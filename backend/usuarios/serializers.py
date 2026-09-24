@@ -178,3 +178,84 @@ class LogoutSerializer(serializers.Serializer):
 
     def save(self, **kwargs):
         self.token.blacklist()
+
+
+# ─────────────────────────────────────────────────────────────────────
+# Gestion de cuentas por el Administrador (CU-USU-01 a CU-USU-05)
+# ─────────────────────────────────────────────────────────────────────
+class UsuarioSerializer(serializers.ModelSerializer):
+    """Lectura de una cuenta (RF-43).
+
+    `password` no figura: RNF-03 exige que no aparezca en ninguna
+    respuesta.
+    """
+
+    rol_display = serializers.CharField(source="get_rol_display", read_only=True)
+    bloqueado = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Usuario
+        fields = [
+            "id",
+            "username",
+            "nombre_completo",
+            "rol",
+            "rol_display",
+            "is_active",
+            "bloqueado",
+            "date_joined",
+            "last_login",
+        ]
+        read_only_fields = fields
+
+    def get_bloqueado(self, obj):
+        """Expone el bloqueo con el nombre del dominio.
+
+        La interfaz habla de cuentas bloqueadas, no de cuentas
+        inactivas: `is_active` es el mecanismo, `bloqueado` es el
+        concepto de spec.md.
+        """
+        return not obj.is_active
+
+
+class CrearUsuarioSerializer(serializers.Serializer):
+    """CU-USU-01 (RF-39, RF-47)."""
+
+    username = serializers.CharField(max_length=150)
+    nombre_completo = serializers.CharField(max_length=150)
+    rol = RolChoiceField()
+    password = serializers.CharField(write_only=True)
+
+    def validate_username(self, valor):
+        if Usuario.objects.filter(username__iexact=valor).exists():
+            raise serializers.ValidationError(
+                "Ya existe una cuenta con ese identificador de acceso."
+            )
+        return valor
+
+    def validate_password(self, valor):
+        try:
+            validate_password(valor)
+        except ValidationErrorDjango as exc:
+            raise serializers.ValidationError(list(exc.messages)) from exc
+        return valor
+
+
+class ActualizarUsuarioSerializer(serializers.Serializer):
+    """CU-USU-02 (RF-40)."""
+
+    nombre_completo = serializers.CharField(max_length=150, required=False)
+    rol = RolChoiceField(required=False)
+
+
+class RestablecerPasswordSerializer(serializers.Serializer):
+    """CU-USU-04 (RF-42)."""
+
+    password_nueva = serializers.CharField(write_only=True)
+
+    def validate_password_nueva(self, valor):
+        try:
+            validate_password(valor)
+        except ValidationErrorDjango as exc:
+            raise serializers.ValidationError(list(exc.messages)) from exc
+        return valor
