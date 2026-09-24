@@ -34,7 +34,7 @@
 
 | Bloque | Contenido | Tareas | Dependencia |
 |---|---|---|---|
-| 0 | Andamiaje del proyecto | T-0.1 a T-0.9 | — |
+| 0 | Andamiaje del proyecto | T-0.1 a T-0.9 ✅ | — |
 | 1 | Autenticación y usuarios | T-1.1 a T-1.14 | Bloque 0 |
 | 2 | Catálogo e inventario | T-2.1 a T-2.10 | Bloque 1 |
 | 3 | Configuración (umbral global) | T-3.1 a T-3.4 | Bloque 2 |
@@ -55,7 +55,7 @@ el de lógica más delicada.
 > más difícil de revertir de todo el proyecto (T-0.4) y el entorno que
 > hace demostrable RNF-08 (T-0.3).
 
-### [ ] T-0.1 — Repositorio Git e higiene inicial
+### [x] T-0.1 — Repositorio Git e higiene inicial
 - **Cubre:** RNF-21
 - **Depende de:** —
 - **Trabajo:** `git init` en la raíz; `.gitignore` para Python, Node,
@@ -64,7 +64,7 @@ el de lógica más delicada.
 - **Hecho cuando:** `git log` muestra el commit inicial y `git status`
   está limpio con un `.env` de prueba presente en el disco.
 
-### [ ] T-0.2 — Esqueleto de carpetas y README
+### [x] T-0.2 — Esqueleto de carpetas y README
 - **Cubre:** RNF-20, RNF-22
 - **Depende de:** T-0.1
 - **Trabajo:** Estructura `backend/`, `frontend/`, `specs/` según
@@ -73,7 +73,7 @@ el de lógica más delicada.
 - **Hecho cuando:** un lector que no conoce el proyecto puede levantarlo
   siguiendo solo el README.
 
-### [ ] T-0.3 — PostgreSQL en desarrollo
+### [x] T-0.3 — PostgreSQL en desarrollo
 - **Cubre:** RNF-08 (habilita su demostración)
 - **Depende de:** T-0.2
 - **Trabajo:** Base de datos y rol propios del proyecto sobre la
@@ -91,7 +91,7 @@ el de lógica más delicada.
   > de preferencia. Nada más del plan cambia: lo que RNF-08 exige es
   > PostgreSQL real, no una forma concreta de instalarlo.
 
-### [ ] T-0.4 — Proyecto Django con modelo `Usuario` propio ⚠️
+### [x] T-0.4 — Proyecto Django con modelo `Usuario` propio ⚠️
 - **Cubre:** RN-ACC-02, RN-USU-05
 - **Depende de:** T-0.3
 - **Trabajo:** `django-admin startproject config backend/`; app `usuarios`
@@ -104,7 +104,7 @@ el de lógica más delicada.
   > uno de `plan.md` §12. Antes de pasar a T-0.5: verificar en `psql`
   > que la tabla de usuarios es `usuarios_usuario`.
 
-### [ ] T-0.5 — Configuración por entornos y secretos
+### [x] T-0.5 — Configuración por entornos y secretos
 - **Cubre:** RNF-05, PT-01
 - **Depende de:** T-0.4
 - **Trabajo:** `config/settings/` dividido en `base.py` y `dev.py`;
@@ -113,7 +113,7 @@ el de lógica más delicada.
 - **Hecho cuando:** el proyecto arranca sin ningún secreto escrito en el
   código, y `.env` no aparece en `git status`.
 
-### [ ] T-0.6 — DRF con permisos cerrados por defecto
+### [x] T-0.6 — DRF con permisos cerrados por defecto
 - **Cubre:** RNF-01
 - **Depende de:** T-0.5
 - **Trabajo:** Instalar DRF; `DEFAULT_PERMISSION_CLASSES =
@@ -124,7 +124,7 @@ el de lógica más delicada.
   responde 401 sin token. Olvidar declarar permisos cierra el endpoint,
   no lo abre.
 
-### [ ] T-0.7 — Manejador de errores y formato uniforme
+### [x] T-0.7 — Manejador de errores y formato uniforme
 - **Cubre:** RNF-06, RNF-15
 - **Depende de:** T-0.6
 - **Trabajo:** `core/exceptions.py` con el manejador propio y las
@@ -133,7 +133,7 @@ el de lógica más delicada.
 - **Hecho cuando:** un error de validación y un 403 devuelven ambos la
   misma forma de JSON, verificado con una prueba.
 
-### [ ] T-0.8 — Proyecto Vue con Vite, Pinia, Router y PrimeVue
+### [x] T-0.8 — Proyecto Vue con Vite, Pinia, Router y PrimeVue
 - **Cubre:** RNF-12, RNF-13, PT-03
 - **Depende de:** T-0.2
 - **Trabajo:** `npm create vite@latest` (plantilla Vue); instalar Vue
@@ -142,7 +142,7 @@ el de lógica más delicada.
 - **Hecho cuando:** `npm run dev` sirve una página con un componente de
   PrimeVue renderizado, adaptable a ancho de tableta.
 
-### [ ] T-0.9 — Entorno de pruebas de ambos lados
+### [x] T-0.9 — Entorno de pruebas de ambos lados
 - **Cubre:** RNF-23
 - **Depende de:** T-0.6, T-0.8
 - **Trabajo:** `pytest`, `pytest-django`, `factory-boy` en backend con
