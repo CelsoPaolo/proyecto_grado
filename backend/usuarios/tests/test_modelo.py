@@ -107,8 +107,26 @@ def test_la_contrasena_se_guarda_cifrada_y_nunca_en_texto_plano():
     usuario = VendedorFactory(password="ClaveSegura123")
 
     assert usuario.password != "ClaveSegura123"
-    assert usuario.password.startswith("pbkdf2_")
+    assert "ClaveSegura123" not in usuario.password
     assert usuario.check_password("ClaveSegura123")
+
+
+def test_la_configuracion_real_usa_un_hash_resistente(settings):
+    """RNF-03.
+
+    La suite corre con MD5 para no tardar diez minutos (ver
+    conftest.py), asi que comprobar el prefijo del hash en la prueba
+    anterior no diria nada sobre produccion. Lo que importa es la
+    configuracion real, y eso es lo que se verifica aqui, leyendo los
+    ajustes del proyecto y no los de la sesion de pruebas.
+    """
+    from config.settings import base
+
+    hasher = base.__dict__.get("PASSWORD_HASHERS")
+
+    # Django usa PBKDF2 por defecto; el proyecto no lo sustituye.
+    assert hasher is None or "PBKDF2" in hasher[0]
+    assert "MD5" not in (hasher[0] if hasher else "PBKDF2")
 
 
 # ─────────────────────────────────────────────────────────────────────

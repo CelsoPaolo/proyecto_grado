@@ -36,7 +36,7 @@
 |---|---|---|---|
 | 0 | Andamiaje del proyecto | T-0.1 a T-0.9 ✅ | — |
 | 1 | Autenticación y usuarios | T-1.1 a T-1.14 ✅ | Bloque 0 |
-| 2 | Catálogo e inventario | T-2.1 a T-2.10 | Bloque 1 |
+| 2 | Catálogo e inventario | T-2.1 a T-2.10 ✅ | Bloque 1 |
 | 3 | Configuración (umbral global) | T-3.1 a T-3.4 | Bloque 2 |
 | 4 | Ventas | T-4.1 a T-4.12 | Bloques 2, 3 |
 | 5 | Servicios técnicos | T-5.1 a T-5.14 | Bloque 1 |
@@ -293,7 +293,7 @@ el de lógica más delicada.
 
 ## Bloque 2 — Catálogo e inventario
 
-### [ ] T-2.1 — Modelos `Categoria` y `Producto` con restricciones
+### [x] T-2.1 — Modelos `Categoria` y `Producto` con restricciones
 - **Cubre:** RN-CAT-01 a RN-CAT-06, RF-14
 - **Depende de:** T-1.1
 - **Trabajo:** Modelos con `CheckConstraint` de `plan.md` §3.3
@@ -303,13 +303,13 @@ el de lógica más delicada.
 - **Hecho cuando:** una prueba intenta insertar stock negativo **saltando
   la validación de Django** y la base lo rechaza.
 
-### [ ] T-2.2 — API de categorías
+### [x] T-2.2 — API de categorías
 - **Cubre:** RF-07, RF-08
 - **Depende de:** T-2.1, T-1.2
 - **Hecho cuando:** eliminar una categoría con productos responde 409
   `CATEGORIA_CON_PRODUCTOS`; sin productos, elimina correctamente.
 
-### [ ] T-2.3 — API de productos
+### [x] T-2.3 — API de productos
 - **Cubre:** RF-09, RF-10, RF-12, RF-14
 - **Depende de:** T-2.2
 - **Trabajo:** CRUD con `multipart` para la imagen; validación de tipo y
@@ -317,7 +317,7 @@ el de lógica más delicada.
 - **Hecho cuando:** un archivo que no es imagen es rechazado aunque tenga
   extensión `.jpg`.
 
-### [ ] T-2.4 — Borrado suave de productos
+### [x] T-2.4 — Borrado suave de productos
 - **Cubre:** RF-11, CU-CAT-04
 - **Depende de:** T-2.3
 - **Trabajo:** `DELETE` marca `activo = false`; los listados de venta
@@ -325,17 +325,17 @@ el de lógica más delicada.
 - **Hecho cuando:** un producto «eliminado» desaparece del selector de
   ventas pero sigue visible en las ventas anteriores que lo incluyen.
 
-### [ ] T-2.5 — Búsqueda y filtros del catálogo
+### [x] T-2.5 — Búsqueda y filtros del catálogo
 - **Cubre:** RF-13, RNF-18
 - **Depende de:** T-2.3
 - **Hecho cuando:** `?buscar=`, `?categoria=` y `?activo=` funcionan
   combinados y la respuesta viene paginada.
 
-### [ ] T-2.6 — Cliente de API del catálogo (frontend)
+### [x] T-2.6 — Cliente de API del catálogo (frontend)
 - **Cubre:** RF-12
 - **Depende de:** T-2.5, T-1.9
 
-### [ ] T-2.7 — Lista de productos
+### [x] T-2.7 — Lista de productos
 - **Cubre:** RF-12, RF-13, RNF-12, RNF-18
 - **Depende de:** T-2.6
 - **Trabajo:** `DataTable` de PrimeVue con paginación de servidor,
@@ -343,17 +343,17 @@ el de lógica más delicada.
 - **Hecho cuando:** un Encargado de Ventas la ve en modo consulta, sin
   botones de edición; un Administrador ve las acciones completas.
 
-### [ ] T-2.8 — Formulario de producto con imagen
+### [x] T-2.8 — Formulario de producto con imagen
 - **Cubre:** RF-09, RF-10, RNF-15
 - **Depende de:** T-2.7
 - **Hecho cuando:** los errores de validación del servidor aparecen junto
   al campo que los origina; la vista previa de la imagen funciona.
 
-### [ ] T-2.9 — Pantalla de categorías
+### [x] T-2.9 — Pantalla de categorías
 - **Cubre:** RF-07, RF-08, RNF-14
 - **Depende de:** T-2.7
 
-### [ ] T-2.10 — Revisión del bloque 2
+### [x] T-2.10 — Revisión del bloque 2
 - **Depende de:** T-2.1 a T-2.9
 - **Hecho cuando:** el Administrador gestiona el catálogo completo; el
   Encargado de Ventas lo consulta pero no lo modifica, ni por interfaz ni
