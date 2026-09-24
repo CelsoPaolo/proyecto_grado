@@ -4,8 +4,13 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as ValidationErrorDjango
 from rest_framework import serializers
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
+from rest_framework_simplejwt.serializers import (
+    TokenObtainPairSerializer,
+    TokenRefreshSerializer,
+)
+from rest_framework_simplejwt.settings import api_settings
+from rest_framework_simplejwt.tokens import RefreshToken, UntypedToken
 
 from core.exceptions import CredencialesInvalidas, CuentaBloqueada
 from usuarios.models import Rol, Usuario
@@ -109,3 +114,67 @@ class CambiarPasswordPropiaSerializer(serializers.Serializer):
 class RolChoiceField(serializers.ChoiceField):
     def __init__(self, **kwargs):
         super().__init__(choices=Rol.choices, **kwargs)
+
+
+class TokenRefreshSeguroSerializer(TokenRefreshSerializer):
+    """Via 2 de plan.md seccion 1.3 — el hueco real de SimpleJWT.
+
+    El serializer de refresco por defecto valida la **firma y la
+    caducidad** del token, pero no carga al usuario ni comprueba su
+    estado. Sin esto, una cuenta bloqueada podria seguir renovando su
+    access token indefinidamente mientras su refresh siguiera vigente,
+    y RN-ACC-05 quedaria incumplido por la puerta de atras.
+    """
+
+    def validate(self, attrs):
+        # Se comprueba al usuario ANTES de delegar en super(), y se lee
+        # el token con UntypedToken en lugar de RefreshToken por dos
+        # motivos, ambos deliberados:
+        #
+        #  1. RefreshToken comprueba la lista negra al construirse. Como
+        #     bloquear una cuenta ya deja sus refresh en esa lista
+        #     (via 3), usarlo aqui haria que la via 3 se adelantara
+        #     siempre a la via 2 y el titular recibiria un 401 generico
+        #     en lugar de saber que su cuenta fue inhabilitada.
+        #  2. Las dos vias deben ser INDEPENDIENTES: esta debe seguir
+        #     cerrando el paso aunque la lista negra no se hubiera
+        #     actualizado, por ejemplo si la cuenta se desactivara
+        #     desde el panel de administracion de Django.
+        #
+        # UntypedToken valida firma y caducidad, que es lo que hace
+        # falta para saber de quien es el token; la validacion completa
+        # del refresco la sigue haciendo super().
+        try:
+            token = UntypedToken(attrs["refresh"])
+        except TokenError as exc:
+            raise InvalidToken(str(exc)) from exc
+
+        usuario = Usuario.objects.filter(
+            pk=token.get(api_settings.USER_ID_CLAIM)
+        ).first()
+
+        if usuario is None or not usuario.is_active:
+            raise CuentaBloqueada()
+
+        return super().validate(attrs)
+
+
+class LogoutSerializer(serializers.Serializer):
+    """CU-AUT-02 — Cerrar sesion (RF-04).
+
+    Anade el refresh token a la lista negra. Sin este paso, cerrar
+    sesion solo borraria el token del navegador: seguiria siendo
+    valido para cualquiera que lo hubiera copiado.
+    """
+
+    refresh = serializers.CharField()
+
+    def validate_refresh(self, valor):
+        try:
+            self.token = RefreshToken(valor)
+        except TokenError as exc:
+            raise serializers.ValidationError("El token no es valido.") from exc
+        return valor
+
+    def save(self, **kwargs):
+        self.token.blacklist()

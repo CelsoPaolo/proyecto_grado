@@ -153,13 +153,30 @@ class TokenRefreshSeguroSerializer(TokenRefreshSerializer):
     """Rechaza el refresco si la cuenta fue bloqueada o eliminada (RN-ACC-05)."""
 
     def validate(self, attrs):
-        datos = super().validate(attrs)
-        token = RefreshToken(attrs["refresh"])
+        # El usuario se comprueba ANTES de delegar en super(), y el
+        # token se lee con UntypedToken, no con RefreshToken.
+        token = UntypedToken(attrs["refresh"])
         usuario = Usuario.objects.filter(pk=token[api_settings.USER_ID_CLAIM]).first()
         if usuario is None or not usuario.is_active:
             raise CuentaBloqueada()          # → 403 CUENTA_BLOQUEADA
-        return datos
+        return super().validate(attrs)
 ```
+
+> **Dos detalles de orden descubiertos al implementar (T-1.4,
+> 2026-09-24), que el esbozo de la v1.1 tenía al revés:**
+>
+> 1. **La comprobación va antes de `super()`, no después.** Con
+>    `ROTATE_REFRESH_TOKENS` y `BLACKLIST_AFTER_ROTATION`, `super()`
+>    pone en la lista negra el token recibido; releerlo después falla
+>    **siempre**, incluso para una cuenta activa.
+> 2. **Se lee con `UntypedToken`, no con `RefreshToken`.**
+>    `RefreshToken` consulta la lista negra al construirse, así que la
+>    vía 3 se adelantaría siempre a la vía 2 y el titular recibiría un
+>    401 genérico en lugar de saber que su cuenta fue inhabilitada. Más
+>    importante: las dos vías deben ser **independientes**, y esta tiene
+>    que seguir cerrando el paso aunque la lista negra no se hubiera
+>    actualizado —por ejemplo si la cuenta se desactivara desde el panel
+>    de administración de Django—.
 
 #### Vía 3 — Lista negra al bloquear
 
