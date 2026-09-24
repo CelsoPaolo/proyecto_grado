@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+from datetime import timedelta
 from pathlib import Path
 
 import environ
@@ -43,12 +44,19 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # Terceros
+    'rest_framework',
+    'rest_framework_simplejwt.token_blacklist',
+    'corsheaders',
+    'django_filters',
     # Aplicaciones del proyecto
+    'core',
     'usuarios',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -137,3 +145,49 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# ─────────────────────────────────────────────────────────────────────
+# Django REST Framework
+# ─────────────────────────────────────────────────────────────────────
+# IsAuthenticated por defecto (RNF-01): ninguna funcionalidad es
+# accesible sin autenticacion. La consecuencia buscada es que olvidar
+# declarar permisos en una vista la deje CERRADA, no abierta.
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'core.pagination.PaginacionEstandar',
+    'PAGE_SIZE': 20,
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+    ],
+    'EXCEPTION_HANDLER': 'core.exceptions.manejador_de_errores',
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+    ],
+    'DATETIME_FORMAT': '%Y-%m-%dT%H:%M:%S%z',
+    'COERCE_DECIMAL_TO_STRING': True,
+}
+
+# SimpleJWT: configuracion de plan.md seccion 1.3.
+# Los 30 minutos del access token NO son la ventana de bloqueo (esa es
+# inmediata, ver T-1.4): acotan el dano de un token robado, que es un
+# riesgo distinto.
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
+    'REFRESH_TOKEN_LIFETIME': timedelta(hours=8),  # jornada laboral
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'CHECK_REVOKE_TOKEN': True,  # invalida tokens al cambiar la contrasena
+    'UPDATE_LAST_LOGIN': True,
+}
+
+# CORS: lista blanca explicita. Nunca CORS_ALLOW_ALL_ORIGINS.
+CORS_ALLOWED_ORIGINS = env.list(
+    'CORS_ALLOWED_ORIGINS',
+    default=['http://localhost:5173'],
+)
