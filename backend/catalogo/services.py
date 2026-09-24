@@ -61,10 +61,3 @@ def retirar_producto(*, producto):
     producto.save(update_fields=["activo"])
     return producto
 
-
-@transaction.atomic
-def restituir_producto(*, producto):
-    """Devuelve al catalogo un producto retirado por error."""
-    producto.activo = True
-    producto.save(update_fields=["activo"])
-    return producto
