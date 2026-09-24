@@ -24,7 +24,7 @@ export const localeEs = {
   matchAny: 'Cumple alguno',
   addRule: 'Agregar regla',
   removeRule: 'Quitar regla',
-  accept: 'Si',
+  accept: 'Sí',
   reject: 'No',
   choose: 'Elegir',
   upload: 'Subir',
