@@ -28,14 +28,14 @@ class UltimoAdministrador(ErrorDeNegocio):
     """RN-USU-04: el sistema nunca queda sin administradores activos."""
 
     codigo = Codigo.ULTIMO_ADMINISTRADOR
-    default_detail = "La operacion dejaria al sistema sin ningun administrador activo."
+    default_detail = "La operación dejaría al sistema sin ningún administrador activo."
 
 
 class AutomodificacionProhibida(ErrorDeNegocio):
     """RN-USU-02 y RN-USU-03: nadie se cambia el rol ni se bloquea."""
 
     codigo = Codigo.AUTOMODIFICACION_PROHIBIDA
-    default_detail = "No puede realizar esta operacion sobre su propia cuenta."
+    default_detail = "No puede realizar esta operación sobre su propia cuenta."
 
 
 # ─────────────────────────────────────────────────────────────────────

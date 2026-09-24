@@ -27,7 +27,7 @@ class _PermisoPorRol(BasePermission):
     """
 
     roles_permitidos = ()
-    message = "No tiene permiso para realizar esta operacion."
+    message = "No tiene permiso para realizar esta operación."
 
     def has_permission(self, request, view):
         usuario = request.user
@@ -74,7 +74,7 @@ class EsDuenoDeLaVentaOAdmin(BasePermission):
     hecho consumado imputable a quien la registro.
     """
 
-    message = "Solo puede operar sobre las ventas que usted registro."
+    message = "Solo puede operar sobre las ventas que usted registró."
 
     def has_object_permission(self, request, view, obj):
         usuario = request.user

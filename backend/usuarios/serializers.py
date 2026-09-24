@@ -93,7 +93,7 @@ class CambiarPasswordPropiaSerializer(serializers.Serializer):
     def validate_password_actual(self, valor):
         usuario = self.context["request"].user
         if not usuario.check_password(valor):
-            raise serializers.ValidationError("La contrasena actual no es correcta.")
+            raise serializers.ValidationError("La contraseña actual no es correcta.")
         return valor
 
     def validate_password_nueva(self, valor):
@@ -173,7 +173,7 @@ class LogoutSerializer(serializers.Serializer):
         try:
             self.token = RefreshToken(valor)
         except TokenError as exc:
-            raise serializers.ValidationError("El token no es valido.") from exc
+            raise serializers.ValidationError("El token no es válido.") from exc
         return valor
 
     def save(self, **kwargs):

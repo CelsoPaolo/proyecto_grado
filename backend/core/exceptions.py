@@ -64,7 +64,7 @@ class ErrorDeNegocio(APIException):
 
     status_code = status.HTTP_400_BAD_REQUEST
     codigo = Codigo.VALIDACION
-    default_detail = "La operacion no pudo completarse."
+    default_detail = "La operación no pudo completarse."
 
     def __init__(self, detalle=None, errores=None):
         self.detalle = detalle or self.default_detail
@@ -89,7 +89,7 @@ def _mensaje_plano(detalle):
     if isinstance(detalle, dict):
         for valor in detalle.values():
             return _mensaje_plano(valor)
-    return "La operacion no pudo completarse."
+    return "La operación no pudo completarse."
 
 
 def manejador_de_errores(exc, context):
@@ -109,7 +109,7 @@ def manejador_de_errores(exc, context):
     elif isinstance(exc, PermissionDenied):
         return respuesta_de_error(
             Codigo.PERMISO_INSUFICIENTE,
-            "No tiene permiso para realizar esta operacion.",
+            "No tiene permiso para realizar esta operación.",
             estado=status.HTTP_403_FORBIDDEN,
         )
 
@@ -130,13 +130,13 @@ def manejador_de_errores(exc, context):
             logger.exception("Violacion de integridad en la base de datos")
             return respuesta_de_error(
                 Codigo.VALIDACION,
-                "La operacion viola una restriccion de los datos.",
+                "La operación viola una restricción de los datos.",
                 estado=status.HTTP_409_CONFLICT,
             )
         logger.exception("Error no controlado")
         return respuesta_de_error(
             Codigo.ERROR_INTERNO,
-            "Ocurrio un error inesperado. Intentelo nuevamente.",
+            "Ocurrió un error inesperado. Inténtelo nuevamente.",
             estado=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
@@ -147,13 +147,13 @@ def manejador_de_errores(exc, context):
     if codigo_http == status.HTTP_401_UNAUTHORIZED:
         return respuesta_de_error(
             Codigo.NO_AUTENTICADO,
-            "Debe iniciar sesion para realizar esta operacion.",
+            "Debe iniciar sesión para realizar esta operación.",
             estado=codigo_http,
         )
     if codigo_http == status.HTTP_403_FORBIDDEN:
         return respuesta_de_error(
             Codigo.PERMISO_INSUFICIENTE,
-            "No tiene permiso para realizar esta operacion.",
+            "No tiene permiso para realizar esta operación.",
             estado=codigo_http,
         )
     if codigo_http == status.HTTP_404_NOT_FOUND:
@@ -189,7 +189,7 @@ class CredencialesInvalidas(ErrorDeNegocio):
 
     status_code = status.HTTP_401_UNAUTHORIZED
     codigo = Codigo.CREDENCIALES_INVALIDAS
-    default_detail = "Usuario o contrasena incorrectos."
+    default_detail = "Usuario o contraseña incorrectos."
 
 
 class CuentaBloqueada(ErrorDeNegocio):
@@ -197,7 +197,7 @@ class CuentaBloqueada(ErrorDeNegocio):
 
     status_code = status.HTTP_403_FORBIDDEN
     codigo = Codigo.CUENTA_BLOQUEADA
-    default_detail = "Esta cuenta esta inhabilitada. Consulte al administrador."
+    default_detail = "Esta cuenta está inhabilitada. Consulte al administrador."
 
 
 class PermisoInsuficiente(ErrorDeNegocio):
@@ -205,4 +205,4 @@ class PermisoInsuficiente(ErrorDeNegocio):
 
     status_code = status.HTTP_403_FORBIDDEN
     codigo = Codigo.PERMISO_INSUFICIENTE
-    default_detail = "No tiene permiso para realizar esta operacion."
+    default_detail = "No tiene permiso para realizar esta operación."

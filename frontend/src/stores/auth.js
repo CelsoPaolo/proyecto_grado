@@ -89,15 +89,18 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function cerrarSesion() {
     const refreshActual = refresh.value
-    // Se limpia el estado local PRIMERO: si la llamada al servidor
-    // fallara, el usuario debe quedar fuera igualmente.
-    limpiar()
-    if (refreshActual) {
-      try {
-        await authApi.logout(refreshActual)
-      } catch {
-        /* el token ya no servia; no hay nada que reparar */
-      }
+    try {
+      // La llamada va ANTES de limpiar, porque necesita el access
+      // token para autenticarse. Si se limpiara primero, el servidor
+      // respondería 401, el refresh nunca llegaría a la lista negra y
+      // RF-04 quedaría incumplido: cerrar sesión solo borraría el
+      // token del navegador.
+      if (refreshActual) await authApi.logout(refreshActual)
+    } catch {
+      /* el token ya no servía; no hay nada que reparar */
+    } finally {
+      // Pase lo que pase con el servidor, el usuario queda fuera.
+      limpiar()
     }
   }
 

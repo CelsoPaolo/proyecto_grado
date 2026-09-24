@@ -35,7 +35,7 @@
 | Bloque | Contenido | Tareas | Dependencia |
 |---|---|---|---|
 | 0 | Andamiaje del proyecto | T-0.1 a T-0.9 ✅ | — |
-| 1 | Autenticación y usuarios | T-1.1 a T-1.14 | Bloque 0 |
+| 1 | Autenticación y usuarios | T-1.1 a T-1.14 ✅ | Bloque 0 |
 | 2 | Catálogo e inventario | T-2.1 a T-2.10 | Bloque 1 |
 | 3 | Configuración (umbral global) | T-3.1 a T-3.4 | Bloque 2 |
 | 4 | Ventas | T-4.1 a T-4.12 | Bloques 2, 3 |
@@ -158,7 +158,7 @@ el de lógica más delicada.
 > otro módulo. Se implementa completo, backend y frontend, antes de
 > tocar el siguiente bloque.
 
-### [ ] T-1.1 — Modelo `Usuario` completo y arranque del administrador
+### [x] T-1.1 — Modelo `Usuario` completo y arranque del administrador
 - **Cubre:** RN-ACC-02, RN-USU-06, §11.1 del plan
 - **Depende de:** T-0.4
 - **Trabajo:** Completar el modelo (`nombre_completo`, `rol`,
@@ -168,7 +168,7 @@ el de lógica más delicada.
   clases de permiso de administrador; el sistema recién instalado es
   accesible.
 
-### [ ] T-1.2 — Clases de permiso por rol
+### [x] T-1.2 — Clases de permiso por rol
 - **Cubre:** RNF-02, RN-ACC-04, matriz 4.4
 - **Depende de:** T-1.1
 - **Trabajo:** `core/permissions.py` con `EsAdministrador`,
@@ -179,7 +179,7 @@ el de lógica más delicada.
   roles, y una prueba verifica que un rol manipulado en el token no
   concede acceso.
 
-### [ ] T-1.3 — Inicio de sesión (JWT)
+### [x] T-1.3 — Inicio de sesión (JWT)
 - **Cubre:** RF-01, RF-02, RF-03
 - **Depende de:** T-1.2, T-0.7
 - **Trabajo:** SimpleJWT con la configuración de `plan.md` §1.3;
@@ -188,7 +188,7 @@ el de lógica más delicada.
   **mismo** mensaje exista o no el usuario (RNF-06); cuenta bloqueada →
   403 `CUENTA_BLOQUEADA`.
 
-### [ ] T-1.4 — Invalidación inmediata de sesiones
+### [x] T-1.4 — Invalidación inmediata de sesiones
 - **Cubre:** **RN-ACC-05**, RNF-07
 - **Depende de:** T-1.3
 - **Trabajo:** Las cuatro vías de `plan.md` §1.3:
@@ -200,7 +200,7 @@ el de lógica más delicada.
   2. refresh de cuenta bloqueada → 403;
   3. bloquear y desbloquear → los refresh anteriores siguen rechazados.
 
-### [ ] T-1.5 — Cierre de sesión y cambio de contraseña propia
+### [x] T-1.5 — Cierre de sesión y cambio de contraseña propia
 - **Cubre:** RF-04, RF-05, RNF-03, RNF-04
 - **Depende de:** T-1.4
 - **Trabajo:** `POST /auth/logout` (lista negra del refresh);
@@ -209,7 +209,7 @@ el de lógica más delicada.
 - **Hecho cuando:** tras cerrar sesión el refresh ya no sirve; cambiar la
   contraseña invalida los access tokens previos (`CHECK_REVOKE_TOKEN`).
 
-### [ ] T-1.6 — Servicio de usuarios con las protecciones de administrador
+### [x] T-1.6 — Servicio de usuarios con las protecciones de administrador
 - **Cubre:** **RN-USU-02, RN-USU-03, RN-USU-04**, RF-44, RF-45, RF-46
 - **Depende de:** T-1.1
 - **Trabajo:** `usuarios/services.py`: crear, editar, cambiar rol,
@@ -222,7 +222,7 @@ el de lógica más delicada.
   dos administradores bloqueándose a la vez no pueden dejar el sistema
   sin acceso.
 
-### [ ] T-1.7 — API de usuarios
+### [x] T-1.7 — API de usuarios
 - **Cubre:** RF-39 a RF-43, RF-47
 - **Depende de:** T-1.6, T-1.2
 - **Trabajo:** Endpoints de `plan.md` §4.4 (usuarios). Sin `DELETE`
@@ -230,7 +230,7 @@ el de lógica más delicada.
 - **Hecho cuando:** pruebas de integración cubren cada endpoint; ninguna
   respuesta contiene el campo `password`; `DELETE` responde 405.
 
-### [ ] T-1.8 — Matriz de permisos automatizada
+### [x] T-1.8 — Matriz de permisos automatizada
 - **Cubre:** RNF-02, matriz 4.4 de `spec.md`
 - **Depende de:** T-1.7
 - **Trabajo:** Prueba parametrizada que recorre cada endpoint existente ×
@@ -239,7 +239,7 @@ el de lógica más delicada.
 - **Hecho cuando:** la prueba pasa y **falla** si se cambia a mano un
   permiso de cualquier vista.
 
-### [ ] T-1.9 — Cliente HTTP y store de sesión (frontend)
+### [x] T-1.9 — Cliente HTTP y store de sesión (frontend)
 - **Cubre:** RF-06, RNF-15
 - **Depende de:** T-0.8, T-1.5
 - **Trabajo:** `api/http.js` con los tres interceptores de `plan.md`
@@ -250,7 +250,7 @@ el de lógica más delicada.
   varias peticiones en vuelo; si el refresco falla, se cierra la sesión y
   se redirige al inicio.
 
-### [ ] T-1.10 — Rutas y guards por rol
+### [x] T-1.10 — Rutas y guards por rol
 - **Cubre:** RF-06
 - **Depende de:** T-1.9
 - **Trabajo:** `router/index.js` con `meta.roles`; guard global; menú
@@ -259,7 +259,7 @@ el de lógica más delicada.
 - **Hecho cuando:** pruebas de Vitest verifican la redirección por rol, y
   el menú de cada rol coincide con la matriz de `spec.md` §4.4.
 
-### [ ] T-1.11 — Pantalla de inicio de sesión
+### [x] T-1.11 — Pantalla de inicio de sesión
 - **Cubre:** RF-01, RF-02, RF-03, RNF-13, RNF-15
 - **Depende de:** T-1.10
 - **Trabajo:** Formulario con validación, estado de carga y mensajes
@@ -267,13 +267,13 @@ el de lógica más delicada.
 - **Hecho cuando:** se puede iniciar sesión con los tres roles y cada uno
   aterriza en la pantalla que le corresponde.
 
-### [ ] T-1.12 — Pantalla de cambio de contraseña propia
+### [x] T-1.12 — Pantalla de cambio de contraseña propia
 - **Cubre:** RF-05
 - **Depende de:** T-1.11
 - **Hecho cuando:** el cambio funciona y, al invalidarse la sesión, la
   aplicación lleva de vuelta al inicio de sesión sin quedarse colgada.
 
-### [ ] T-1.13 — Pantallas de gestión de usuarios
+### [x] T-1.13 — Pantallas de gestión de usuarios
 - **Cubre:** RF-39 a RF-47
 - **Depende de:** T-1.11, T-1.7
 - **Trabajo:** Lista con búsqueda y filtro por rol; formulario de alta y
@@ -283,7 +283,7 @@ el de lógica más delicada.
   administradores muestra el mensaje del servidor; la interfaz **no**
   duplica la regla, la respeta.
 
-### [ ] T-1.14 — Revisión del bloque 1
+### [x] T-1.14 — Revisión del bloque 1
 - **Depende de:** T-1.1 a T-1.13
 - **Hecho cuando:** un administrador crea cuentas de los otros dos roles
   y cada una inicia sesión y ve solo lo suyo; bloquear a un usuario
