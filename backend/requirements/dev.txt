@@ -1,0 +1,7 @@
+# Desarrollo: incluye lo comun mas las herramientas de prueba.
+# Unico entorno implementado (decision PT-01).
+-r base.txt
+
+pytest>=8.3
+pytest-django>=4.9
+factory-boy>=3.3
