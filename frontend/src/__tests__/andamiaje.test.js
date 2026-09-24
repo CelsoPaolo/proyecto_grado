@@ -1,52 +1,17 @@
 /**
- * Pruebas del andamiaje del frontend: T-0.8 y T-0.9.
+ * Locale en espanol (RNF-13).
  *
- * Verifican que PrimeVue, el tema y el locale en espanol estan montados
- * correctamente. Si el locale se rompiera, la interfaz volveria al
- * ingles en tablas y calendarios sin que nada fallara a gritos, y eso
- * incumpliria RNF-13.
+ * Originalmente estas pruebas montaban el App.vue de andamiaje de
+ * T-0.8, que T-1.10 sustituyo por el marco real de la aplicacion. Lo
+ * que sigue siendo util comprobar aqui es el locale: si se rompiera,
+ * la interfaz volveria al ingles en tablas y calendarios sin que nada
+ * fallara a gritos. El montaje de componentes de PrimeVue se verifica
+ * ahora en login.test.js, sobre una pantalla real.
  */
 
-import { mount } from '@vue/test-utils'
-import PrimeVue from 'primevue/config'
-import Aura from '@primeuix/themes/aura'
 import { describe, expect, it } from 'vitest'
 
-import App from '../App.vue'
 import { localeEs } from '../locale/es'
-
-function montarApp() {
-  return mount(App, {
-    global: {
-      plugins: [[PrimeVue, { theme: { preset: Aura }, locale: localeEs }]],
-    },
-  })
-}
-
-describe('T-0.8 — andamiaje de la interfaz', () => {
-  it('monta la aplicacion con componentes de PrimeVue renderizados', () => {
-    const app = montarApp()
-
-    // Button y Card de PrimeVue emiten sus propias clases.
-    expect(app.find('.p-button').exists()).toBe(true)
-    expect(app.find('.p-card').exists()).toBe(true)
-  })
-
-  it('muestra los cinco modulos funcionales de la especificacion', () => {
-    const app = montarApp()
-    const texto = app.text()
-
-    for (const modulo of [
-      'Catálogo e inventario',
-      'Registro de ventas',
-      'Servicios técnicos',
-      'Gestión de usuarios',
-      'Panel de indicadores',
-    ]) {
-      expect(texto).toContain(modulo)
-    }
-  })
-})
 
 describe('RNF-13 — interfaz en espanol', () => {
   it('el locale traduce los textos de tablas y paginacion', () => {
@@ -59,5 +24,11 @@ describe('RNF-13 — interfaz en espanol', () => {
     expect(localeEs.firstDayOfWeek).toBe(1)
     expect(localeEs.dateFormat).toBe('dd/mm/yy')
     expect(localeEs.monthNames[0]).toBe('Enero')
+  })
+
+  it('cubre los textos de los dialogos de confirmacion (RNF-14)', () => {
+    expect(localeEs.accept).toBe('Sí')
+    expect(localeEs.reject).toBe('No')
+    expect(localeEs.cancel).toBe('Cancelar')
   })
 })
