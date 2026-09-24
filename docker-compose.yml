@@ -1,0 +1,33 @@
+# Alternativa a la instalacion nativa de PostgreSQL (tasks.md T-0.3).
+#
+# En el equipo de desarrollo del autor se usa PostgreSQL 18 instalado
+# como servicio de Windows; este archivo existe para reproducir el mismo
+# entorno en otra maquina sin instalar nada.
+#
+#   docker compose up -d
+#
+# Las credenciales salen de backend/.env, de modo que ambas vias usen
+# exactamente los mismos valores y el .env no tenga que cambiarse al
+# pasar de una a otra.
+
+services:
+  db:
+    image: postgres:18
+    container_name: pcsolution_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-pcsolution}
+      POSTGRES_USER: ${DB_USER:-pcsolution}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Definir DB_PASSWORD en backend/.env}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - pcsolution_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-pcsolution}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pcsolution_pgdata:

@@ -1,0 +1,55 @@
+/* Estilos base de PC-Solution ERP.
+   Los componentes visuales los aporta PrimeVue (tema Aura); aqui solo
+   van los tokens propios y el comportamiento adaptable (RNF-12). */
+
+:root {
+  /* Puntos de corte declarados como referencia del proyecto:
+     escritorio >= 1280px, portatil >= 1024px, tableta >= 768px.
+     No se disena para telefono movil (spec.md seccion 2.2). */
+  --pcs-ancho-maximo: 1440px;
+  --pcs-espaciado: 1rem;
+  --pcs-radio: 8px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--p-surface-50, #f8fafc);
+  color: var(--p-text-color, #1e293b);
+  line-height: 1.5;
+}
+
+#app {
+  min-height: 100vh;
+}
+
+/* Contenedor de pagina: centra el contenido y garantiza margen lateral
+   en pantallas estrechas. */
+.pcs-contenedor {
+  width: 100%;
+  max-width: var(--pcs-ancho-maximo);
+  margin-inline: auto;
+  padding: calc(var(--pcs-espaciado) * 1.5);
+}
+
+@media (max-width: 768px) {
+  .pcs-contenedor {
+    padding: var(--pcs-espaciado);
+  }
+}
+
+/* Las tablas de datos no deben forzar scroll horizontal de toda la
+   pagina en pantallas estrechas (RNF-12). */
+.p-datatable-wrapper {
+  overflow-x: auto;
+}

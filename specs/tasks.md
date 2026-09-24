@@ -76,11 +76,20 @@ el de lógica más delicada.
 ### [ ] T-0.3 — PostgreSQL en desarrollo
 - **Cubre:** RNF-08 (habilita su demostración)
 - **Depende de:** T-0.2
-- **Trabajo:** `docker-compose.yml` con PostgreSQL 16, volumen persistente
-  y credenciales desde `.env`. Alternativa documentada: instalación
-  nativa, para el caso de que Docker no esté disponible en el equipo.
-- **Hecho cuando:** `docker compose up -d` levanta la base y se puede
-  conectar con `psql`.
+- **Trabajo:** Base de datos y rol propios del proyecto sobre la
+  **instalación nativa de PostgreSQL 18** del equipo, con credenciales
+  desde `.env`. Se versiona además un `docker-compose.yml` equivalente
+  como alternativa documentada, para reproducir el entorno en otra
+  máquina.
+- **Hecho cuando:** el rol y la base existen y se puede conectar con
+  `psql` usando las credenciales del `.env`.
+- > **Desviación respecto del plan v1.1, registrada el 2026-09-24.** El
+  > plan proponía Docker como vía principal y la instalación nativa como
+  > alternativa. En el equipo del autor ocurre lo contrario: PostgreSQL
+  > 18 ya está instalado y corriendo como servicio, mientras que el
+  > comando `docker` no está disponible en el PATH. Se invierte el orden
+  > de preferencia. Nada más del plan cambia: lo que RNF-08 exige es
+  > PostgreSQL real, no una forma concreta de instalarlo.
 
 ### [ ] T-0.4 — Proyecto Django con modelo `Usuario` propio ⚠️
 - **Cubre:** RN-ACC-02, RN-USU-05

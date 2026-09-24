@@ -31,14 +31,14 @@
 
 | Ámbito | Decisión | Versión objetivo |
 |---|---|---|
-| Lenguaje backend | Python | 3.12 |
+| Lenguaje backend | Python | 3.13 |
 | Framework backend | Django | 5.1 LTS |
 | API | Django REST Framework | 3.15 |
-| Base de datos | PostgreSQL | 16 |
+| Base de datos | PostgreSQL | 18 |
 | Autenticación | JWT vía `djangorestframework-simplejwt` | 5.3 |
 | Framework frontend | Vue.js (Composition API, `<script setup>`) | 3.5 |
-| Empaquetador | Vite | 5 |
-| Estado global | Pinia | 2 |
+| Empaquetador | Vite | 8 |
+| Estado global | Pinia | 4 |
 | Enrutamiento | Vue Router | 4 |
 | Cliente HTTP | Axios | 1.7 |
 | Componentes UI | PrimeVue (tema Aura) | 4 |
@@ -46,6 +46,14 @@
 | Pruebas backend | pytest + pytest-django + factory-boy | — |
 | Pruebas frontend | Vitest + Vue Test Utils | — |
 | Control de versiones | Git (repositorio propio) | — |
+
+> **Versiones reales instaladas, registradas el 2026-09-24 (T-0.3, T-0.8).**
+> El equipo tiene Python 3.13 y PostgreSQL 18; el andamiaje de Vite
+> instaló Vite 8, Pinia 4 y Vitest 5, versiones mayores más recientes que
+> las anotadas en la v1.1 de este plan. La tabla queda actualizada a lo
+> realmente instalado. Ninguna decisión de arquitectura cambia: las
+> versiones se fijaron como referencia, no como restricción, y todas son
+> las estables vigentes de las mismas herramientas elegidas.
 
 ### 1.2 Justificación de las decisiones abiertas
 
