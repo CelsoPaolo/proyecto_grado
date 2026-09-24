@@ -48,6 +48,18 @@ export const rutas = [
     },
   },
   {
+    path: '/catalogo',
+    name: 'catalogo',
+    component: () => import('@/views/catalogo/ProductosView.vue'),
+    meta: { roles: [ADMIN, VENTAS], titulo: 'Catálogo', icono: 'pi pi-box' },
+  },
+  {
+    path: '/categorias',
+    name: 'categorias',
+    component: () => import('@/views/catalogo/CategoriasView.vue'),
+    meta: { roles: [ADMIN], titulo: 'Categorías', icono: 'pi pi-tags' },
+  },
+  {
     path: '/usuarios',
     name: 'usuarios',
     component: () => import('@/views/usuarios/UsuariosView.vue'),

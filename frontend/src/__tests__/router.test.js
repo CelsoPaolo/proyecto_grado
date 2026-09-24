@@ -27,6 +27,26 @@ describe('guards por rol (spec.md matriz 4.4)', () => {
     expect(puedeEntrar(usuarios, SERVICIOS)).toBe(false)
   })
 
+  it('el catalogo lo consultan Administrador y Ventas, no Servicios', () => {
+    /* spec.md matriz 4.4: el Encargado de Servicios no consulta el
+       catalogo. */
+    const catalogo = ruta('catalogo')
+
+    expect(puedeEntrar(catalogo, ADMIN)).toBe(true)
+    expect(puedeEntrar(catalogo, VENTAS)).toBe(true)
+    expect(puedeEntrar(catalogo, SERVICIOS)).toBe(false)
+  })
+
+  it('solo el Administrador gestiona categorias', () => {
+    /* RF-07: la gestion del catalogo es exclusiva del Administrador,
+       aunque el Encargado de Ventas pueda consultar los productos. */
+    const categorias = ruta('categorias')
+
+    expect(puedeEntrar(categorias, ADMIN)).toBe(true)
+    expect(puedeEntrar(categorias, VENTAS)).toBe(false)
+    expect(puedeEntrar(categorias, SERVICIOS)).toBe(false)
+  })
+
   it('los tres roles entran al inicio y a su propia cuenta', () => {
     for (const nombre of ['inicio', 'cambiar-password']) {
       for (const rol of [ADMIN, VENTAS, SERVICIOS]) {
