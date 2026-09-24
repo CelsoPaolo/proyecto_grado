@@ -1,4 +1,4 @@
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
 
 
@@ -12,6 +12,37 @@ class Rol(models.TextChoices):
     ADMINISTRADOR = "ADMINISTRADOR", "Administrador"
     VENTAS = "VENTAS", "Encargado de Ventas"
     SERVICIOS = "SERVICIOS", "Encargado de Servicios"
+
+
+#: Roles habilitados para atender solicitudes de servicio (RN-SER-10).
+ROLES_QUE_ATIENDEN_SERVICIOS = (Rol.ADMINISTRADOR, Rol.SERVICIOS)
+
+#: Roles habilitados para registrar ventas (RN-ACC-03).
+ROLES_QUE_VENDEN = (Rol.ADMINISTRADOR, Rol.VENTAS)
+
+
+class UsuarioManager(UserManager):
+    """Manager del modelo de usuario.
+
+    Su unica particularidad resuelve el arranque del sistema
+    (plan.md seccion 11.1): RN-USU-01 dice que solo el Administrador
+    crea cuentas, asi que con la base vacia nadie podria crear la
+    primera y el sistema recien instalado seria inaccesible.
+
+    `createsuperuser` es la salida: un comando de consola, ejecutado
+    una sola vez al preparar el equipo, fuera del flujo de la
+    aplicacion. No vulnera RN-USU-01, del mismo modo que tener la llave
+    del local no es una funcion del ERP.
+
+    Se fuerza el rol de Administrador porque un superusuario sin rol
+    podria autenticarse pero no pasaria ninguna clase de permiso: las
+    comprobaciones de T-1.2 miran `rol`, no `is_superuser`.
+    """
+
+    def create_superuser(self, username, email=None, password=None, **extra):
+        extra["rol"] = Rol.ADMINISTRADOR
+        extra.setdefault("nombre_completo", username)
+        return super().create_superuser(username, email, password, **extra)
 
 
 class Usuario(AbstractUser):
@@ -48,12 +79,22 @@ class Usuario(AbstractUser):
         choices=Rol.choices,
     )
 
-    REQUIRED_FIELDS = ["nombre_completo", "rol"]
+    objects = UsuarioManager()
+
+    # `rol` queda fuera: createsuperuser no lo pregunta porque el
+    # manager lo fuerza a ADMINISTRADOR.
+    REQUIRED_FIELDS = ["nombre_completo"]
 
     class Meta:
         verbose_name = "usuario"
         verbose_name_plural = "usuarios"
         ordering = ["nombre_completo"]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(rol__in=[r.value for r in Rol]),
+                name="usuario_rol_valido",
+            ),
+        ]
 
     def __str__(self):
         return f"{self.nombre_completo} ({self.get_rol_display()})"
