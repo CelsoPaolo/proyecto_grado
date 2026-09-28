@@ -53,6 +53,9 @@ MATRIZ = {
     ("PATCH", "/api/v1/productos/{id}"): (Rol.ADMINISTRADOR,),
     ("PUT", "/api/v1/productos/{id}"): (Rol.ADMINISTRADOR,),
     ("DELETE", "/api/v1/productos/{id}"): (Rol.ADMINISTRADOR,),
+    # ── Configuracion del sistema: solo Administrador ────────────────
+    ("GET", "/api/v1/configuracion"): (Rol.ADMINISTRADOR,),
+    ("PATCH", "/api/v1/configuracion"): (Rol.ADMINISTRADOR,),
     # ── Gestion de usuarios: solo Administrador ──────────────────────
     ("GET", "/api/v1/usuarios"): (Rol.ADMINISTRADOR,),
     ("POST", "/api/v1/usuarios"): (Rol.ADMINISTRADOR,),
