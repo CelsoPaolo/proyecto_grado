@@ -47,6 +47,17 @@ describe('guards por rol (spec.md matriz 4.4)', () => {
     expect(puedeEntrar(categorias, SERVICIOS)).toBe(false)
   })
 
+  it('solo el Administrador configura el umbral', () => {
+    /* RF-52: configurar el umbral de existencias bajas es exclusivo
+       del Administrador, aunque el aviso que produce lo vea tambien el
+       Encargado de Ventas en el catalogo. */
+    const configuracion = ruta('configuracion')
+
+    expect(puedeEntrar(configuracion, ADMIN)).toBe(true)
+    expect(puedeEntrar(configuracion, VENTAS)).toBe(false)
+    expect(puedeEntrar(configuracion, SERVICIOS)).toBe(false)
+  })
+
   it('los tres roles entran al inicio y a su propia cuenta', () => {
     for (const nombre of ['inicio', 'cambiar-password']) {
       for (const rol of [ADMIN, VENTAS, SERVICIOS]) {

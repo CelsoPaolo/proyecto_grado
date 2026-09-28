@@ -37,7 +37,7 @@
 | 0 | Andamiaje del proyecto | T-0.1 a T-0.9 ✅ | — |
 | 1 | Autenticación y usuarios | T-1.1 a T-1.14 ✅ | Bloque 0 |
 | 2 | Catálogo e inventario | T-2.1 a T-2.10 ✅ | Bloque 1 |
-| 3 | Configuración (umbral global) | T-3.1 a T-3.4 | Bloque 2 |
+| 3 | Configuración (umbral global) | T-3.1 a T-3.4 ✅ | Bloque 2 |
 | 4 | Ventas | T-4.1 a T-4.12 | Bloques 2, 3 |
 | 5 | Servicios técnicos | T-5.1 a T-5.14 | Bloque 1 |
 | 6 | Panel de indicadores | T-6.1 a T-6.5 | Bloques 4, 5 |
@@ -366,7 +366,7 @@ el de lógica más delicada.
 > Bloque pequeño, colocado aquí porque el catálogo (T-3.4) y el panel
 > (bloque 6) lo necesitan para marcar las existencias bajas.
 
-### [ ] T-3.1 — Modelo `ConfiguracionSistema` de fila única
+### [x] T-3.1 — Modelo `ConfiguracionSistema` de fila única
 - **Cubre:** RN-CAT-07
 - **Depende de:** T-2.1
 - **Trabajo:** Tabla con `CheckConstraint (id = 1)` y
@@ -375,17 +375,17 @@ el de lógica más delicada.
 - **Hecho cuando:** intentar crear una segunda fila falla en la base; la
   fila existe tras migrar en una base vacía.
 
-### [ ] T-3.2 — API de configuración
+### [x] T-3.2 — API de configuración
 - **Cubre:** RF-52
 - **Depende de:** T-3.1, T-1.2
 - **Hecho cuando:** solo el Administrador puede leer y modificar;
   un valor negativo se rechaza; se registra quién lo cambió.
 
-### [ ] T-3.3 — Pantalla de configuración
+### [x] T-3.3 — Pantalla de configuración
 - **Cubre:** RF-52
 - **Depende de:** T-3.2, T-2.6
 
-### [ ] T-3.4 — Marca de existencias bajas en el catálogo
+### [x] T-3.4 — Marca de existencias bajas en el catálogo
 - **Cubre:** RF-53
 - **Depende de:** T-3.2, T-2.7
 - **Trabajo:** Cada producto serializado incluye `stock_bajo`, calculado

@@ -66,6 +66,12 @@ export const rutas = [
     meta: { roles: [ADMIN], titulo: 'Usuarios', icono: 'pi pi-users' },
   },
   {
+    path: '/configuracion',
+    name: 'configuracion',
+    component: () => import('@/views/configuracion/ConfiguracionView.vue'),
+    meta: { roles: [ADMIN], titulo: 'Configuración', icono: 'pi pi-cog' },
+  },
+  {
     path: '/sin-permiso',
     name: 'sin-permiso',
     component: () => import('@/views/SinPermisoView.vue'),
