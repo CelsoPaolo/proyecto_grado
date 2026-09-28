@@ -38,7 +38,7 @@
 | 1 | Autenticación y usuarios | T-1.1 a T-1.14 ✅ | Bloque 0 |
 | 2 | Catálogo e inventario | T-2.1 a T-2.10 ✅ | Bloque 1 |
 | 3 | Configuración (umbral global) | T-3.1 a T-3.4 ✅ | Bloque 2 |
-| 4 | Ventas | T-4.1 a T-4.12 | Bloques 2, 3 |
+| 4 | Ventas | T-4.1 a T-4.12 ✅ | Bloques 2, 3 |
 | 5 | Servicios técnicos | T-5.1 a T-5.14 | Bloque 1 |
 | 6 | Panel de indicadores | T-6.1 a T-6.5 | Bloques 4, 5 |
 | 7 | Cierre y documentación | T-7.1 a T-7.5 | Todos |
@@ -403,7 +403,7 @@ el de lógica más delicada.
 > **el servicio y su prueba de concurrencia van antes que la API**, para
 > no construir encima de un descuento de stock no verificado.
 
-### [ ] T-4.1 — Modelos `Venta` y `DetalleVenta`
+### [x] T-4.1 — Modelos `Venta` y `DetalleVenta`
 - **Cubre:** RN-VEN-01, RN-VEN-04, RN-VEN-05, RN-VEN-09, RNF-11
 - **Depende de:** T-2.1
 - **Trabajo:** Campos congelados `producto_nombre`, `precio_unitario` y
@@ -413,13 +413,13 @@ el de lógica más delicada.
 - **Hecho cuando:** el esquema impide cantidad ≤ 0 y precio ≤ 0 a nivel
   de base.
 
-### [ ] T-4.2 — Excepciones de negocio de ventas
+### [x] T-4.2 — Excepciones de negocio de ventas
 - **Cubre:** RNF-06
 - **Depende de:** T-4.1, T-0.7
 - **Trabajo:** `StockInsuficiente` (422, con el detalle por producto),
   `VentaYaAnulada` (409).
 
-### [ ] T-4.3 — Servicio `registrar_venta()` ⚠️
+### [x] T-4.3 — Servicio `registrar_venta()` ⚠️
 - **Cubre:** **RN-VEN-02, RN-VEN-03, RN-VEN-04**, RNF-08, RNF-09
 - **Depende de:** T-4.2
 - **Trabajo:** El patrón de tres capas de `plan.md` §6.3:
@@ -434,7 +434,7 @@ el de lógica más delicada.
   - cambiar el precio del producto después no altera la venta guardada
     (RN-VEN-04).
 
-### [ ] T-4.4 — Prueba de concurrencia de existencias ⚠️
+### [x] T-4.4 — Prueba de concurrencia de existencias ⚠️
 - **Cubre:** **RNF-08**
 - **Depende de:** T-4.3
 - **Trabajo:** `TransactionTestCase` (no `TestCase`) contra PostgreSQL
@@ -447,7 +447,7 @@ el de lógica más delicada.
   > resto del bloque hasta que esta prueba pase de forma estable en
   > varias ejecuciones seguidas.
 
-### [ ] T-4.5 — Servicio `anular_venta()`
+### [x] T-4.5 — Servicio `anular_venta()`
 - **Cubre:** RN-VEN-07, RN-VEN-08, RN-VEN-11, RNF-10
 - **Depende de:** T-4.4
 - **Trabajo:** Mismo patrón en sentido inverso: bloqueo ordenado,
@@ -456,7 +456,7 @@ el de lógica más delicada.
 - **Hecho cuando:** el stock vuelve exactamente al valor previo; anular
   dos veces da 409; una venta con fecha antigua se anula sin problema.
 
-### [ ] T-4.6 — API de ventas
+### [x] T-4.6 — API de ventas
 - **Cubre:** RF-15 a RF-20, RF-23, RF-24, RF-54
 - **Depende de:** T-4.5, T-1.2
 - **Trabajo:** `POST /ventas`, `GET /ventas/{id}`,
@@ -465,7 +465,7 @@ el de lógica más delicada.
 - **Hecho cuando:** `PATCH` y `DELETE` sobre una venta responden 405; el
   422 de stock trae el detalle por producto del formato de §4.3.
 
-### [ ] T-4.7 — Historial de ventas filtrado por rol
+### [x] T-4.7 — Historial de ventas filtrado por rol
 - **Cubre:** RF-21, RF-22, RF-27, RN-VEN-09
 - **Depende de:** T-4.6
 - **Trabajo:** `get_queryset()` restringe al usuario autenticado si su rol
@@ -474,10 +474,10 @@ el de lógica más delicada.
   otro ni en la lista ni pidiendo su id directamente, y no puede
   anularlas (403/404).
 
-### [ ] T-4.8 — Cliente de API de ventas (frontend)
+### [x] T-4.8 — Cliente de API de ventas (frontend)
 - **Depende de:** T-4.6, T-1.9
 
-### [ ] T-4.9 — Pantalla de registro de venta
+### [x] T-4.9 — Pantalla de registro de venta
 - **Cubre:** RF-15, RF-16, RF-17, RNF-16
 - **Depende de:** T-4.8, T-2.7
 - **Trabajo:** Datos de contacto del cliente, buscador de productos,
@@ -489,20 +489,20 @@ el de lógica más delicada.
   > electrónico: no se persiste ni existe fuera de la pantalla
   > (`spec.md` §2.2, `plan.md` §7.4).
 
-### [ ] T-4.10 — Historial y detalle de venta
+### [x] T-4.10 — Historial y detalle de venta
 - **Cubre:** RF-21, RF-22, RF-23, RNF-18
 - **Depende de:** T-4.9
 - **Hecho cuando:** el detalle muestra los datos congelados; un producto
   posteriormente modificado o retirado aparece tal como estaba el día de
   la venta.
 
-### [ ] T-4.11 — Anulación desde la interfaz
+### [x] T-4.11 — Anulación desde la interfaz
 - **Cubre:** RF-24, RF-25, RNF-14
 - **Depende de:** T-4.10
 - **Hecho cuando:** el diálogo exige motivo, y tras anular el stock del
   catálogo refleja la devolución sin recargar la aplicación.
 
-### [ ] T-4.12 — Revisión del bloque 4
+### [x] T-4.12 — Revisión del bloque 4
 - **Depende de:** T-4.1 a T-4.11
 - **Hecho cuando:** ciclo completo comprobado en el navegador: registrar
   venta → ver el descuento en el catálogo → anular → ver la devolución.
