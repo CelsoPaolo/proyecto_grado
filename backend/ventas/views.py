@@ -1,3 +1,123 @@
-from django.shortcuts import render
+"""Endpoints de ventas (/api/v1/ventas).
 
-# Create your views here.
+NO existen PUT, PATCH ni DELETE sobre una venta: **la ausencia de esos
+verbos es la implementacion de RN-VEN-06 y RF-26**. Una venta
+confirmada no se edita ni se elimina, y el unico cambio posible es la
+anulacion, que es una accion con nombre propio y no un borrado.
+"""
+
+from django.db.models import Count
+from django.utils.dateparse import parse_date
+from rest_framework import mixins, status, viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
+
+from core.permissions import EsDuenoDeLaVentaOAdmin, PuedeVender
+from ventas.models import Venta
+from ventas.serializers import (
+    AnularVentaSerializer,
+    RegistrarVentaSerializer,
+    VentaResumenSerializer,
+    VentaSerializer,
+)
+from ventas.services import anular_venta, registrar_venta
+
+
+class VentaViewSet(
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet,
+):
+    """CU-VEN-01 a CU-VEN-03 (RF-15 a RF-27, RF-54)."""
+
+    permission_classes = [PuedeVender, EsDuenoDeLaVentaOAdmin]
+
+    def get_serializer_class(self):
+        if self.action == "list":
+            return VentaResumenSerializer
+        return VentaSerializer
+
+    def get_queryset(self):
+        """RF-21, RF-22 y RF-27 - filtrado por rol.
+
+        Un Encargado de Ventas solo ve las suyas; el Administrador ve
+        todas (RN-VEN-09).
+
+        Contrasta a proposito con SolicitudViewSet (bloque 5), cuyo
+        get_queryset NO filtra por usuario: PA-04 hizo de los servicios
+        un espacio compartido (RN-SER-15). La asimetria es intencional
+        -un servicio es trabajo en curso que cambia de manos, una venta
+        es un hecho consumado imputable a quien la registro- y esta
+        declarada en spec.md seccion 11.
+        """
+        # El order_by explicito no es redundante: annotate() con
+        # agregacion descarta el orden por defecto del Meta, y una
+        # consulta sin orden hace que la paginacion repita o salte
+        # filas entre paginas (RNF-18). Ya ocurrio en el catalogo.
+        consulta = (
+            Venta.objects.select_related("usuario", "anulada_por")
+            .annotate(cantidad_items=Count("items"))
+            .order_by("-fecha_hora", "-id")
+        )
+
+        if not self.request.user.es_administrador:
+            consulta = consulta.filter(usuario=self.request.user)
+
+        parametros = self.request.query_params
+
+        if estado := parametros.get("estado"):
+            consulta = consulta.filter(estado=estado)
+
+        if desde := parse_date(parametros.get("desde", "")):
+            consulta = consulta.filter(fecha_hora__date__gte=desde)
+
+        if hasta := parse_date(parametros.get("hasta", "")):
+            consulta = consulta.filter(fecha_hora__date__lte=hasta)
+
+        if self.action == "retrieve":
+            consulta = consulta.prefetch_related("items")
+
+        return consulta
+
+    def create(self, request):
+        """POST /ventas - CU-VEN-01 (RF-15 a RF-20).
+
+        Si falta stock, el servicio levanta StockInsuficiente y la
+        transaccion se revierte entera: ningun producto queda
+        descontado (RN-VEN-02).
+        """
+        entrada = RegistrarVentaSerializer(data=request.data)
+        entrada.is_valid(raise_exception=True)
+
+        venta = registrar_venta(
+            usuario=request.user,
+            cliente_nombre=entrada.validated_data["cliente_nombre"],
+            cliente_telefono=entrada.validated_data["cliente_telefono"],
+            items=entrada.validated_data["items"],
+        )
+
+        venta = self.get_queryset().prefetch_related("items").get(pk=venta.pk)
+        return Response(VentaSerializer(venta).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=["post"])
+    def anular(self, request, pk=None):
+        """POST /ventas/{id}/anular - CU-VEN-03 (RF-24, RF-25, RF-54).
+
+        get_object() aplica EsDuenoDeLaVentaOAdmin: un Encargado de
+        Ventas no puede anular la venta de otro (RF-27).
+
+        Sin limite de plazo (RN-VEN-11).
+        """
+        venta = self.get_object()
+
+        entrada = AnularVentaSerializer(data=request.data)
+        entrada.is_valid(raise_exception=True)
+
+        venta = anular_venta(
+            venta=venta,
+            usuario=request.user,
+            motivo=entrada.validated_data["motivo"],
+        )
+
+        venta = self.get_queryset().prefetch_related("items").get(pk=venta.pk)
+        return Response(VentaSerializer(venta).data)

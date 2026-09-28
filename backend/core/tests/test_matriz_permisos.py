@@ -53,6 +53,14 @@ MATRIZ = {
     ("PATCH", "/api/v1/productos/{id}"): (Rol.ADMINISTRADOR,),
     ("PUT", "/api/v1/productos/{id}"): (Rol.ADMINISTRADOR,),
     ("DELETE", "/api/v1/productos/{id}"): (Rol.ADMINISTRADOR,),
+    # ── Ventas: Administrador y Ventas ───────────────────────────────
+    # El alcance dentro del rol (propias frente a todas) lo controla
+    # get_queryset, no el permiso de entrada: se verifica en
+    # ventas/tests/test_api_ventas.py.
+    ("GET", "/api/v1/ventas"): (Rol.ADMINISTRADOR, Rol.VENTAS),
+    ("POST", "/api/v1/ventas"): (Rol.ADMINISTRADOR, Rol.VENTAS),
+    ("GET", "/api/v1/ventas/{id}"): (Rol.ADMINISTRADOR, Rol.VENTAS),
+    ("POST", "/api/v1/ventas/{id}/anular"): (Rol.ADMINISTRADOR, Rol.VENTAS),
     # ── Configuracion del sistema: solo Administrador ────────────────
     ("GET", "/api/v1/configuracion"): (Rol.ADMINISTRADOR,),
     ("PATCH", "/api/v1/configuracion"): (Rol.ADMINISTRADOR,),
