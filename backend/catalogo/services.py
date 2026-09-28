@@ -5,11 +5,6 @@ from django.db.models import ProtectedError
 
 from core.exceptions import Codigo, ErrorDeNegocio
 
-#: Valor provisional del umbral de existencias bajas.
-#: El bloque 3 (T-3.1) lo sustituye por la fila de configuracion, que
-#: el Administrador podra cambiar desde la interfaz (RN-CAT-07).
-UMBRAL_PROVISIONAL = 5
-
 
 class CategoriaConProductos(ErrorDeNegocio):
     """RN-CAT-04: una categoria con productos no se elimina."""
@@ -28,10 +23,14 @@ def umbral_stock_bajo():
     """Umbral global de existencias bajas (RN-CAT-07).
 
     Global para todo el catalogo, no por producto: es la decision
-    PA-01. Vive en una sola funcion para que el bloque 3 solo tenga que
-    cambiar su cuerpo, sin tocar a quienes la llaman.
+    PA-01. Aislarlo en esta funcion permitio que T-3.2 sustituyera el
+    valor provisional por la configuracion real sin tocar ninguno de
+    sus llamadores: ni el serializer ni la vista del catalogo saben de
+    donde sale el numero.
     """
-    return UMBRAL_PROVISIONAL
+    from configuracion.services import obtener_umbral_stock_bajo
+
+    return obtener_umbral_stock_bajo()
 
 
 @transaction.atomic
