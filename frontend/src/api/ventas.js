@@ -1,0 +1,33 @@
+/** Llamadas a /ventas (plan.md seccion 4.4). */
+
+import http from './http'
+
+export const ventasApi = {
+  listar: (params = {}) => http.get('/ventas', { params }).then((r) => r.data),
+
+  obtener: (id) => http.get(`/ventas/${id}`).then((r) => r.data),
+
+  /**
+   * Registra y confirma la venta.
+   *
+   * `items` lleva solo producto_id y cantidad: el precio lo pone el
+   * servidor desde el catalogo (RN-VEN-04). Enviarlo desde aqui no
+   * tendria efecto, y mandarlo daria la falsa impresion de que el
+   * navegador decide el importe.
+   */
+  registrar: ({ clienteNombre, clienteTelefono, items }) =>
+    http
+      .post('/ventas', {
+        cliente_nombre: clienteNombre,
+        cliente_telefono: clienteTelefono,
+        items: items.map((i) => ({
+          producto_id: i.producto_id,
+          cantidad: i.cantidad,
+        })),
+      })
+      .then((r) => r.data),
+
+  /** No es un borrado: la venta permanece, con su motivo (RN-VEN-06). */
+  anular: (id, motivo) =>
+    http.post(`/ventas/${id}/anular`, { motivo }).then((r) => r.data),
+}
