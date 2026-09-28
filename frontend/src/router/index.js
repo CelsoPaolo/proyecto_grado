@@ -54,6 +54,24 @@ export const rutas = [
     meta: { roles: [ADMIN, VENTAS], titulo: 'Catálogo', icono: 'pi pi-box' },
   },
   {
+    path: '/ventas',
+    name: 'ventas',
+    component: () => import('@/views/ventas/VentasView.vue'),
+    meta: { roles: [ADMIN, VENTAS], titulo: 'Ventas', icono: 'pi pi-shopping-cart' },
+  },
+  {
+    path: '/ventas/nueva',
+    name: 'venta-nueva',
+    component: () => import('@/views/ventas/RegistrarVentaView.vue'),
+    meta: { roles: [ADMIN, VENTAS], titulo: 'Registrar venta', enMenu: false },
+  },
+  {
+    path: '/ventas/:id',
+    name: 'venta-detalle',
+    component: () => import('@/views/ventas/VentaDetalleView.vue'),
+    meta: { roles: [ADMIN, VENTAS], titulo: 'Detalle de venta', enMenu: false },
+  },
+  {
     path: '/categorias',
     name: 'categorias',
     component: () => import('@/views/catalogo/CategoriasView.vue'),

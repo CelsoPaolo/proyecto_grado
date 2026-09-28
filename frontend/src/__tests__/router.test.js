@@ -47,6 +47,27 @@ describe('guards por rol (spec.md matriz 4.4)', () => {
     expect(puedeEntrar(categorias, SERVICIOS)).toBe(false)
   })
 
+  it('las ventas las llevan Administrador y Ventas, no Servicios', () => {
+    /* spec.md matriz 4.4. El alcance dentro del rol (propias frente a
+       todas) lo decide el servidor, no el router: aqui solo se
+       controla quien puede entrar. */
+    for (const nombre of ['ventas', 'venta-nueva', 'venta-detalle']) {
+      expect(puedeEntrar(ruta(nombre), ADMIN)).toBe(true)
+      expect(puedeEntrar(ruta(nombre), VENTAS)).toBe(true)
+      expect(puedeEntrar(ruta(nombre), SERVICIOS)).toBe(false)
+    }
+  })
+
+  it('registrar y ver detalle no aparecen en el menu', () => {
+    /* Se llega a ellas desde el historial, no desde el menu lateral:
+       una ruta con parametro no tiene sentido como entrada de menu. */
+    const enMenu = menuPara(ADMIN).map((o) => o.name)
+
+    expect(enMenu).toContain('ventas')
+    expect(enMenu).not.toContain('venta-nueva')
+    expect(enMenu).not.toContain('venta-detalle')
+  })
+
   it('solo el Administrador configura el umbral', () => {
     /* RF-52: configurar el umbral de existencias bajas es exclusivo
        del Administrador, aunque el aviso que produce lo vea tambien el
