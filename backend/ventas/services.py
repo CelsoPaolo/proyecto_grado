@@ -52,7 +52,8 @@ def registrar_venta(*, usuario, cliente_nombre, cliente_telefono, items):
       1. transaction.atomic() + select_for_update() en orden de pk.
       2. Validacion con las filas YA bloqueadas: mientras se comprueba,
          nadie mas puede cambiarlas.
-      3. Descuento con F() y congelado de nombre y precio.
+      3. Descuento con F() (RF-18) y congelado de nombre y precio
+         (RF-19).
 
     El precio lo toma el SERVIDOR del catalogo, nunca del cliente:
     aceptarlo del navegador permitiria alterarlo desde alli.

@@ -1,5 +1,6 @@
 """Serializers del catalogo."""
 
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from catalogo.models import Categoria, Producto
@@ -54,6 +55,7 @@ class ProductoSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["activo"]
 
+    @extend_schema_field(serializers.BooleanField)
     def get_stock_bajo(self, obj):
         """RF-53 — la regla se calcula en el SERVIDOR.
 

@@ -1,5 +1,6 @@
 """Endpoint del panel de indicadores (/api/v1/panel/resumen)."""
 
+from drf_spectacular.utils import extend_schema
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -18,5 +19,9 @@ class ResumenPanelView(APIView):
 
     permission_classes = [EsAdministrador]
 
+    @extend_schema(
+        responses={200: ResumenPanelSerializer},
+        summary="Indicadores del día",
+    )
     def get(self, request):
         return Response(ResumenPanelSerializer(resumen_del_panel()).data)

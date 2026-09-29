@@ -1,5 +1,6 @@
 """Endpoint de configuracion del sistema (/api/v1/configuracion)."""
 
+from drf_spectacular.utils import extend_schema
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -19,10 +20,19 @@ class ConfiguracionView(APIView):
 
     permission_classes = [EsAdministrador]
 
+    @extend_schema(
+        responses={200: ConfiguracionSerializer},
+        summary="Umbral global de existencias bajas",
+    )
     def get(self, request):
         configuracion = ConfiguracionSistema.obtener()
         return Response(ConfiguracionSerializer(configuracion).data)
 
+    @extend_schema(
+        request=ConfiguracionSerializer,
+        responses={200: ConfiguracionSerializer},
+        summary="Modificar el umbral global",
+    )
     def patch(self, request):
         entrada = ConfiguracionSerializer(
             ConfiguracionSistema.obtener(), data=request.data, partial=True

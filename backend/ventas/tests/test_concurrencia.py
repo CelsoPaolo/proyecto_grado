@@ -1,4 +1,4 @@
-"""T-4.4 — Concurrencia en el descuento de existencias (RNF-08).
+"""T-4.4 — Concurrencia en el descuento de existencias (RNF-08, RNF-19).
 
 **Criterio de aceptacion ejecutable de RNF-08.** Es la unica evidencia
 de que la garantia se cumple de verdad: el resto de la suite comprueba
@@ -138,7 +138,10 @@ class ConcurrenciaEnElDescuentoDeStock(TransactionTestCase):
         self.assertEqual(producto.stock, 0)
 
     def test_con_stock_suficiente_todas_las_ventas_simultaneas_confirman(self):
-        """Contraprueba imprescindible.
+        """Contraprueba imprescindible, y ademas RNF-19.
+
+        Diez ventas a la vez se completan todas: el sistema soporta
+        el uso simultaneo de todo el personal sin degradarse.
 
         Sin ella, un bug que rechazara TODAS las ventas pasaria las dos
         pruebas anteriores: cero ventas confirmadas nunca deja el stock

@@ -2,6 +2,8 @@
 
 from rest_framework import serializers
 
+from core.serializers import UsuarioBreveSerializer
+
 from ventas.models import DetalleVenta, Venta
 
 
@@ -24,11 +26,6 @@ class DetalleVentaSerializer(serializers.ModelSerializer):
             "subtotal",
         ]
         read_only_fields = fields
-
-
-class UsuarioBreveSerializer(serializers.Serializer):
-    id = serializers.IntegerField(read_only=True)
-    nombre_completo = serializers.CharField(read_only=True)
 
 
 class VentaSerializer(serializers.ModelSerializer):

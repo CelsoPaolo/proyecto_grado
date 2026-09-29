@@ -41,9 +41,9 @@
 | 4 | Ventas | T-4.1 a T-4.12 ✅ | Bloques 2, 3 |
 | 5 | Servicios técnicos | T-5.1 a T-5.14 ✅ | Bloque 1 |
 | 6 | Panel de indicadores | T-6.1 a T-6.5 ✅ | Bloques 4, 5 |
-| 7 | Cierre y documentación | T-7.1 a T-7.5 | Todos |
+| 7 | Cierre y documentación | T-7.1 a T-7.5 ✅ | Todos |
 
-**Total: 73 tareas.** Los bloques 4 y 5 son independientes entre sí y
+**Total: 73 tareas — todas completadas.** Los bloques 4 y 5 son independientes entre sí y
 podrían abordarse en cualquier orden; se propone ventas primero por ser
 el de lógica más delicada.
 
@@ -701,7 +701,7 @@ el de lógica más delicada.
 
 ## Bloque 7 — Cierre y documentación
 
-### [ ] T-7.1 — Cobertura de las reglas obligatorias
+### [x] T-7.1 — Cobertura de las reglas obligatorias
 - **Cubre:** RNF-23
 - **Depende de:** bloques 1 a 6
 - **Trabajo:** Verificar que **todas** las reglas de la tabla «reglas con
@@ -709,13 +709,13 @@ el de lógica más delicada.
 - **Hecho cuando:** la suite completa está en verde y ninguna regla de
   esa tabla queda sin cubrir.
 
-### [ ] T-7.2 — Revisión de la matriz de permisos completa
+### [x] T-7.2 — Revisión de la matriz de permisos completa
 - **Cubre:** RNF-02
 - **Depende de:** T-7.1
 - **Hecho cuando:** T-1.8, ya con todos los endpoints, coincide celda por
   celda con la matriz de `spec.md` §4.4.
 
-### [ ] T-7.3 — Verificación de usabilidad
+### [x] T-7.3 — Verificación de usabilidad
 - **Cubre:** RNF-12 a RNF-16
 - **Depende de:** T-7.1
 - **Hecho cuando:** recorrido manual en ancho de escritorio, portátil y
@@ -723,7 +723,7 @@ el de lógica más delicada.
   validación aparece junto a su campo; la interfaz está íntegramente en
   español.
 
-### [ ] T-7.4 — Documentación final
+### [x] T-7.4 — Documentación final
 - **Cubre:** RNF-22
 - **Depende de:** T-7.1
 - **Trabajo:** README con instalación y puesta en marcha; documentación
@@ -733,7 +733,7 @@ el de lógica más delicada.
 - **Hecho cuando:** otra persona levanta el proyecto y ejecuta la
   demostración completa siguiendo solo la documentación.
 
-### [ ] T-7.5 — Verificación de coherencia con la especificación
+### [x] T-7.5 — Verificación de coherencia con la especificación
 - **Cubre:** RNF-22
 - **Depende de:** T-7.1 a T-7.4
 - **Trabajo:** Recorrer `spec.md` requerimiento por requerimiento contra

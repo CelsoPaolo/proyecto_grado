@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'django_filters',
+    'drf_spectacular',
     # Aplicaciones del proyecto
     'core',
     'usuarios',
@@ -176,6 +177,28 @@ REST_FRAMEWORK = {
     ],
     'DATETIME_FORMAT': '%Y-%m-%dT%H:%M:%S%z',
     'COERCE_DECIMAL_TO_STRING': True,
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+# Documentacion de la API (T-7.4). El esquema se genera del codigo,
+# no se escribe aparte: asi no puede quedarse atras del contrato real.
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'API de PC-Solution ERP',
+    'DESCRIPTION': (
+        'Sistema ERP interno de PC-Solution (Sucre, Bolivia). '
+        'Uso exclusivamente interno: los clientes de la empresa no '
+        'tienen cuenta ni acceso. Ver specs/spec.md para las reglas '
+        'de negocio que cada endpoint implementa.'
+    ),
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'COMPONENT_SPLIT_REQUEST': True,
+    # `estado` existe en venta y en solicitud con valores distintos;
+    # sin estos nombres el esquema los fusionaria en uno solo.
+    'ENUM_NAME_OVERRIDES': {
+        'EstadoVentaEnum': 'ventas.models.EstadoVenta.choices',
+        'EstadoSolicitudEnum': 'servicios.models.EstadoSolicitud.choices',
+    },
 }
 
 # SimpleJWT: configuracion de plan.md seccion 1.3.

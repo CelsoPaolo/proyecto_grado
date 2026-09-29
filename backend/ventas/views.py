@@ -31,6 +31,9 @@ class VentaViewSet(
     """CU-VEN-01 a CU-VEN-03 (RF-15 a RF-27, RF-54)."""
 
     permission_classes = [PuedeVender, EsDuenoDeLaVentaOAdmin]
+    # Respaldo para la introspeccion del esquema (T-7.4): en
+    # ejecucion siempre manda get_queryset().
+    queryset = Venta.objects.none()
 
     def get_serializer_class(self):
         if self.action == "list":

@@ -1,5 +1,6 @@
 """Vistas de token: refresco seguro y cierre de sesion."""
 
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -28,6 +29,11 @@ class LogoutView(APIView):
 
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        request=LogoutSerializer,
+        responses={204: None},
+        summary="Cerrar sesión",
+    )
     def post(self, request):
         serializer = LogoutSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)

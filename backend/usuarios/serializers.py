@@ -3,6 +3,7 @@
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as ValidationErrorDjango
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.serializers import (
@@ -208,6 +209,7 @@ class UsuarioSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = fields
 
+    @extend_schema_field(serializers.BooleanField)
     def get_bloqueado(self, obj):
         """Expone el bloqueo con el nombre del dominio.
 

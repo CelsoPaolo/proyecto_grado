@@ -2,6 +2,8 @@
 
 from rest_framework import serializers
 
+from core.serializers import UsuarioBreveSerializer
+
 from servicios.models import (
     EventoSolicitud,
     MODALIDAD_POR_TIPO,
@@ -9,11 +11,6 @@ from servicios.models import (
     SolicitudServicio,
     TipoServicio,
 )
-
-
-class UsuarioBreveSerializer(serializers.Serializer):
-    id = serializers.IntegerField(read_only=True)
-    nombre_completo = serializers.CharField(read_only=True)
 
 
 class EventoSerializer(serializers.ModelSerializer):

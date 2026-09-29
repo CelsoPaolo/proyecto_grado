@@ -51,6 +51,9 @@ class SolicitudViewSet(
     """
 
     permission_classes = [PuedeAtenderServicios]
+    # Respaldo para la introspeccion del esquema (T-7.4): en
+    # ejecucion siempre manda get_queryset().
+    queryset = SolicitudServicio.objects.none()
 
     def get_serializer_class(self):
         if self.action == "list":

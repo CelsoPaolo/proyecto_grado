@@ -16,6 +16,11 @@ mapea directamente al campo correspondiente del formulario (RNF-15).
 
 RNF-06: los mensajes son genericos donde deben serlo y nunca exponen
 trazas ni detalles internos del sistema.
+
+RNF-05: toda entrada se valida en el SERVIDOR. Las comprobaciones
+del formulario son comodidad para quien escribe, no una garantia:
+este manejador existe porque el servidor rechaza por su cuenta lo
+que la interfaz podria haber dejado pasar.
 """
 
 import logging

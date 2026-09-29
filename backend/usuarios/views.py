@@ -1,5 +1,6 @@
 """Endpoints de autenticacion y de cuenta propia (/api/v1/auth/)."""
 
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -21,6 +22,11 @@ class LoginView(APIView):
     permission_classes = [AllowAny]
     authentication_classes = []
 
+    @extend_schema(
+        request=LoginSerializer,
+        responses={200: UsuarioResumenSerializer},
+        summary="Iniciar sesión",
+    )
     def post(self, request):
         serializer = LoginSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
@@ -37,6 +43,10 @@ class YoView(APIView):
 
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        responses={200: UsuarioResumenSerializer},
+        summary="Usuario autenticado y su rol",
+    )
     def get(self, request):
         return Response(UsuarioResumenSerializer(request.user).data)
 
@@ -46,6 +56,11 @@ class CambiarPasswordPropiaView(APIView):
 
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        request=CambiarPasswordPropiaSerializer,
+        responses={204: None},
+        summary="Cambiar la contraseña propia",
+    )
     def post(self, request):
         serializer = CambiarPasswordPropiaSerializer(
             data=request.data, context={"request": request}

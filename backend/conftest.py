@@ -1,6 +1,8 @@
 """Configuracion comun de las pruebas.
 
-Se aplica a toda la suite, de ambas aplicaciones.
+Se aplica a toda la suite, de ambas aplicaciones, que conviven en un
+unico repositorio propio e independiente de cualquier otro proyecto
+(RNF-21).
 """
 
 import pytest

@@ -255,7 +255,9 @@ class TipoEvento(models.TextChoices):
 class EventoSolicitud(models.Model):
     """Historial de una solicitud (RN-SER-06).
 
-    Tabla de SOLO INSERCION: nunca se actualiza ni se borra.
+    Tabla de SOLO INSERCION: nunca se actualiza ni se borra. Es lo
+    que hace no alterable el registro de quien hizo cada cambio y
+    cuando (RNF-07).
 
     Sobre una misma solicitud actuan dos personas distintas -el
     Administrador cotiza, el registrador cierra-, asi que este historial

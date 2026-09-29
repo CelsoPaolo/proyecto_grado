@@ -1,6 +1,11 @@
 /**
  * Cliente HTTP unico del sistema (plan.md seccion 7.2).
  *
+ * Es la UNICA puerta del frontend hacia los datos: no existe acceso
+ * directo a la base ni ningun otro canal (RNF-20). Que todo pase por
+ * aqui es lo que permite resolver en un solo lugar la autenticacion,
+ * el refresco de token y el formato de error.
+ *
  * Concentra tres comportamientos para que ninguna vista tenga que
  * ocuparse de ellos:
  *
