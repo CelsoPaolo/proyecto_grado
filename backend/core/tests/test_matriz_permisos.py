@@ -83,6 +83,8 @@ MATRIZ = {
     # ── Configuracion del sistema: solo Administrador ────────────────
     ("GET", "/api/v1/configuracion"): (Rol.ADMINISTRADOR,),
     ("PATCH", "/api/v1/configuracion"): (Rol.ADMINISTRADOR,),
+    # ── Panel de indicadores: solo Administrador ─────────────────────
+    ("GET", "/api/v1/panel/resumen"): (Rol.ADMINISTRADOR,),
     # ── Gestion de usuarios: solo Administrador ──────────────────────
     ("GET", "/api/v1/usuarios"): (Rol.ADMINISTRADOR,),
     ("POST", "/api/v1/usuarios"): (Rol.ADMINISTRADOR,),

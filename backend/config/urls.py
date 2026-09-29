@@ -18,6 +18,7 @@ urlpatterns = [
     path("api/v1/", include("configuracion.urls")),
     path("api/v1/", include("ventas.urls")),
     path("api/v1/", include("servicios.urls")),
+    path("api/v1/", include("panel.urls")),
 ]
 
 if settings.DEBUG:
