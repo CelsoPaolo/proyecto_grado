@@ -61,6 +61,25 @@ MATRIZ = {
     ("POST", "/api/v1/ventas"): (Rol.ADMINISTRADOR, Rol.VENTAS),
     ("GET", "/api/v1/ventas/{id}"): (Rol.ADMINISTRADOR, Rol.VENTAS),
     ("POST", "/api/v1/ventas/{id}/anular"): (Rol.ADMINISTRADOR, Rol.VENTAS),
+    # ── Servicios: Administrador y Servicios ─────────────────────────
+    # Salvo COTIZAR, que es solo del Administrador (RF-56, RF-57): es
+    # la unica accion del modulo con permiso mas estrecho que el resto.
+    ("GET", "/api/v1/solicitudes"): (Rol.ADMINISTRADOR, Rol.SERVICIOS),
+    ("POST", "/api/v1/solicitudes"): (Rol.ADMINISTRADOR, Rol.SERVICIOS),
+    ("GET", "/api/v1/solicitudes/{id}"): (Rol.ADMINISTRADOR, Rol.SERVICIOS),
+    ("POST", "/api/v1/solicitudes/{id}/iniciar"): (
+        Rol.ADMINISTRADOR,
+        Rol.SERVICIOS,
+    ),
+    ("POST", "/api/v1/solicitudes/{id}/finalizar"): (
+        Rol.ADMINISTRADOR,
+        Rol.SERVICIOS,
+    ),
+    ("POST", "/api/v1/solicitudes/{id}/cancelar"): (
+        Rol.ADMINISTRADOR,
+        Rol.SERVICIOS,
+    ),
+    ("POST", "/api/v1/solicitudes/{id}/cotizar"): (Rol.ADMINISTRADOR,),
     # ── Configuracion del sistema: solo Administrador ────────────────
     ("GET", "/api/v1/configuracion"): (Rol.ADMINISTRADOR,),
     ("PATCH", "/api/v1/configuracion"): (Rol.ADMINISTRADOR,),
