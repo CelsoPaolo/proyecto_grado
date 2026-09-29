@@ -747,15 +747,13 @@ permitiría alterarlo desde el navegador.
 
 | Método | Ruta | Roles | Descripción | Cubre |
 |---|---|---|---|---|
-| GET | `/solicitudes` | A, S (todas) | Lista paginada. Filtros `?estado=`, `?tipo=`, `?desde=`, `?hasta=`, `?tecnico=`, `?asignadas_a_mi=true`, `?sin_asignar=true`. | RF-36, RF-37, RF-60 |
-| POST | `/solicitudes` | A, S | Registra la solicitud (técnico opcional). | RF-28, RF-29, RF-30, RF-55 |
-| GET | `/solicitudes/{id}` | A, S | Detalle con historial completo. | RF-38 |
-| PATCH | `/solicitudes/{id}` | A, S | Corrige datos de contacto o descripción mientras esté abierta. | — |
-| POST | `/solicitudes/{id}/asignar` | A, S | Asigna o reasigna el técnico. | RF-56, RF-57, RF-59 |
-| POST | `/solicitudes/{id}/iniciar` | A, S | Pasa a *En atención*; 409 sin técnico. | RF-31, RF-58 |
-| POST | `/solicitudes/{id}/finalizar` | A, S | Cierra con observaciones y monto. | RF-32, RF-33, RF-61, RF-62 |
+| GET | `/solicitudes` | A (todas), S (propias) | Lista paginada. Filtros `?estado=`, `?tipo=`, `?desde=`, `?hasta=`, `?sin_cotizar=true`. | RF-36, RF-37, RF-60 |
+| POST | `/solicitudes` | A, S | Registra la solicitud. Sin monto ni técnico: son del Administrador. | RF-28, RF-29, RF-30, RF-55 |
+| GET | `/solicitudes/{id}` | A (todas), S (propias) | Detalle con historial completo. | RF-38, RF-64 |
+| POST | `/solicitudes/{id}/cotizar` | **solo A** | Fija el monto y anota el técnico. Única acción del módulo con permiso más estrecho. | RF-56, RF-57, RF-58, RF-59 |
+| POST | `/solicitudes/{id}/iniciar` | A, S | Pasa a *En atención*. Sin guardas: el trabajo empieza antes de cotizar. | RF-31 |
+| POST | `/solicitudes/{id}/finalizar` | A, S | Cierra con observaciones; 409 si no hay monto cotizado. | RF-32, RF-33, RF-61 |
 | POST | `/solicitudes/{id}/cancelar` | A, S | Cancela con motivo. | RF-34 |
-| GET | `/solicitudes/tecnicos-asignables` | A, S | Cuentas activas con rol habilitado. | RF-57 |
 
 Cada transición es un endpoint con nombre propio en lugar de un
 `PATCH {"estado": "..."}`. Así la máquina de estados de RN-SER-02 vive en
@@ -822,7 +820,7 @@ hace explícito.
   "servicios_dia":  { "cantidad": 5,  "importe": "1300.00" },
   "ingreso_total":  { "importe": "9750.00",
                       "de_ventas": "8450.00", "de_servicios": "1300.00" },
-  "servicios_pendientes": { "total": 9, "sin_asignar": 3,
+  "servicios_pendientes": { "total": 9, "sin_cotizar": 3,
                             "registradas": 4, "en_atencion": 5 },
   "stock_bajo": {
     "umbral": 5,

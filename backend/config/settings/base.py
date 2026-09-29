@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'configuracion',
     'ventas',
     'servicios',
+    'panel',
 ]
 
 MIDDLEWARE = [
