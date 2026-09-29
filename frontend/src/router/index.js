@@ -48,6 +48,12 @@ export const rutas = [
     },
   },
   {
+    path: '/panel',
+    name: 'panel',
+    component: () => import('@/views/panel/PanelView.vue'),
+    meta: { roles: [ADMIN], titulo: 'Panel', icono: 'pi pi-chart-bar' },
+  },
+  {
     path: '/catalogo',
     name: 'catalogo',
     component: () => import('@/views/catalogo/ProductosView.vue'),
