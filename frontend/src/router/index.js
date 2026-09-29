@@ -72,6 +72,24 @@ export const rutas = [
     meta: { roles: [ADMIN, VENTAS], titulo: 'Detalle de venta', enMenu: false },
   },
   {
+    path: '/servicios',
+    name: 'servicios',
+    component: () => import('@/views/servicios/ServiciosView.vue'),
+    meta: { roles: [ADMIN, SERVICIOS], titulo: 'Servicios', icono: 'pi pi-wrench' },
+  },
+  {
+    path: '/servicios/nuevo',
+    name: 'servicio-nuevo',
+    component: () => import('@/views/servicios/RegistrarServicioView.vue'),
+    meta: { roles: [ADMIN, SERVICIOS], titulo: 'Registrar solicitud', enMenu: false },
+  },
+  {
+    path: '/servicios/:id',
+    name: 'servicio-detalle',
+    component: () => import('@/views/servicios/ServicioDetalleView.vue'),
+    meta: { roles: [ADMIN, SERVICIOS], titulo: 'Detalle de solicitud', enMenu: false },
+  },
+  {
     path: '/categorias',
     name: 'categorias',
     component: () => import('@/views/catalogo/CategoriasView.vue'),
