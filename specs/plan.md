@@ -1140,11 +1140,13 @@ incumplir la especificación):
 | RN-VEN-07 | Anular → el stock vuelve exactamente al valor previo. |
 | RN-VEN-11 | Anular una venta con fecha antigua → permitido. |
 | RN-SER-03 | Finalizar sin observaciones → 400. |
-| RN-SER-11 | Iniciar sin técnico asignado → 409. |
-| RN-SER-13 | Finalizar sin monto → 400; con monto `0` → 200. |
-| RN-SER-15 | Un encargado de servicios actúa sobre la solicitud de otro → permitido. |
+| RN-SER-09 | El técnico es texto libre: aceptar un nombre que no es cuenta del sistema. |
+| RN-SER-13 | Finalizar sin monto cotizado → 409; con monto `0` → 200. |
+| RN-SER-15 | Un encargado de servicios pide la solicitud de otro → 404. |
+| RF-57 | Un encargado de servicios intenta cotizar, incluso la suya → 403. |
 | RN-VEN-09 / RF-27 | Un encargado de ventas intenta ver o anular la venta de otro → 403/404. |
 | RN-USU-02/03/04 | Autocambio de rol, autobloqueo y último administrador → rechazados. |
+| RN-IND-05 | El ingreso total nunca se devuelve sin su desglose por origen. |
 | RN-ACC-05 | Las tres pruebas de invalidación inmediata de §1.3. |
 | RNF-08 | Prueba de concurrencia de §6.4. |
 
