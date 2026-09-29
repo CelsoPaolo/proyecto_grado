@@ -40,7 +40,7 @@
 | 3 | Configuración (umbral global) | T-3.1 a T-3.4 ✅ | Bloque 2 |
 | 4 | Ventas | T-4.1 a T-4.12 ✅ | Bloques 2, 3 |
 | 5 | Servicios técnicos | T-5.1 a T-5.14 ✅ | Bloque 1 |
-| 6 | Panel de indicadores | T-6.1 a T-6.5 | Bloques 4, 5 |
+| 6 | Panel de indicadores | T-6.1 a T-6.5 ✅ | Bloques 4, 5 |
 | 7 | Cierre y documentación | T-7.1 a T-7.5 | Todos |
 
 **Total: 73 tareas.** Los bloques 4 y 5 son independientes entre sí y
@@ -654,7 +654,7 @@ el de lógica más delicada.
 
 ## Bloque 6 — Panel de indicadores
 
-### [ ] T-6.1 — Consultas agregadas de los indicadores
+### [x] T-6.1 — Consultas agregadas de los indicadores
 - **Cubre:** RN-IND-01 a RN-IND-05
 - **Depende de:** T-4.7, T-5.8, T-3.2
 - **Trabajo:** Agregados del día: ventas confirmadas (excluyendo
@@ -665,7 +665,7 @@ el de lógica más delicada.
   anulada no suma, que un servicio cancelado no suma, y que un servicio
   registrado ayer y cerrado hoy cuenta **hoy**.
 
-### [ ] T-6.2 — API del panel
+### [x] T-6.2 — API del panel
 - **Cubre:** RF-48 a RF-50, RF-65, RF-66
 - **Depende de:** T-6.1, T-1.2
 - **Trabajo:** `GET /panel/resumen` con la forma de `plan.md` §4.4.
@@ -674,7 +674,7 @@ el de lógica más delicada.
   roles); la respuesta nunca ofrece un total agregado sin su desglose
   (RN-IND-05).
 
-### [ ] T-6.3 — Pantalla del panel
+### [x] T-6.3 — Pantalla del panel
 - **Cubre:** RF-48 a RF-51, RF-65, RF-66, RNF-12
 - **Depende de:** T-6.2
 - **Trabajo:** Tarjetas de indicadores, desglose de ingresos por origen,
@@ -682,7 +682,7 @@ el de lógica más delicada.
 - **Hecho cuando:** cada indicador enlaza a su módulo (RF-51) y la
   disposición se mantiene legible en ancho de tableta.
 
-### [ ] T-6.4 — Rendimiento de los indicadores
+### [x] T-6.4 — Rendimiento de los indicadores
 - **Cubre:** RNF-17
 - **Depende de:** T-6.3
 - **Trabajo:** Revisar las consultas con `django-debug-toolbar`;
@@ -691,7 +691,7 @@ el de lógica más delicada.
 - **Hecho cuando:** el panel responde por debajo de 3 segundos con un
   volumen de datos realista, y no hay consultas N+1.
 
-### [ ] T-6.5 — Revisión del bloque 6
+### [x] T-6.5 — Revisión del bloque 6
 - **Depende de:** T-6.1 a T-6.4
 - **Hecho cuando:** registrar una venta y finalizar un servicio se
   reflejan en el panel al recargarlo, con los importes correctos y
