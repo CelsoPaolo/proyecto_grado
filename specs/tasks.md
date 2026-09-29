@@ -39,7 +39,7 @@
 | 2 | Catálogo e inventario | T-2.1 a T-2.10 ✅ | Bloque 1 |
 | 3 | Configuración (umbral global) | T-3.1 a T-3.4 ✅ | Bloque 2 |
 | 4 | Ventas | T-4.1 a T-4.12 ✅ | Bloques 2, 3 |
-| 5 | Servicios técnicos | T-5.1 a T-5.14 | Bloque 1 |
+| 5 | Servicios técnicos | T-5.1 a T-5.14 ✅ | Bloque 1 |
 | 6 | Panel de indicadores | T-6.1 a T-6.5 | Bloques 4, 5 |
 | 7 | Cierre y documentación | T-7.1 a T-7.5 | Todos |
 
@@ -521,7 +521,7 @@ el de lógica más delicada.
 > aparece la cotización por parte del Administrador. Los criterios de
 > cada tarea siguen derivando de la especificación, no al revés.
 
-### [ ] T-5.1 — Modelo `SolicitudServicio`
+### [x] T-5.1 — Modelo `SolicitudServicio`
 - **Cubre:** RN-SER-01, RN-SER-04, RN-SER-05, RN-SER-09, RN-SER-11, RF-55
 - **Depende de:** T-1.1
 - **Trabajo:** `tipo` con choices; `modalidad` **derivada del tipo por el
@@ -534,7 +534,7 @@ el de lógica más delicada.
   dirección y un monto negativo, y el técnico no tiene ninguna relación
   con la tabla de usuarios.
 
-### [ ] T-5.2 — Modelo `EventoSolicitud` (historial)
+### [x] T-5.2 — Modelo `EventoSolicitud` (historial)
 - **Cubre:** RN-SER-06, RF-35, RF-59
 - **Depende de:** T-5.1
 - **Trabajo:** Tabla de **solo inserción** que registra con el mismo
@@ -547,7 +547,7 @@ el de lógica más delicada.
   > registrador cierra—, así que el historial sigue siendo lo que
   > permite saber quién hizo qué.
 
-### [ ] T-5.3 — Máquina de estados
+### [x] T-5.3 — Máquina de estados
 - **Cubre:** **RN-SER-02**, RF-31
 - **Depende de:** T-5.2
 - **Trabajo:** Transiciones válidas declaradas en un solo lugar, con sus
@@ -558,14 +558,14 @@ el de lógica más delicada.
   combinaciones de estado origen × destino y solo permite las del
   diagrama de `spec.md` RN-SER-02.
 
-### [ ] T-5.4 — Servicio de registro de solicitud
+### [x] T-5.4 — Servicio de registro de solicitud
 - **Cubre:** RF-28, RF-29, RF-30, RN-SER-04
 - **Depende de:** T-5.3
 - **Hecho cuando:** mantenimiento y reparación no piden dirección; redes
   y videovigilancia la exigen; toda solicitud nace *Registrada*, sin
   cotizar y con su registrador.
 
-### [ ] T-5.5 — Servicio de cotización (solo Administrador)
+### [x] T-5.5 — Servicio de cotización (solo Administrador)
 - **Cubre:** **RN-SER-09, RN-SER-10, RN-SER-12, RN-SER-13, RN-SER-16,
   RN-SER-17**, RF-56, RF-58, RF-59, RF-62
 - **Depende de:** T-5.4
@@ -576,7 +576,7 @@ el de lógica más delicada.
   cotizar una solicitud terminal → 409; el monto puede corregirse
   mientras esté abierta.
 
-### [ ] T-5.6 — Servicios de inicio, finalización y cancelación
+### [x] T-5.6 — Servicios de inicio, finalización y cancelación
 - **Cubre:** **RN-SER-03, RN-SER-07, RN-SER-13, RN-SER-14, RN-SER-16**,
   RF-32, RF-33, RF-34, RF-61, RF-63
 - **Depende de:** T-5.5
@@ -589,7 +589,7 @@ el de lógica más delicada.
   - finalizar con monto `0` → 200 (servicio en garantía o de cortesía);
   - una solicitud finalizada no admite edición de nada.
 
-### [ ] T-5.7 — API de solicitudes con visibilidad por usuario ⚠️
+### [x] T-5.7 — API de solicitudes con visibilidad por usuario ⚠️
 - **Cubre:** **RN-SER-15**, RF-36, RF-38, RF-57, RF-64
 - **Depende de:** T-5.6, T-1.2
 - **Trabajo:** Endpoints de `plan.md` §4.4, cada transición con nombre
@@ -600,7 +600,7 @@ el de lógica más delicada.
   solicitud que no registró, ni pidiendo su id directamente; y no puede
   cotizar ninguna, ni siquiera las suyas.
 
-### [ ] T-5.8 — Filtros de solicitudes
+### [x] T-5.8 — Filtros de solicitudes
 - **Cubre:** RF-37, RF-60
 - **Depende de:** T-5.7
 - **Trabajo:** `?estado=`, `?tipo=`, `?desde=`, `?hasta=` y
@@ -608,17 +608,17 @@ el de lógica más delicada.
 - **Hecho cuando:** los filtros funcionan combinados y el de
   «pendientes de cotizar» devuelve solo las abiertas sin monto.
 
-### [ ] T-5.9 — Ampliación de la matriz de permisos
+### [x] T-5.9 — Ampliación de la matriz de permisos
 - **Cubre:** RNF-02
 - **Depende de:** T-5.7, T-1.8
 - **Hecho cuando:** T-1.8 incluye los endpoints de servicios y refleja
   que el rol VENTAS no accede a ninguno y que solo el Administrador
   cotiza.
 
-### [ ] T-5.10 — Cliente de API de servicios (frontend)
+### [x] T-5.10 — Cliente de API de servicios (frontend)
 - **Depende de:** T-5.8, T-1.9
 
-### [ ] T-5.11 — Lista de solicitudes
+### [x] T-5.11 — Lista de solicitudes
 - **Cubre:** RF-36, RF-37, RF-60, RNF-18
 - **Depende de:** T-5.10
 - **Trabajo:** Tabla con filtros; columnas de estado, tipo, técnico
@@ -626,14 +626,14 @@ el de lógica más delicada.
 - **Hecho cuando:** el Administrador distingue de un vistazo cuáles
   esperan su cotización.
 
-### [ ] T-5.12 — Formulario de registro con dirección condicional
+### [x] T-5.12 — Formulario de registro con dirección condicional
 - **Cubre:** RF-28, RF-29, RNF-15
 - **Depende de:** T-5.11
 - **Hecho cuando:** el campo de dirección aparece y se vuelve
   obligatorio solo al elegir redes o videovigilancia, y la regla la
   sigue imponiendo el servidor aunque se manipule el formulario.
 
-### [ ] T-5.13 — Detalle con historial y acciones
+### [x] T-5.13 — Detalle con historial y acciones
 - **Cubre:** RF-32 a RF-35, RF-38, RF-56, RF-61, RNF-14
 - **Depende de:** T-5.12
 - **Trabajo:** Línea de tiempo del historial; diálogos de iniciar,
@@ -643,7 +643,7 @@ el de lógica más delicada.
   si intenta finalizar sin monto el sistema le explica que el
   Administrador debe cotizarla primero.
 
-### [ ] T-5.14 — Revisión del bloque 5
+### [x] T-5.14 — Revisión del bloque 5
 - **Depende de:** T-5.1 a T-5.13
 - **Hecho cuando:** ciclo completo comprobado con **dos** usuarios: un
   Encargado de Servicios registra e inicia, el Administrador cotiza, el
