@@ -55,10 +55,10 @@ class PuedeVender(_PermisoPorRol):
 class PuedeAtenderServicios(_PermisoPorRol):
     """Solicitudes de servicio tecnico (RN-ACC-03).
 
-    Conceder este permiso alcanza para actuar sobre CUALQUIER solicitud
-    abierta: PA-04 hizo de los servicios un espacio compartido
-    (RN-SER-15). El tecnico asignado indica de quien es el trabajo, no
-    quien tiene permiso.
+    Este permiso concede la ENTRADA al modulo. El alcance dentro de el
+    lo decide SolicitudViewSet.get_queryset(): un Encargado de Servicios
+    solo ve las solicitudes que registro (RN-SER-15, revisado en
+    spec.md v1.2).
     """
 
     roles_permitidos = (Rol.ADMINISTRADOR, Rol.SERVICIOS)
@@ -67,11 +67,10 @@ class PuedeAtenderServicios(_PermisoPorRol):
 class EsDuenoDeLaVentaOAdmin(BasePermission):
     """Autorizacion a nivel de objeto para las ventas (RF-27).
 
-    Contrasta a proposito con PuedeAtenderServicios: el historial de
-    ventas es **privado por usuario**, mientras que el de servicios es
-    compartido. La asimetria es intencional (spec.md seccion 11): un
-    servicio es trabajo en curso que cambia de manos, una venta es un
-    hecho consumado imputable a quien la registro.
+    El historial de ventas es privado por usuario: cada encargado opera
+    solo sobre lo que registro. Desde spec.md v1.2 los servicios siguen
+    el mismo modelo (RN-SER-15), asi que ambos modulos se comportan
+    igual y no hay asimetria que justificar.
     """
 
     message = "Solo puede operar sobre las ventas que usted registró."

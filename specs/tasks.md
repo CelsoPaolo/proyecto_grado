@@ -515,36 +515,45 @@ el de lógica más delicada.
 > decisiones PA-03 (monto cobrado), PA-04 (visibilidad compartida) y
 > PA-05 (técnico asignado).
 
+> **Reformulado el 2026-09-29** tras la revisión de PA-03, PA-04 y
+> PA-05 en `spec.md` v1.2. El bloque se simplifica: desaparecen la
+> asignación de técnico como entidad y la visibilidad compartida, y
+> aparece la cotización por parte del Administrador. Los criterios de
+> cada tarea siguen derivando de la especificación, no al revés.
+
 ### [ ] T-5.1 — Modelo `SolicitudServicio`
-- **Cubre:** RN-SER-01, RN-SER-04, RN-SER-05, RN-SER-09, RF-55
+- **Cubre:** RN-SER-01, RN-SER-04, RN-SER-05, RN-SER-09, RN-SER-11, RF-55
 - **Depende de:** T-1.1
 - **Trabajo:** `tipo` con choices; `modalidad` **derivada del tipo por el
   sistema**, no elegida por el usuario, y almacenada como columna;
-  `registrada_por` (no nula) y `tecnico_asignado` (nula) como FK
-  **distintas** con `related_name` propios; restricciones de
+  `registrada_por` como **única** FK a `Usuario`, no nula e inmutable;
+  `tecnico` como `CharField` opcional (anotación, no relación);
+  `monto_cobrado` decimal nulo hasta que se cotice; restricciones de
   `plan.md` §3.3 e índices de §3.4.
 - **Hecho cuando:** la base rechaza una solicitud a domicilio sin
-  dirección, y `registrada_por` y `tecnico_asignado` no pueden
-  confundirse en ninguna consulta.
+  dirección y un monto negativo, y el técnico no tiene ninguna relación
+  con la tabla de usuarios.
 
 ### [ ] T-5.2 — Modelo `EventoSolicitud` (historial)
 - **Cubre:** RN-SER-06, RF-35, RF-59
 - **Depende de:** T-5.1
 - **Trabajo:** Tabla de **solo inserción** que registra con el mismo
-  formato los tres tipos de evento: cambio de estado, asignación de
-  técnico y cierre.
-- **Hecho cuando:** existe una prueba de que el historial no se actualiza
-  ni se borra desde ningún punto del código.
-- > PA-04 hizo de los servicios un espacio compartido, así que este
-  > historial **es** el control de responsabilidad del módulo
-  > (`spec.md` §11), no un accesorio.
+  formato los tipos de evento del módulo: cambio de estado, cotización,
+  anotación de técnico y cierre.
+- **Hecho cuando:** existe una prueba de que el historial no se
+  actualiza ni se borra desde ningún punto del código.
+- > Aunque cada usuario solo vea lo suyo, sobre una misma solicitud
+  > actúan dos personas distintas —el Administrador cotiza, el
+  > registrador cierra—, así que el historial sigue siendo lo que
+  > permite saber quién hizo qué.
 
 ### [ ] T-5.3 — Máquina de estados
 - **Cubre:** **RN-SER-02**, RF-31
 - **Depende de:** T-5.2
 - **Trabajo:** Transiciones válidas declaradas en un solo lugar, con sus
-  tres guardas: técnico para iniciar, observaciones y monto para
-  finalizar, motivo para cancelar. Estados terminales sin salida.
+  dos guardas: observaciones **y monto ya cotizado** para finalizar,
+  motivo para cancelar. Pasar a *En atención* no tiene guarda. Estados
+  terminales sin salida.
 - **Hecho cuando:** una prueba parametrizada recorre **todas** las
   combinaciones de estado origen × destino y solo permite las del
   diagrama de `spec.md` RN-SER-02.
@@ -553,59 +562,58 @@ el de lógica más delicada.
 - **Cubre:** RF-28, RF-29, RF-30, RN-SER-04
 - **Depende de:** T-5.3
 - **Hecho cuando:** mantenimiento y reparación no piden dirección; redes
-  y videovigilancia la exigen; toda solicitud nace *Registrada* con su
-  registrador.
+  y videovigilancia la exigen; toda solicitud nace *Registrada*, sin
+  cotizar y con su registrador.
 
-### [ ] T-5.5 — Servicio de asignación de técnico
-- **Cubre:** RN-SER-10, RN-SER-12, RF-56, RF-57, RF-59
+### [ ] T-5.5 — Servicio de cotización (solo Administrador)
+- **Cubre:** **RN-SER-09, RN-SER-10, RN-SER-12, RN-SER-13, RN-SER-16,
+  RN-SER-17**, RF-56, RF-58, RF-59, RF-62
 - **Depende de:** T-5.4
-- **Trabajo:** Asignar y reasignar, incluida la autoasignación; solo
-  cuentas **activas** con rol SERVICIOS o ADMINISTRADOR; prohibido en
-  estados terminales; cada cambio al historial con técnico anterior y
-  nuevo.
-- **Hecho cuando:** asignar una cuenta bloqueada da 400; reasignar una
-  solicitud finalizada da 409; el historial refleja la cadena completa.
+- **Trabajo:** Fijar el monto y anotar el técnico; ambos solo mientras
+  la solicitud siga abierta; el monto puede reajustarse; cada cambio al
+  historial con autor y momento.
+- **Hecho cuando:** monto negativo → 400; monto cero → aceptado;
+  cotizar una solicitud terminal → 409; el monto puede corregirse
+  mientras esté abierta.
 
 ### [ ] T-5.6 — Servicios de inicio, finalización y cancelación
-- **Cubre:** **RN-SER-03, RN-SER-11, RN-SER-13, RN-SER-14, RN-SER-16**,
-  RF-32, RF-33, RF-34, RF-61, RF-62, RF-63
+- **Cubre:** **RN-SER-03, RN-SER-07, RN-SER-13, RN-SER-14, RN-SER-16**,
+  RF-32, RF-33, RF-34, RF-61, RF-63
 - **Depende de:** T-5.5
-- **Trabajo:** `iniciar()` exige técnico asignado; `finalizar()` exige
-  observaciones **y** monto, fija fecha de cierre y autor;
-  `cancelar()` exige motivo y deja el monto nulo.
+- **Trabajo:** `iniciar()` sin guardas; `finalizar()` exige
+  observaciones **y** monto ya cotizado, fija fecha de cierre y autor;
+  `cancelar()` exige motivo.
 - **Hecho cuando:**
-  - iniciar sin técnico → 409 `TECNICO_REQUERIDO`;
-  - finalizar sin observaciones → 400; sin monto → 400;
+  - finalizar sin observaciones → 400;
+  - finalizar sin monto cotizado → 409, indicando que debe cotizarse;
   - finalizar con monto `0` → 200 (servicio en garantía o de cortesía);
-  - monto negativo → 400;
-  - una solicitud finalizada no admite edición de monto ni observaciones.
+  - una solicitud finalizada no admite edición de nada.
 
-### [ ] T-5.7 — API de solicitudes con visibilidad compartida ⚠️
-- **Cubre:** **RN-SER-15**, RF-36, RF-38
+### [ ] T-5.7 — API de solicitudes con visibilidad por usuario ⚠️
+- **Cubre:** **RN-SER-15**, RF-36, RF-38, RF-57, RF-64
 - **Depende de:** T-5.6, T-1.2
-- **Trabajo:** Endpoints de `plan.md` §4.4 (servicios), cada transición
-  con nombre propio. `get_queryset()` **no filtra por usuario**.
-- **Hecho cuando:** un Encargado de Servicios ve y actúa sobre una
-  solicitud registrada por otro y asignada a un tercero.
-- > ⚠️ Contrasta a propósito con T-4.7, donde el `get_queryset()` **sí**
-  > filtra. La asimetría es intencional (`spec.md` §11): se documenta con
-  > un comentario en el código para que no parezca una inconsistencia.
+- **Trabajo:** Endpoints de `plan.md` §4.4, cada transición con nombre
+  propio. `get_queryset()` filtra por `registrada_por` cuando el rol no
+  es Administrador, **igual que en ventas**. La cotización exige
+  `EsAdministrador`.
+- **Hecho cuando:** un Encargado de Servicios no ve ni puede tocar una
+  solicitud que no registró, ni pidiendo su id directamente; y no puede
+  cotizar ninguna, ni siquiera las suyas.
 
 ### [ ] T-5.8 — Filtros de solicitudes
-- **Cubre:** RF-37, RF-60, RF-64
+- **Cubre:** RF-37, RF-60
 - **Depende de:** T-5.7
-- **Trabajo:** `?estado=`, `?tipo=`, `?desde=`, `?hasta=`, `?tecnico=`,
-  `?asignadas_a_mi=true`, `?sin_asignar=true`; marca de «pendiente de
-  reasignación» cuando el técnico asignado tiene la cuenta bloqueada.
-- **Hecho cuando:** los filtros funcionan combinados; bloquear a un
-  técnico hace aparecer sus solicitudes abiertas como pendientes de
-  reasignación.
+- **Trabajo:** `?estado=`, `?tipo=`, `?desde=`, `?hasta=` y
+  `?sin_cotizar=true` para el Administrador.
+- **Hecho cuando:** los filtros funcionan combinados y el de
+  «pendientes de cotizar» devuelve solo las abiertas sin monto.
 
 ### [ ] T-5.9 — Ampliación de la matriz de permisos
 - **Cubre:** RNF-02
 - **Depende de:** T-5.7, T-1.8
 - **Hecho cuando:** T-1.8 incluye los endpoints de servicios y refleja
-  que el rol VENTAS no accede a ninguno.
+  que el rol VENTAS no accede a ninguno y que solo el Administrador
+  cotiza.
 
 ### [ ] T-5.10 — Cliente de API de servicios (frontend)
 - **Depende de:** T-5.8, T-1.9
@@ -613,33 +621,34 @@ el de lógica más delicada.
 ### [ ] T-5.11 — Lista de solicitudes
 - **Cubre:** RF-36, RF-37, RF-60, RNF-18
 - **Depende de:** T-5.10
-- **Trabajo:** Tabla con filtros y accesos rápidos «asignadas a mí» y
-  «sin asignar»; columnas de registrador y técnico asignado, claramente
-  diferenciadas.
-- **Hecho cuando:** un vistazo basta para distinguir quién registró la
-  solicitud de quién la está atendiendo.
+- **Trabajo:** Tabla con filtros; columnas de estado, tipo, técnico
+  anotado y monto; distintivo para las pendientes de cotizar.
+- **Hecho cuando:** el Administrador distingue de un vistazo cuáles
+  esperan su cotización.
 
 ### [ ] T-5.12 — Formulario de registro con dirección condicional
 - **Cubre:** RF-28, RF-29, RNF-15
 - **Depende de:** T-5.11
-- **Hecho cuando:** el campo de dirección aparece y se vuelve obligatorio
-  solo al elegir redes o videovigilancia, y la regla la sigue imponiendo
-  el servidor aunque se manipule el formulario.
+- **Hecho cuando:** el campo de dirección aparece y se vuelve
+  obligatorio solo al elegir redes o videovigilancia, y la regla la
+  sigue imponiendo el servidor aunque se manipule el formulario.
 
-### [ ] T-5.13 — Detalle con historial y acciones de estado
-- **Cubre:** RF-32 a RF-35, RF-38, RF-56, RF-58, RF-61, RNF-14
+### [ ] T-5.13 — Detalle con historial y acciones
+- **Cubre:** RF-32 a RF-35, RF-38, RF-56, RF-61, RNF-14
 - **Depende de:** T-5.12
-- **Trabajo:** Línea de tiempo del historial; diálogos de asignar,
-  iniciar, finalizar (observaciones + monto) y cancelar; las acciones no
-  disponibles se ocultan según el estado.
-- **Hecho cuando:** el diálogo de finalizar deja claro que un servicio
-  sin costo se registra con monto `0`, no dejando el campo vacío.
+- **Trabajo:** Línea de tiempo del historial; diálogos de iniciar,
+  cotizar (solo Administrador), finalizar y cancelar; las acciones no
+  disponibles se ocultan según el estado y el rol.
+- **Hecho cuando:** al Encargado de Servicios no se le ofrece cotizar, y
+  si intenta finalizar sin monto el sistema le explica que el
+  Administrador debe cotizarla primero.
 
 ### [ ] T-5.14 — Revisión del bloque 5
 - **Depende de:** T-5.1 a T-5.13
-- **Hecho cuando:** ciclo completo comprobado con **dos** encargados de
-  servicios distintos: uno registra, el otro se autoasigna, inicia,
-  finaliza con monto, y el historial muestra la cadena completa.
+- **Hecho cuando:** ciclo completo comprobado con **dos** usuarios: un
+  Encargado de Servicios registra e inicia, el Administrador cotiza, el
+  registrador finaliza, y el historial muestra la cadena completa con
+  ambos autores. Un segundo Encargado de Servicios no ve esa solicitud.
 
 ---
 

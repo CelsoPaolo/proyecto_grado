@@ -2,8 +2,8 @@
 
 - **Proyecto:** Sistema ERP interno para PC-Solution (Sucre, Bolivia)
 - **Documento:** Etapa 1 de Spec-Driven Development — Especificación funcional
-- **Versión:** 1.1
-- **Fecha:** 2026-09-22
+- **Versión:** 1.2
+- **Fecha:** 2026-09-29
 - **Estado:** **Aprobada** — incorpora las decisiones PA-01 a PA-05
   (ver sección 11)
 
@@ -13,6 +13,7 @@
 |---|---|---|
 | 1.0 | 2026-09-22 | Versión inicial para revisión. |
 | 1.1 | 2026-09-22 | Se resuelven las preguntas abiertas PA-01 a PA-05. Cambios principales: umbral global de existencias bajas configurable (PA-01); anulación de ventas sin plazo (PA-02); monto cobrado por servicio e indicador de ingresos por servicios (PA-03); visibilidad compartida de las solicitudes entre el personal de servicios (PA-04); técnico asignado distinto del usuario registrador (PA-05). |
+| 1.2 | 2026-09-29 | **Se revisan PA-03, PA-04 y PA-05 antes de implementar el módulo de servicios.** El monto lo cotiza y registra el **Administrador** tras la revisión, no el técnico al finalizar (PA-03). Cada solicitud la ven **solo quien la registró y el Administrador**, no toda el área (PA-04). El técnico deja de ser una entidad asignable y pasa a ser **una anotación de texto libre** del Administrador (PA-05). Consecuencia notable: desaparece la asimetría entre ventas y servicios que la v1.1 declaraba intencional. |
 
 > **Nota sobre la numeración:** los identificadores (RF-, RN-, RNF-, CU-,
 > SUP-) son estables entre versiones. Los requerimientos añadidos en la
@@ -121,7 +122,8 @@ Responsable de la gestión integral del sistema.
 - Consulta **todas** las ventas de la empresa y puede anularlas.
 - Consulta **todas** las solicitudes de servicio y puede gestionarlas.
 - Crea, edita, bloquea y desbloquea cuentas de usuario, y asigna roles.
-- Asigna y reasigna el técnico responsable de cualquier solicitud abierta.
+- **Cotiza los servicios técnicos:** registra el monto a cobrar tras la
+  revisión, y anota el nombre del técnico que los atiende.
 - Configura el umbral global de existencias bajas.
 - Accede al panel de indicadores.
 - Puede realizar, además, **todo lo que hacen los otros dos roles**
@@ -145,23 +147,20 @@ Responsable de la atención técnica.
 - Registra solicitudes de servicio técnico (mantenimiento, reparación,
   instalación de redes, videovigilancia) con el contacto del cliente y la
   descripción del problema.
-- Consulta **todas** las solicitudes del área, no solo las que él
-  registró, de modo que pueda continuar el trabajo de un compañero.
-- Asigna o reasigna el técnico responsable de una solicitud abierta,
-  pudiendo asignársela a sí mismo.
-- Actualiza el estado de **cualquier** solicitud abierta conforme avanza
-  la atención.
-- Registra observaciones del trabajo realizado y el monto cobrado, y
-  finaliza el servicio.
+- Consulta **sus propias** solicitudes: las que él registró.
+- Actualiza el estado de sus solicitudes conforme avanza la atención.
+- Registra observaciones del trabajo realizado y finaliza el servicio.
+- **No** fija el monto cobrado ni anota el técnico: ambas cosas son del
+  Administrador (RN-SER-13, RN-SER-09).
 - No gestiona el catálogo, ni usuarios, ni ventas, ni accede al panel de
   indicadores.
 
-> **Contraste deliberado con ventas:** la información de servicios es
-> **compartida** dentro del área (cualquier encargado puede retomar una
-> solicitud), mientras que el historial de ventas sigue siendo **privado
-> por usuario** (cada encargado ve y anula solo lo suyo). Esta asimetría
-> es intencional: un servicio es un trabajo en curso que puede cambiar de
-> manos, una venta es un hecho consumado imputable a quien la registró.
+> **Simetría con ventas.** Cada encargado ve y gestiona únicamente lo
+> suyo, igual que en el historial de ventas. Las dos áreas siguen el
+> mismo modelo de visibilidad: privado por usuario, con el Administrador
+> viéndolo todo. *(La v1.1 planteaba lo contrario para servicios —un
+> espacio compartido dentro del área— y la revisión de PA-04 lo
+> descartó.)*
 
 ### 4.4 Matriz de permisos
 
@@ -179,11 +178,13 @@ Responsable de la atención técnica.
 | Anular una venta propia | ✔ | ✔ | ✘ |
 | Anular **cualquier** venta | ✔ | ✘ | ✘ |
 | Registrar una solicitud de servicio | ✔ | ✘ | ✔ |
-| Consultar **todas** las solicitudes de servicio | ✔ | ✘ | ✔ |
-| Asignar / reasignar el técnico de una solicitud abierta | ✔ | ✘ | ✔ |
-| Actualizar el estado de **cualquier** solicitud abierta | ✔ | ✘ | ✔ |
-| Registrar observaciones y monto, y finalizar un servicio | ✔ | ✘ | ✔ |
-| Cancelar una solicitud abierta | ✔ | ✘ | ✔ |
+| Consultar las solicitudes **propias** | ✔ | ✘ | ✔ |
+| Consultar **todas** las solicitudes | ✔ | ✘ | ✘ |
+| Actualizar el estado de una solicitud propia | ✔ | ✘ | ✔ |
+| Registrar observaciones y finalizar un servicio propio | ✔ | ✘ | ✔ |
+| Cancelar una solicitud propia | ✔ | ✘ | ✔ |
+| **Cotizar: fijar el monto a cobrar** | ✔ | ✘ | ✘ |
+| **Anotar el nombre del técnico** | ✔ | ✘ | ✘ |
 | Gestionar cuentas de usuario y roles | ✔ | ✘ | ✘ |
 | Ver el panel de indicadores | ✔ | ✘ | ✘ |
 
@@ -338,83 +339,72 @@ precondición, flujo principal, flujos alternativos y postcondición.
      redes, videovigilancia), el sistema exige además la dirección. Si se
      atiende **en taller** (mantenimiento, reparación), la dirección no se
      solicita.
-  4. Opcionalmente indica ya el **técnico asignado**; si no lo hace, la
-     solicitud queda sin asignar a la espera de CU-SER-06.
-  5. El sistema registra la solicitud en estado *Registrada*, con fecha,
+  4. El sistema registra la solicitud en estado *Registrada*, con fecha,
      hora y el **usuario registrador**.
-- **Alternativos:**
-  - Datos obligatorios faltantes (incluida la dirección cuando
-    corresponde) → se rechaza el registro.
-  - Técnico indicado que no es una cuenta activa con rol habilitado para
-    atender servicios → se rechaza (RN-SER-10).
-- **Postcondición:** la solicitud queda registrada y visible para todo el
-  personal de servicios.
+- **Alternativos:** datos obligatorios faltantes (incluida la dirección
+  cuando corresponde) → se rechaza el registro.
+- **Postcondición:** la solicitud queda registrada, visible para su
+  registrador y para el Administrador.
 
 #### CU-SER-02 — Actualizar el estado de una solicitud
-- **Actor:** Encargado de Servicios (cualquier solicitud abierta),
-  Administrador (cualquiera).
+- **Actor:** Encargado de Servicios (solo las propias), Administrador
+  (cualquiera).
 - **Precondición:** la solicitud no está en un estado terminal.
 - **Flujo principal:** el usuario avanza la solicitud al siguiente estado
   válido (ver RN-SER-02); el sistema registra el cambio con su fecha, hora
   y autor en el historial.
-- **Alternativos:**
-  - Transición no permitida → se rechaza.
-  - Paso a *En atención* sin técnico asignado → se rechaza, y el sistema
-    ofrece asignar uno (RN-SER-11).
+- **Alternativos:** transición no permitida → se rechaza.
 - **Postcondición:** la solicitud refleja el nuevo estado y su historial
   de cambios.
 
-#### CU-SER-03 — Registrar observaciones, monto cobrado y finalizar
-- **Actor:** Encargado de Servicios (cualquier solicitud abierta),
-  Administrador (cualquiera).
-- **Precondición:** la solicitud está en estado *En atención* y tiene
-  técnico asignado.
+#### CU-SER-03 — Registrar observaciones y finalizar
+- **Actor:** Encargado de Servicios (solo las propias), Administrador
+  (cualquiera).
+- **Precondición:** la solicitud está en estado *En atención* y ya tiene
+  monto cotizado (CU-SER-06).
 - **Flujo principal:** el usuario registra las **observaciones del
-  trabajo realizado** y el **monto cobrado** al cliente, y finaliza el
-  servicio; el sistema lo marca como *Finalizado* con su fecha y hora de
-  cierre y con el autor del cierre.
+  trabajo realizado** y finaliza el servicio; el sistema lo marca como
+  *Finalizado* con su fecha y hora de cierre y con el autor del cierre.
 - **Alternativos:**
   - Intento de finalizar sin observaciones registradas → se rechaza
     (RN-SER-03).
-  - Intento de finalizar sin monto cobrado → se rechaza (RN-SER-13). Un
-    servicio sin cargo se registra con monto cero, no dejándolo vacío.
-  - Monto negativo → se rechaza.
+  - Intento de finalizar sin monto cotizado → se rechaza (RN-SER-13); el
+    sistema indica que el Administrador debe cotizarla primero.
 - **Postcondición:** la solicitud queda *Finalizada*, ya no admite
   cambios de estado, y su monto pasa a contar en los ingresos por
   servicios del panel de indicadores.
 
 #### CU-SER-04 — Cancelar una solicitud
-- **Actor:** Encargado de Servicios (cualquier solicitud abierta),
-  Administrador (cualquiera).
+- **Actor:** Encargado de Servicios (solo las propias), Administrador
+  (cualquiera).
 - **Precondición:** la solicitud no está *Finalizada* ni *Cancelada*.
 - **Flujo principal:** el usuario cancela la solicitud indicando el
   motivo; el sistema la marca como *Cancelada* registrando autor y fecha.
-- **Postcondición:** la solicitud queda cerrada sin atención y sin monto
-  cobrado; no cuenta como ingreso (RN-SER-14).
+- **Postcondición:** la solicitud queda cerrada sin atención; no cuenta
+  como ingreso aunque estuviera cotizada (RN-SER-14).
 
 #### CU-SER-05 — Consultar las solicitudes de servicio
-- **Actor:** Encargado de Servicios (todas), Administrador (todas).
+- **Actor:** Encargado de Servicios (solo las propias), Administrador
+  (todas).
 - **Flujo principal:** consulta la lista de solicitudes con cliente, tipo,
-  estado, fecha, usuario registrador y técnico asignado; filtra por
-  estado, tipo, rango de fechas y técnico asignado —incluido un filtro
-  rápido «asignadas a mí» y otro de «sin asignar»— y abre el detalle de
+  estado, fecha, usuario registrador, técnico anotado y monto cotizado;
+  filtra por estado, tipo y rango de fechas —incluido un filtro rápido de
+  «pendientes de cotizar» para el Administrador— y abre el detalle de
   cada una con su historial de cambios.
 - **Postcondición:** ninguna (consulta).
 
-#### CU-SER-06 — Asignar o reasignar el técnico responsable
-- **Actor:** Encargado de Servicios, Administrador.
+#### CU-SER-06 — Cotizar un servicio y anotar el técnico
+- **Actor:** **Administrador únicamente.**
 - **Precondición:** la solicitud no está en un estado terminal.
-- **Flujo principal:** el usuario selecciona al técnico responsable entre
-  las cuentas activas habilitadas para atender servicios —pudiendo
-  elegirse a sí mismo para retomar el trabajo de un compañero— y confirma
-  la asignación; el sistema registra el cambio en el historial con el
-  técnico anterior, el nuevo, el autor y el momento.
+- **Flujo principal:** tras la revisión del equipo o del trabajo, el
+  Administrador registra en la solicitud el **monto a cobrar** y,
+  opcionalmente, el **nombre del técnico** que la atiende; el sistema
+  guarda ambos y deja constancia del cambio en el historial.
 - **Alternativos:**
+  - Monto negativo → se rechaza. Un servicio en garantía o de cortesía
+    se cotiza en **cero**, nunca se deja vacío.
   - Solicitud ya *Finalizada* o *Cancelada* → se rechaza (RN-SER-12).
-  - Cuenta elegida bloqueada o sin rol habilitado → se rechaza
-    (RN-SER-10).
-- **Postcondición:** la solicitud queda a cargo del nuevo técnico y el
-  cambio es trazable.
+- **Postcondición:** la solicitud queda cotizada y puede finalizarse.
 
 ### 5.5 Gestión de usuarios
 
@@ -568,16 +558,20 @@ precondición, flujo principal, flujos alternativos y postcondición.
   son:
 
   ```
-                 [1]              [2]
+                                  [1]
   Registrada ──────────► En atención ──────────► Finalizada
        │                      │
        └──────────────────────┴──────────────► Cancelada
-                                 [3]
+                                 [2]
 
-  [1] exige técnico asignado ............................. RN-SER-11
-  [2] exige observaciones del trabajo y monto cobrado .... RN-SER-03, RN-SER-13
-  [3] exige motivo de cancelación ........................ RN-SER-07
+  [1] exige observaciones del trabajo Y monto ya cotizado
+      por el Administrador ............... RN-SER-03, RN-SER-13
+  [2] exige motivo de cancelación ........ RN-SER-07
   ```
+
+  Pasar a *En atención* no tiene guarda: el trabajo puede empezar
+  antes de que el Administrador lo cotice, que es justamente el orden
+  que describe PA-03 (primero se revisa, después se cotiza).
 
   *Finalizada* y *Cancelada* son estados terminales: no admiten
   transiciones posteriores. No se permite retroceder de estado.
@@ -593,44 +587,47 @@ precondición, flujo principal, flujos alternativos y postcondición.
 - **RN-SER-07** — La cancelación exige un motivo.
 - **RN-SER-08** — Las solicitudes no se eliminan; se cancelan.
 
-#### Técnico asignado (PA-05)
+#### Técnico anotado (PA-05, revisado en v1.2)
 
-- **RN-SER-09** — Una solicitud distingue dos responsables:
-  el **usuario registrador**, que queda fijo desde el alta y **nunca
-  cambia**, y el **técnico asignado**, que puede estar vacío al inicio y
-  puede cambiar mientras la solicitud siga abierta. Los indicadores de
-  productividad y la trazabilidad usan ambos datos, nunca los confunden.
-- **RN-SER-10** — Solo puede ser técnico asignado una cuenta **activa**
-  con rol **Encargado de Servicios** o **Administrador**. Si la cuenta
-  del técnico asignado se bloquea después, la solicitud conserva el dato
-  histórico y el sistema la señala como pendiente de reasignación.
-- **RN-SER-11** — Una solicitud **no puede pasar a *En atención*** sin un
-  técnico asignado. Es la contrapartida de RN-SER-03: así como no se
-  cierra un trabajo sin decir qué se hizo, no se empieza sin decir quién
-  lo hace.
-- **RN-SER-12** — La asignación y la reasignación solo son posibles
-  mientras la solicitud no esté en un estado terminal. Cada cambio queda
-  en el historial con técnico anterior, técnico nuevo, autor y momento.
-- **RN-SER-15** — La información de servicios es **compartida** dentro
-  del área: todo Encargado de Servicios puede consultar y actuar sobre
-  cualquier solicitud abierta, esté o no asignada a él. Esto contrasta
-  deliberadamente con las ventas, cuyo historial es privado por usuario
-  (RN-VEN-09), y es lo que permite continuar el trabajo de un compañero.
+- **RN-SER-09** — El **técnico** es una **anotación de texto libre**, no
+  una entidad del sistema: el Administrador escribe el nombre de quien
+  atiende el trabajo. No hay asignación formal, ni relación con las
+  cuentas de usuario, ni validación de que esa persona tenga cuenta. Es
+  información para el seguimiento, **nunca un mecanismo de acceso**.
+- **RN-SER-10** — Solo el **Administrador** anota o modifica el técnico.
+  El campo es opcional: una solicitud puede atenderse sin que se
+  registre quién lo hizo.
+- **RN-SER-11** — El único responsable con identidad en el sistema es el
+  **usuario registrador**, que queda fijo desde el alta y **nunca
+  cambia**. La trazabilidad de quién hizo cada cambio la aporta el
+  historial (RN-SER-06), no el campo del técnico.
+- **RN-SER-12** — El monto y el técnico solo pueden fijarse mientras la
+  solicitud no esté en un estado terminal. Cada cambio queda en el
+  historial con su autor y momento.
+- **RN-SER-15** — Cada solicitud la ven **únicamente quien la registró y
+  el Administrador**. El modelo de visibilidad es el mismo que el de las
+  ventas (RN-VEN-09): privado por usuario, con el Administrador viéndolo
+  todo.
 
-#### Monto cobrado (PA-03)
+#### Monto cotizado (PA-03, revisado en v1.2)
 
-- **RN-SER-13** — Para finalizar una solicitud es obligatorio registrar,
-  además de las observaciones, el **monto cobrado** al cliente. El monto
-  es un número no negativo: un servicio en garantía o de cortesía se
-  registra con monto **cero**, nunca se deja vacío.
-- **RN-SER-14** — Una solicitud *Cancelada* no registra monto y **no
-  cuenta** como ingreso. Solo los servicios *Finalizados* aportan a los
-  indicadores de ingresos.
-- **RN-SER-16** — El monto cobrado se registra una sola vez, en el acto
-  de finalizar, y forma parte del cierre **inmutable** de la solicitud:
-  una vez finalizada, ni el monto ni las observaciones se editan. Un
-  cierre equivocado se corrige registrando una nueva solicitud, del mismo
-  modo que una venta errónea se corrige anulándola.
+- **RN-SER-13** — El **monto a cobrar lo fija el Administrador** tras la
+  revisión del trabajo (CU-SER-06), no el técnico al cerrarlo. Una
+  solicitud **no puede finalizarse sin monto cotizado**: sin esa
+  condición, un servicio podría cerrarse sin importe y los ingresos del
+  panel (RN-IND-04) dejarían de reflejar lo realmente cobrado.
+- **RN-SER-14** — Una solicitud *Cancelada* **no cuenta** como ingreso,
+  aunque se hubiera cotizado antes de cancelarla. Solo los servicios
+  *Finalizados* aportan a los indicadores.
+- **RN-SER-16** — El monto puede corregirse **mientras la solicitud siga
+  abierta**: cotizar es una estimación tras la revisión y puede ajustarse
+  si el trabajo resulta distinto. Una vez *Finalizada*, el cierre es
+  **inmutable**: ni el monto, ni las observaciones, ni el técnico se
+  editan. Un cierre equivocado se corrige registrando una nueva
+  solicitud, del mismo modo que una venta errónea se corrige anulándola.
+- **RN-SER-17** — El monto es un número **no negativo**. Un servicio en
+  garantía o de cortesía se cotiza en **cero**, nunca se deja vacío: así
+  «gratis» y «sin cotizar» no se confunden.
 
 ### 6.6 Indicadores
 
@@ -638,7 +635,8 @@ precondición, flujo principal, flujos alternativos y postcondición.
   confirmadas de la fecha actual; las anuladas quedan excluidas.
 - **RN-IND-02** — «Servicios pendientes» considera las solicitudes en
   estado *Registrada* o *En atención*, sin límite de fecha, y desglosa
-  cuántas de ellas no tienen técnico asignado.
+  cuántas de ellas están **pendientes de cotizar**, que son las que el
+  Administrador tiene que atender para que puedan cerrarse.
 - **RN-IND-03** — «Productos con existencias bajas» considera los
   productos cuya existencia es menor o igual al **umbral global**
   vigente (RN-CAT-07).
@@ -714,19 +712,19 @@ precondición, flujo principal, flujos alternativos y postcondición.
 | RF-33 | El sistema debe impedir finalizar una solicitud que no tenga observaciones registradas. |
 | RF-34 | El sistema debe permitir cancelar una solicitud no terminal indicando el motivo. |
 | RF-35 | El sistema debe registrar el autor y el momento de cada cambio de estado de una solicitud. |
-| RF-36 | El sistema debe permitir al Encargado de Servicios y al Administrador consultar **todas** las solicitudes de servicio, con independencia de quién las registró o tenga asignadas. |
+| RF-36 | El sistema debe permitir al Encargado de Servicios consultar **sus propias** solicitudes y al Administrador consultar todas. |
 | RF-37 | El sistema debe permitir filtrar las solicitudes por estado, tipo y rango de fechas. |
 | RF-38 | El sistema debe permitir consultar el detalle de una solicitud con su historial de cambios. |
-| RF-55 | El sistema debe registrar en cada solicitud el usuario registrador y el técnico asignado como dos datos distintos, permitiendo que el segundo esté vacío al inicio. |
-| RF-56 | El sistema debe permitir asignar y reasignar el técnico responsable de una solicitud no terminal, incluida la autoasignación. |
-| RF-57 | El sistema debe ofrecer como técnico asignable únicamente las cuentas activas con rol Encargado de Servicios o Administrador. |
-| RF-58 | El sistema debe impedir que una solicitud pase a *En atención* sin un técnico asignado. |
-| RF-59 | El sistema debe registrar en el historial cada asignación y reasignación, con técnico anterior, técnico nuevo, autor y momento. |
-| RF-60 | El sistema debe permitir filtrar las solicitudes por técnico asignado, incluyendo los filtros rápidos «asignadas a mí» y «sin asignar». |
-| RF-61 | El sistema debe exigir el registro del monto cobrado, junto con las observaciones, como condición para finalizar una solicitud. |
-| RF-62 | El sistema debe aceptar un monto cobrado de cero y rechazar montos negativos. |
-| RF-63 | El sistema debe impedir la edición del monto cobrado y de las observaciones una vez finalizada la solicitud. |
-| RF-64 | El sistema debe señalar las solicitudes abiertas cuyo técnico asignado corresponda a una cuenta bloqueada, como pendientes de reasignación. |
+| RF-55 | El sistema debe registrar en cada solicitud el usuario registrador, que queda fijo, y separadamente el nombre del técnico como anotación de texto libre. |
+| RF-56 | El sistema debe permitir **solo al Administrador** fijar el monto a cobrar y anotar el técnico de una solicitud no terminal. |
+| RF-57 | El sistema debe impedir que un Encargado de Servicios fije el monto o anote el técnico. |
+| RF-58 | El sistema debe permitir cotizar una solicitud en cualquier momento antes de su cierre, y volver a ajustar el monto mientras siga abierta. |
+| RF-59 | El sistema debe registrar en el historial cada cotización y cada anotación de técnico, con autor y momento. |
+| RF-60 | El sistema debe permitir al Administrador filtrar las solicitudes pendientes de cotizar. |
+| RF-61 | El sistema debe impedir finalizar una solicitud que no tenga monto cotizado, indicando que el Administrador debe cotizarla primero. |
+| RF-62 | El sistema debe aceptar un monto de cero y rechazar montos negativos. |
+| RF-63 | El sistema debe impedir la edición del monto, de las observaciones y del técnico una vez finalizada la solicitud. |
+| RF-64 | El sistema debe impedir que un Encargado de Servicios acceda a una solicitud que no registró, ni siquiera solicitando su identificador directamente. |
 
 ### 7.5 Gestión de usuarios
 
@@ -747,7 +745,7 @@ precondición, flujo principal, flujos alternativos y postcondición.
 | ID | Requerimiento |
 |---|---|
 | RF-48 | El sistema debe mostrar al Administrador la cantidad y el importe total de las ventas confirmadas del día. |
-| RF-49 | El sistema debe mostrar al Administrador la cantidad de solicitudes de servicio pendientes, desglosando cuántas no tienen técnico asignado. |
+| RF-49 | El sistema debe mostrar al Administrador la cantidad de solicitudes de servicio pendientes, desglosando cuántas están pendientes de cotizar. |
 | RF-50 | El sistema debe mostrar al Administrador la lista de productos con existencias bajas según el umbral global vigente. |
 | RF-51 | El sistema debe presentar los indicadores de forma visual y permitir acceder desde ellos al módulo correspondiente. |
 | RF-65 | El sistema debe mostrar al Administrador la cantidad de servicios finalizados en el día y la suma de sus montos cobrados. |
@@ -854,31 +852,38 @@ Las cinco preguntas abiertas de la versión 1.0 fueron resueltas el
 |---|---|---|---|
 | **PA-01** | ¿Umbral de existencias bajas global o por producto? | **Global**: un único número configurable para todo el catálogo. | RN-CAT-07, CU-CAT-06, RF-52, RF-53, RN-IND-03, SUP-01 |
 | **PA-02** | ¿Plazo límite para anular una venta propia? | **Sin límite de plazo**; el control es la trazabilidad de la anulación. | RN-VEN-11, CU-VEN-03, RF-54 |
-| **PA-03** | ¿El servicio técnico registra un monto cobrado? | **Sí**, obligatorio al finalizar junto con las observaciones, y alimenta los indicadores de ingresos. | RN-SER-13, RN-SER-14, RN-SER-16, CU-SER-03, RF-61 a RF-63, RN-IND-04, RN-IND-05, RF-65, RF-66 |
-| **PA-04** | ¿El Encargado de Servicios ve solo lo suyo o todo el área? | **Todo el área**: visibilidad y actuación compartidas sobre cualquier solicitud abierta. | RN-SER-15, sección 4.3, matriz 4.4, CU-SER-02 a CU-SER-05, RF-36 |
-| **PA-05** | ¿Técnico responsable distinto del registrador? | **Sí**: usuario registrador fijo + técnico asignado reasignable. | RN-SER-09 a RN-SER-12, CU-SER-06, RF-55 a RF-60, RF-64 |
+| **PA-03** | ¿El servicio técnico registra un monto cobrado? | **Sí.** *(v1.1: lo registraba el técnico al finalizar. **Revisado en v1.2**: lo cotiza y registra el **Administrador** tras la revisión.)* | RN-SER-13, RN-SER-16, RN-SER-17, CU-SER-06, RF-56 a RF-58, RF-61, RF-62 |
+| **PA-04** | ¿Quién ve cada solicitud? | **Quien la registró y el Administrador.** *(v1.1: todo el área de servicios. **Revisado en v1.2**.)* | RN-SER-15, sección 4.3, matriz 4.4, CU-SER-02 a CU-SER-05, RF-36, RF-64 |
+| **PA-05** | ¿Técnico responsable distinto del registrador? | **Como anotación de texto libre**, no como entidad asignable. *(v1.1: era una asignación formal con historial de reasignaciones. **Revisado en v1.2**.)* | RN-SER-09 a RN-SER-12, CU-SER-06, RF-55, RF-59 |
 
-### Consecuencias de PA-04 y PA-05 sobre el modelo de permisos
+### Qué cambió en la revisión de v1.2
 
-La combinación de ambas decisiones cambia el modelo de autorización del
-módulo de servicios respecto de la versión 1.0:
+Las tres decisiones revisadas simplifican el módulo de servicios y, de
+paso, **eliminan la asimetría** que la v1.1 declaraba intencional.
 
-1. **La autorización de servicios deja de ser por propiedad y pasa a ser
-   por rol.** En la v1.0, un Encargado de Servicios solo podía actuar
-   sobre lo que él había registrado. Ahora basta con tener el rol para
-   consultar y actuar sobre cualquier solicitud abierta (RN-SER-15). El
-   técnico asignado indica **de quién es el trabajo**, no **quién tiene
-   permiso**: no es un mecanismo de control de acceso.
-2. **Ventas y servicios quedan asimétricos, y es intencional.** Las
-   ventas conservan la autorización por propiedad (RF-27): un Encargado
-   de Ventas sigue viendo y anulando solo las suyas. Un servicio es
-   trabajo en curso que cambia de manos; una venta es un hecho consumado
-   imputable a quien la registró.
-3. **La trazabilidad sustituye a la restricción.** Como cualquier
-   encargado puede tocar cualquier solicitud, el historial de cambios
-   (RF-35, RF-59) deja de ser un accesorio y pasa a ser el control
-   principal de responsabilidad del módulo: sin él, no habría forma de
-   saber quién hizo qué sobre una solicitud compartida.
-4. **Aparece un estado operativo nuevo:** la solicitud *sin técnico
-   asignado*, que el panel debe visibilizar (RF-49) porque representa
-   trabajo que nadie ha tomado.
+1. **Ventas y servicios pasan a comportarse igual.** La v1.1 hacía de
+   los servicios un espacio compartido dentro del área, y dedicaba
+   varios párrafos a justificar por qué eso no era una inconsistencia
+   frente al historial privado de ventas. Con PA-04 revisado, ambos
+   módulos siguen el mismo modelo: **privado por usuario, con el
+   Administrador viéndolo todo**. No hay asimetría que explicar.
+2. **El técnico deja de ser un problema de autorización.** Al ser texto
+   libre y no una cuenta, no hay que validar si está activo, ni
+   reasignar cuando se bloquea, ni impedir que alguien se autoasigne.
+   Desaparecen cuatro reglas y un caso de uso.
+3. **Cotizar y cerrar se separan.** El Administrador cotiza tras la
+   revisión; el Encargado de Servicios cierra cuando termina el trabajo.
+   Eso reparte la responsabilidad —quien decide el precio no es quien
+   ejecuta— y es la razón de que pasar a *En atención* ya no tenga
+   guarda: el trabajo empieza antes de que exista el importe.
+4. **El historial sigue siendo el control de responsabilidad**, aunque
+   ahora cada usuario solo vea lo suyo: es lo que permite saber quién
+   cotizó, quién cambió el estado y quién cerró.
+
+### Una condición que la revisión no resolvía y aquí se fija
+
+PA-03 dice cuándo y quién cotiza, pero no si una solicitud puede
+cerrarse sin monto. **Se decide que no puede** (RN-SER-13): sin esa
+condición, un servicio podría finalizarse sin importe y los ingresos
+del panel (RN-IND-04) dejarían de reflejar lo realmente cobrado. Un
+servicio gratuito se cotiza en cero, que es distinto de no cotizarlo.

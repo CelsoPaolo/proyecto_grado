@@ -471,14 +471,18 @@ el mismo principio que el congelado de precios. `direccion` es
 obligatoria si y solo si `modalidad == DOMICILIO` (RN-SER-04), validado
 en el serializer y reforzado con un `CheckConstraint`.
 
-#### Dos claves foráneas distintas a `Usuario` en la solicitud
+#### Un solo responsable con identidad; el técnico es texto
 
-`registrada_por` (no nula, inmutable) y `tecnico_asignado` (nula,
-mutable) son campos **separados**, conforme a RN-SER-09. `related_name`
-distintos (`solicitudes_registradas` y `solicitudes_asignadas`) para que
-ninguna consulta los confunda. `tecnico_asignado` admite `NULL` porque
-una solicitud puede nacer sin técnico (CU-SER-01) y eso es un estado
-operativo legítimo que el panel debe poder contar (RF-49).
+*(Revisado en spec.md v1.2.)* `registrada_por` es la única clave foránea
+a `Usuario` en la solicitud: no nula e inmutable (RN-SER-11). El
+**técnico** es un `CharField` opcional, una anotación del Administrador
+(RN-SER-09), no una relación. No hay que validar que esa persona tenga
+cuenta, ni reasignar cuando se bloquea, ni impedir autoasignaciones:
+los tres problemas desaparecen al no ser una entidad.
+
+`monto_cobrado` admite `NULL` porque una solicitud nace sin cotizar y
+eso es un estado operativo legítimo que el panel debe poder contar
+(RF-49, RF-60).
 
 #### `EventoSolicitud`: el historial como tabla de primera clase
 
@@ -857,15 +861,15 @@ Clases en `core/permissions.py`:
 | `EsDuenoDeLaVentaOAdmin` | Nivel de objeto: autor de la venta, o admin. | `GET/anular` de una venta (RF-27). |
 
 **Filtrado de consultas por rol.** No basta con permitir o denegar el
-endpoint: `VentaViewSet.get_queryset()` restringe la lista al usuario
-autenticado si su rol es VENTAS. Un Encargado de Ventas nunca recibe,
-ni siquiera paginadas, las ventas de otro. En cambio
-`SolicitudViewSet.get_queryset()` **no filtra por usuario**: RN-SER-15
-hizo de los servicios un espacio compartido.
+endpoint: `VentaViewSet.get_queryset()` y
+`SolicitudViewSet.get_queryset()` restringen la lista al usuario
+autenticado cuando su rol no es Administrador. Un encargado nunca
+recibe, ni siquiera paginadas, las filas de otro.
 
-> La diferencia entre ambos `get_queryset` es la traducción exacta de la
-> asimetría que `spec.md` §11 declara intencional. Se documentará con un
-> comentario en el código para que no parezca una inconsistencia.
+> *(La v1.1 de este plan describía aquí una asimetría entre ambos
+> módulos: servicios compartido, ventas privado. La revisión de PA-04
+> en `spec.md` v1.2 la elimino: los dos se comportan igual, y el código
+> resulta más simple por partida doble.)*
 
 ### 5.2 Las protecciones de la cuenta de administrador
 

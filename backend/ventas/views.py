@@ -43,12 +43,9 @@ class VentaViewSet(
         Un Encargado de Ventas solo ve las suyas; el Administrador ve
         todas (RN-VEN-09).
 
-        Contrasta a proposito con SolicitudViewSet (bloque 5), cuyo
-        get_queryset NO filtra por usuario: PA-04 hizo de los servicios
-        un espacio compartido (RN-SER-15). La asimetria es intencional
-        -un servicio es trabajo en curso que cambia de manos, una venta
-        es un hecho consumado imputable a quien la registro- y esta
-        declarada en spec.md seccion 11.
+        SolicitudViewSet (bloque 5) aplica el MISMO criterio desde la
+        revision de PA-04 en spec.md v1.2: ambos modulos son privados
+        por usuario.
         """
         # El order_by explicito no es redundante: annotate() con
         # agregacion descarta el orden por defecto del Meta, y una
