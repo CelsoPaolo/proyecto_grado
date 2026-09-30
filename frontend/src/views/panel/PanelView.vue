@@ -245,7 +245,7 @@ h1 {
 
 .subtitulo {
   margin: 0.25rem 0 0;
-  color: var(--p-text-muted-color, #64748b);
+  color: var(--p-text-muted-color, #71717a);
 }
 
 .cargando {
@@ -266,7 +266,7 @@ h1 {
 }
 
 .etiqueta {
-  color: var(--p-text-muted-color, #64748b);
+  color: var(--p-text-muted-color, #71717a);
   font-size: 0.9rem;
 }
 
@@ -286,19 +286,19 @@ h1 {
   align-items: center;
   gap: 0.75rem;
   padding: 0.85rem;
-  border: 1px solid var(--p-surface-200, #e2e8f0);
+  border: 1px solid var(--p-surface-200, #e4e4e7);
   border-radius: var(--pcs-radio);
   color: inherit;
   text-decoration: none;
 }
 
 .origen:hover {
-  background: var(--p-surface-50, #f8fafc);
+  background: var(--p-surface-50, #fafafa);
 }
 
 .origen i {
   font-size: 1.4rem;
-  color: var(--p-primary-color, #10b981);
+  color: var(--p-primary-color, #7c3aed);
 }
 
 .origen div {
@@ -307,7 +307,7 @@ h1 {
 }
 
 .origen-etiqueta {
-  color: var(--p-text-muted-color, #64748b);
+  color: var(--p-text-muted-color, #71717a);
   font-size: 0.85rem;
 }
 
@@ -316,7 +316,7 @@ h1 {
 }
 
 .origen small {
-  color: var(--p-text-muted-color, #64748b);
+  color: var(--p-text-muted-color, #71717a);
 }
 
 .tarjetas {
@@ -352,7 +352,7 @@ h1 {
   display: flex;
   justify-content: space-between;
   padding-bottom: 0.35rem;
-  border-bottom: 1px solid var(--p-surface-100, #f1f5f9);
+  border-bottom: 1px solid var(--p-surface-100, #f4f4f5);
 }
 
 .detalle li.urgente strong {
@@ -362,6 +362,6 @@ h1 {
 .nota {
   display: block;
   margin-top: 0.75rem;
-  color: var(--p-text-muted-color, #64748b);
+  color: var(--p-text-muted-color, #71717a);
 }
 </style>

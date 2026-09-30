@@ -225,7 +225,7 @@ async function guardar() {
 }
 
 .ayuda {
-  color: var(--p-text-muted-color, #64748b);
+  color: var(--p-text-muted-color, #71717a);
   font-weight: 400;
 }
 

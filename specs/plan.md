@@ -2,8 +2,8 @@
 
 - **Proyecto:** Sistema ERP interno para PC-Solution (Sucre, Bolivia)
 - **Documento:** Etapa 2 de Spec-Driven Development — Plan técnico
-- **Versión:** 1.1
-- **Fecha:** 2026-09-22
+- **Versión:** 1.2
+- **Fecha:** 2026-09-30
 - **Estado:** **Aprobado** — incorpora las decisiones PT-01 a PT-04
   (ver sección 13)
 - **Deriva de:** `spec.md` v1.1
@@ -14,6 +14,7 @@
 |---|---|---|
 | 1.0 | 2026-09-22 | Versión inicial para revisión. |
 | 1.1 | 2026-09-22 | Se resuelven los puntos pendientes PT-01 a PT-04. Alcance limitado a entorno de desarrollo (PT-01); **invalidación inmediata de sesiones** al bloquear una cuenta, con corrección de un error técnico de la v1.0 (PT-02); PrimeVue confirmado (PT-03); sin carga de datos de ejemplo, salvo el arranque del primer administrador (PT-04). |
+| 1.2 | 2026-09-30 | Se añade §7.6 con la paleta e identidad visual: cromo oscuro sobre área clara, morado como color de marca y los estados semánticos conservando sus colores. Decisión de presentación posterior a las primeras sesiones de uso; no altera ningún comportamiento y por eso no genera RF nuevos. |
 
 > Este documento traduce la especificación funcional a **decisiones
 > técnicas concretas**: arquitectura, modelo de datos, contrato de la API,
@@ -1063,6 +1064,55 @@ Se usa la rejilla adaptable de PrimeVue con tres puntos de corte
 presentación apilada en pantallas estrechas. No se diseña para teléfono
 móvil: `spec.md` §2.2 excluye la aplicación móvil y el personal trabaja
 en mostrador.
+
+### 7.6 Paleta e identidad visual
+
+Decidido el 30/09/2026, después de las primeras sesiones de uso: la
+paleta verde y blanca de arranque no representaba a la empresa. Se
+sustituye por **cromo oscuro sobre área de trabajo clara**.
+
+No se le asigna un RF. Un cambio de paleta no altera ningún
+comportamiento del sistema: ninguna regla de negocio, ningún permiso y
+ningún dato dependen de él. Se registra aquí, que es donde viven las
+decisiones de presentación.
+
+**Dónde vive.** Dos archivos y nada más:
+
+| Archivo | Qué define |
+|---|---|
+| `frontend/src/main.js` | `definePreset(Aura, …)` con las rampas `primary` y `surface`. Es el sitio único. |
+| `frontend/src/assets/main.css` | Fondo del `body` y los tokens propios `--pcs-cromo-*` y `--pcs-degradado-*` |
+
+Los `var(--token, #hex)` repartidos por los componentes son respaldos
+inertes —el token siempre resuelve—, pero se actualizaron igualmente
+para que no asome el verde anterior durante la carga inicial.
+
+**Rampas.** `primary`: violeta `#f5f3ff` … `#2e1065`, con
+`primary.color = {primary.600}` (`#7c3aed`). `surface`: grises fríos
+`#ffffff` … `#09090b`.
+
+**El color sigue siendo información, no decoración.** Los estados
+semánticos —éxito, aviso, peligro, información— **conservan sus colores
+propios** y no pasan a morado. Las existencias bajas en ámbar, una
+venta anulada en rojo o una solicitud sin cotizar resaltada son señales
+que el personal lee de un vistazo; teñirlas del color de la marca las
+borraría. El morado queda para identidad, navegación, botones primarios
+y estados de interacción (`#6d28d9` al pasar el ratón, anillo de foco
+`#a78bfa`).
+
+**Contrastes verificados (RNF-14, WCAG AA).**
+
+| Combinación | Ratio | |
+|---|---|---|
+| Texto `#18181b` sobre blanco | 17,4:1 | ✅ |
+| Texto atenuado `#71717a` sobre blanco | 4,8:1 | ✅ |
+| Botón y menú activo `#7c3aed` + blanco | 5,3:1 | ✅ |
+| Barra lateral `#09090b` + texto `#f4f4f5` | 18,1:1 | ✅ |
+| Barra lateral + opción inactiva `#a1a1aa` | 7,4:1 | ✅ |
+| `#8b5cf6` sobre blanco | 3,9:1 | ⚠️ no se usa como color de texto |
+
+Verificado en navegador con los tres puntos de corte de §7.5 (1440,
+1024 y 768 px).
 
 ---
 

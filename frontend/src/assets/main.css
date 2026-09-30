@@ -1,6 +1,7 @@
 /* Estilos base de PC-Solution ERP.
-   Los componentes visuales los aporta PrimeVue (tema Aura); aqui solo
-   van los tokens propios y el comportamiento adaptable (RNF-12). */
+   Los componentes visuales los aporta PrimeVue; los colores viven en
+   el preset de main.js. Aqui solo van los tokens propios y el
+   comportamiento adaptable (RNF-12). */
 
 :root {
   /* Puntos de corte declarados como referencia del proyecto:
@@ -9,6 +10,28 @@
   --pcs-ancho-maximo: 1440px;
   --pcs-espaciado: 1rem;
   --pcs-radio: 8px;
+
+  /* ── Cromo oscuro ───────────────────────────────────────────────
+     La barra lateral y la cabecera van en negro mientras el area de
+     trabajo sigue clara. Se declaran como tokens propios y no como
+     valores sueltos para que AppLayout no invente colores por su
+     cuenta y para poder ajustarlos desde un solo sitio.
+
+     Contrastes verificados contra #09090b:
+       texto principal  #f4f4f5  ->  18,1:1
+       texto inactivo   #a1a1aa  ->   7,4:1
+     Ambos por encima del 4,5:1 que exige AA. */
+  --pcs-cromo-fondo: #09090b;
+  --pcs-cromo-borde: #27272a;
+  --pcs-cromo-texto: #f4f4f5;
+  --pcs-cromo-texto-tenue: #a1a1aa;
+  --pcs-cromo-hover: #27272a;
+
+  /* Degradados de identidad por rol (Inicio). Ninguno baja de
+     #7c3aed, que con texto blanco da 5,3:1. */
+  --pcs-degradado-admin: linear-gradient(135deg, #2e1065, #6d28d9);
+  --pcs-degradado-ventas: linear-gradient(135deg, #4c1d95, #7c3aed);
+  --pcs-degradado-servicios: linear-gradient(135deg, #5b21b6, #7c3aed);
 }
 
 * {
@@ -24,8 +47,8 @@ body {
 
 body {
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  background: var(--p-surface-50, #f8fafc);
-  color: var(--p-text-color, #1e293b);
+  background: var(--p-surface-50, #fafafa);
+  color: var(--p-text-color, #18181b);
   line-height: 1.5;
 }
 

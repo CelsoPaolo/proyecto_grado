@@ -84,14 +84,19 @@ const opcionesCuenta = computed(() => [
   flex-direction: column;
 }
 
+/* Cabecera y barra lateral van en negro; el area de trabajo sigue
+   clara. Los colores salen de los tokens --pcs-cromo-* de main.css,
+   no se escriben aqui, para que el cromo se ajuste desde un solo
+   sitio. */
 .cabecera {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
   padding: 0.75rem 1.25rem;
-  background: var(--p-surface-0, #fff);
-  border-bottom: 1px solid var(--p-surface-200, #e2e8f0);
+  background: var(--pcs-cromo-fondo, #09090b);
+  border-bottom: 1px solid var(--pcs-cromo-borde, #27272a);
+  color: var(--pcs-cromo-texto, #f4f4f5);
 }
 
 .marca {
@@ -100,12 +105,24 @@ const opcionesCuenta = computed(() => [
   gap: 0.5rem;
   font-weight: 700;
   font-size: 1.1rem;
+  color: var(--pcs-cromo-texto, #f4f4f5);
 }
 
 .identidad {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+/* El boton de cuenta es `text`, asi que hereda el color del tema y
+   sobre negro quedaria ilegible. */
+.identidad :deep(.p-button.p-button-text) {
+  color: var(--pcs-cromo-texto, #f4f4f5);
+}
+
+.identidad :deep(.p-button.p-button-text:hover) {
+  background: var(--pcs-cromo-hover, #27272a);
+  color: var(--pcs-cromo-texto, #f4f4f5);
 }
 
 .cuerpo {
@@ -118,30 +135,41 @@ const opcionesCuenta = computed(() => [
   width: 220px;
   flex-shrink: 0;
   padding: 1rem 0.75rem;
-  background: var(--p-surface-0, #fff);
-  border-right: 1px solid var(--p-surface-200, #e2e8f0);
+  background: var(--pcs-cromo-fondo, #09090b);
+  border-right: 1px solid var(--pcs-cromo-borde, #27272a);
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
 }
 
+/* Las opciones inactivas van atenuadas (#a1a1aa sobre negro = 7,4:1)
+   para que la activa destaque sin necesidad de negrita. */
 .opcion {
   display: flex;
   align-items: center;
   gap: 0.6rem;
   padding: 0.6rem 0.75rem;
   border-radius: var(--pcs-radio);
-  color: inherit;
+  color: var(--pcs-cromo-texto-tenue, #a1a1aa);
   text-decoration: none;
+  transition: background-color 0.15s, color 0.15s;
 }
 
 .opcion:hover {
-  background: var(--p-surface-100, #f1f5f9);
+  background: var(--pcs-cromo-hover, #27272a);
+  color: var(--pcs-cromo-texto, #f4f4f5);
 }
 
 .opcion.activa {
-  background: var(--p-primary-color, #10b981);
+  background: var(--p-primary-color, #7c3aed);
   color: var(--p-primary-contrast-color, #fff);
+}
+
+/* El foco tiene que verse sobre fondo negro: el anillo por defecto del
+   tema es morado oscuro y se perderia. */
+.opcion:focus-visible {
+  outline: 2px solid var(--p-primary-400, #a78bfa);
+  outline-offset: 2px;
 }
 
 .contenido {
@@ -162,7 +190,7 @@ const opcionesCuenta = computed(() => [
     flex-direction: row;
     overflow-x: auto;
     border-right: none;
-    border-bottom: 1px solid var(--p-surface-200, #e2e8f0);
+    border-bottom: 1px solid var(--pcs-cromo-borde, #27272a);
   }
 
   .contenido {

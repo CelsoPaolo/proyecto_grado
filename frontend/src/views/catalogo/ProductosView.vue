@@ -263,7 +263,7 @@ h1 {
 
 .subtitulo {
   margin: 0.25rem 0 0;
-  color: var(--p-text-muted-color, #64748b);
+  color: var(--p-text-muted-color, #71717a);
 }
 
 .filtros {
@@ -292,13 +292,13 @@ h1 {
   display: grid;
   place-items: center;
   border-radius: 6px;
-  background: var(--p-surface-100, #f1f5f9);
-  color: var(--p-text-muted-color, #94a3b8);
+  background: var(--p-surface-100, #f4f4f5);
+  color: var(--p-text-muted-color, #a1a1aa);
 }
 
 .nota {
   display: block;
-  color: var(--p-text-muted-color, #64748b);
+  color: var(--p-text-muted-color, #71717a);
 }
 
 .acciones {

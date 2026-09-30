@@ -43,6 +43,6 @@ const restaurando = computed(() => auth.cargando && !auth.usuario && auth.refres
   display: grid;
   place-items: center;
   gap: 1rem;
-  color: var(--p-text-muted-color, #64748b);
+  color: var(--p-text-muted-color, #71717a);
 }
 </style>

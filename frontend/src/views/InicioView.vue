@@ -43,7 +43,7 @@ h1 {
 
 .subtitulo {
   margin: 0.25rem 0 1.5rem;
-  color: var(--p-text-muted-color, #64748b);
+  color: var(--p-text-muted-color, #71717a);
 }
 
 .accesos {
@@ -66,6 +66,6 @@ h1 {
 
 .acceso i {
   font-size: 1.4rem;
-  color: var(--p-primary-color, #10b981);
+  color: var(--p-primary-color, #7c3aed);
 }
 </style>

@@ -311,7 +311,7 @@ h1 {
 
 .subtitulo {
   margin: 0.25rem 0 0;
-  color: var(--p-text-muted-color, #64748b);
+  color: var(--p-text-muted-color, #71717a);
 }
 
 .columnas {
@@ -351,7 +351,7 @@ h1 {
 .ayuda {
   display: block;
   margin-top: 0.75rem;
-  color: var(--p-text-muted-color, #64748b);
+  color: var(--p-text-muted-color, #71717a);
 }
 
 .sugerencia {
@@ -360,7 +360,7 @@ h1 {
 }
 
 .sugerencia small {
-  color: var(--p-text-muted-color, #64748b);
+  color: var(--p-text-muted-color, #71717a);
 }
 
 .lineas {
@@ -385,7 +385,7 @@ h1 {
   justify-content: space-between;
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid var(--p-surface-200, #e2e8f0);
+  border-top: 1px solid var(--p-surface-200, #e4e4e7);
 }
 
 .total {

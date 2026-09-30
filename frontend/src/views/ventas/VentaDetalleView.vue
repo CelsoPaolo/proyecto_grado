@@ -236,7 +236,7 @@ h1 {
 
 .subtitulo {
   margin: 0.25rem 0 0;
-  color: var(--p-text-muted-color, #64748b);
+  color: var(--p-text-muted-color, #71717a);
 }
 
 .acciones {
@@ -284,7 +284,7 @@ dl {
 
 dt {
   font-weight: 600;
-  color: var(--p-text-muted-color, #64748b);
+  color: var(--p-text-muted-color, #71717a);
 }
 
 dd {
@@ -298,7 +298,7 @@ dd {
   gap: 0.75rem;
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid var(--p-surface-200, #e2e8f0);
+  border-top: 1px solid var(--p-surface-200, #e4e4e7);
 }
 
 .total strong {
@@ -327,7 +327,7 @@ dd {
 }
 
 .ayuda {
-  color: var(--p-text-muted-color, #64748b);
+  color: var(--p-text-muted-color, #71717a);
 }
 
 .pie {

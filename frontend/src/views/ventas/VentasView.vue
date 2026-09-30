@@ -186,7 +186,7 @@ h1 {
 
 .subtitulo {
   margin: 0.25rem 0 0;
-  color: var(--p-text-muted-color, #64748b);
+  color: var(--p-text-muted-color, #71717a);
 }
 
 .filtros {

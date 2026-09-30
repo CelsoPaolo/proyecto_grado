@@ -455,7 +455,7 @@ h1 {
 
 .subtitulo {
   margin: 0.25rem 0 0;
-  color: var(--p-text-muted-color, #64748b);
+  color: var(--p-text-muted-color, #71717a);
 }
 
 .acciones {
@@ -505,7 +505,7 @@ dl {
 
 dt {
   font-weight: 600;
-  color: var(--p-text-muted-color, #64748b);
+  color: var(--p-text-muted-color, #71717a);
 }
 
 dd {
@@ -522,7 +522,7 @@ dd {
 }
 
 .evento-meta {
-  color: var(--p-text-muted-color, #64748b);
+  color: var(--p-text-muted-color, #71717a);
 }
 
 .formulario {
@@ -547,7 +547,7 @@ dd {
 }
 
 .ayuda {
-  color: var(--p-text-muted-color, #64748b);
+  color: var(--p-text-muted-color, #71717a);
 }
 
 .pie {
