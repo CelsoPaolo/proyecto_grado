@@ -353,14 +353,14 @@ escriben en las vistas**. Una vista de DRF recibe, delega y responde.
 │ id                 │
 │ username       UQ  │◄──────────────┐
 │ password (hash)    │               │ registrada_por
-│ nombre_completo    │◄──────┐       │ tecnico_asignado
-│ rol  (ADM/VEN/SER) │       │       │ (PROTECT)
-│ is_active (bloqueo)│       │       │
+│ nombre_completo    │◄──────┐       │ cotizada_por
+│ rol  (ADM/VEN/SER) │       │       │ cerrada_por
+│ is_active (bloqueo)│       │       │ (PROTECT)
 │ date_joined        │       │       │
 └────────────────────┘       │       │
                              │       │
-        ┌────────────────────┘       └──────────────────┐
-        │ usuario / anulada_por (PROTECT)               │
+        ┌────────────────────┘       └───────────────────┐
+        │ usuario / anulada_por (PROTECT)                │
         │                                                │
 ┌───────▼────────────┐                    ┌──────────────▼──────────────┐
 │ Venta              │                    │ SolicitudServicio           │
@@ -370,43 +370,47 @@ escriben en las vistas**. Una vista de DRF recibe, delega y responde.
 │ cliente_telefono   │                    │ cliente_telefono            │
 │ usuario        FK  │                    │ tipo  (MANT/REP/RED/VID)    │
 │ fecha_hora         │                    │ modalidad (TALLER|DOMICILIO)│
-│ estado (CONF/ANUL) │                    │ direccion         NULL      │
+│ estado (CONF/ANUL) │                    │ direccion         ''        │
 │ total     NUMERIC  │                    │ descripcion                 │
 │ motivo_anulacion   │                    │ estado (REG/ATE/FIN/CAN)    │
 │ anulada_por    FK  │                    │ registrada_por    FK        │
-│ fecha_anulacion    │                    │ tecnico_asignado  FK NULL   │
-└─────────┬──────────┘                    │ observaciones     ''        │
-          │ 1                             │ monto_cobrado     NULL      │
-          │                               │ motivo_cancelacion''        │
-          │ N  (CASCADE)                  │ fecha_registro              │
-┌─────────▼──────────┐                    │ fecha_inicio_atencion NULL  │
-│ DetalleVenta       │                    │ fecha_cierre          NULL  │
-│────────────────────│                    │ cerrada_por       FK NULL   │
-│ id                 │                    └──────────────┬──────────────┘
-│ venta          FK  │                                   │ 1
-│ producto  FK PROT  │──────┐                            │
-│ producto_nombre ❄  │      │                            │ N (CASCADE)
-│ precio_unitario ❄  │      │             ┌──────────────▼──────────────┐
-│ cantidad           │      │             │ EventoSolicitud             │
-│ subtotal        ❄  │      │             │─────────────────────────────│
-└────────────────────┘      │             │ id                          │
-                            │             │ solicitud          FK       │
-      ❄ = dato congelado    │             │ tipo_evento                 │
-        (RN-VEN-04)         │             │ estado_anterior / nuevo     │
-                            │             │ tecnico_anterior / nuevo FK │
-┌────────────────────┐      │             │ usuario            FK       │
-│ Producto           │◄─────┘             │ fecha_hora                  │
-│────────────────────│                    │ nota                        │
-│ id                 │                    └─────────────────────────────┘
-│ nombre         UQ  │
-│ descripcion        │      ┌──────────────────────┐
-│ precio   NUMERIC>0 │      │ ConfiguracionSistema │
-│ stock       >= 0   │      │──────────────────────│
-│ categoria  FK PROT │      │ id (singleton = 1)   │
-│ imagen       NULL  │      │ umbral_stock_bajo    │
-│ activo (soft del.) │      │ actualizado_por  FK  │
-└─────────┬──────────┘      │ actualizado_en       │
-          │ N               └──────────────────────┘
+│ fecha_anulacion    │                    │ tecnico     TEXTO LIBRE ★   │
+└─────────┬──────────┘                    │ monto_cobrado     NULL      │
+          │ 1                             │ cotizada_por      FK NULL   │
+          │                               │ fecha_cotizacion  NULL      │
+          │ N  (CASCADE)                  │ observaciones     ''        │
+┌─────────▼──────────┐                    │ motivo_cancelacion''        │
+│ DetalleVenta       │                    │ cerrada_por       FK NULL   │
+│────────────────────│                    │ fecha_registro              │
+│ id                 │                    │ fecha_inicio_atencion NULL  │
+│ venta          FK  │                    │ fecha_cierre          NULL  │
+│ producto  FK PROT  │──────┐             └──────────────┬──────────────┘
+│ producto_nombre ❄  │      │                            │ 1
+│ precio_unitario ❄  │      │                            │
+│ cantidad           │      │                            │ N (CASCADE)
+│ subtotal        ❄  │      │             ┌──────────────▼──────────────┐
+└────────────────────┘      │             │ EventoSolicitud             │
+                            │             │─────────────────────────────│
+      ❄ = dato congelado    │             │ id                          │
+        (RN-VEN-04)         │             │ solicitud          FK       │
+                            │             │ tipo_evento                 │
+      ★ = texto libre, NO   │             │ estado_anterior / nuevo     │
+        es una cuenta       │             │ usuario            FK       │
+        (RN-SER-09)         │             │ fecha_hora                  │
+                            │             │ nota                        │
+┌────────────────────┐      │             └─────────────────────────────┘
+│ Producto           │◄─────┘
+│────────────────────│                    ┌──────────────────────┐
+│ id                 │                    │ ConfiguracionSistema │
+│ nombre         UQ  │                    │──────────────────────│
+│ descripcion        │                    │ id (singleton = 1)   │
+│ precio   NUMERIC>0 │                    │ umbral_stock_bajo    │
+│ stock       >= 0   │                    │ actualizado_por  FK  │
+│ categoria  FK PROT │                    │ actualizado_en       │
+│ imagen       NULL  │                    └──────────────────────┘
+│ activo (soft del.) │
+└─────────┬──────────┘
+          │ N
           │ (PROTECT)
 ┌─────────▼──────────┐
 │ Categoria          │
@@ -487,13 +491,26 @@ eso es un estado operativo legítimo que el panel debe poder contar
 
 #### `EventoSolicitud`: el historial como tabla de primera clase
 
-PA-04 convirtió el módulo de servicios en un espacio compartido: cualquier
-encargado puede tocar cualquier solicitud abierta. Como señala la sección
-11 de `spec.md`, eso hace del historial el control principal de
-responsabilidad del módulo, no un accesorio. Por eso es una tabla propia,
-de solo inserción (nunca se actualiza ni se borra), que registra con el
-mismo formato los tres tipos de evento: cambio de estado, asignación de
-técnico y cierre (RF-35, RF-59).
+*(Reescrito tras la revisión de PA-04 en spec.md v1.2.)* El esbozo
+anterior justificaba esta tabla diciendo que el módulo era un espacio
+compartido donde cualquier encargado podía tocar cualquier solicitud
+abierta. **Eso dejó de ser cierto:** desde la v1.2 cada solicitud la ven
+solo quien la registró y el Administrador (RN-SER-15), igual que en
+ventas.
+
+El historial no pierde importancia por ello; la gana por otro motivo.
+Sobre una misma solicitud actúan **dos personas distintas**: el
+Administrador la cotiza y anota al técnico (RF-56), y el registrador la
+inicia y la cierra. Ninguno de los dos ve la traza completa del otro en
+los campos del registro, porque cada campo guarda solo el último valor.
+El historial es lo que permite saber quién hizo qué y cuándo, incluso con
+la visibilidad restringida.
+
+Por eso es una tabla propia, de **solo inserción** (nunca se actualiza ni
+se borra), que registra con el mismo formato los cuatro tipos de evento:
+cambio de estado, cotización, anotación de técnico y cierre (RF-35,
+RF-59). El técnico se **anota**, no se asigna: es texto libre y no una
+relación (RN-SER-09).
 
 #### `ConfiguracionSistema` como fila única
 
@@ -536,7 +553,7 @@ deben cumplirse pase lo que pase (RNF-08, RNF-11):
 | `venta` | `(usuario, fecha_hora DESC)` | Historial propio del encargado (RF-21). |
 | `venta` | `(fecha_hora DESC)`, `(estado)` | Filtros e indicador del día (RF-22, RF-48). |
 | `detalle_venta` | `(venta)` | Carga del detalle y devolución de stock. |
-| `solicitud` | `(estado)`, `(tecnico_asignado)`, `(fecha_registro DESC)` | Filtros de RF-37, RF-60 e indicador RF-49. |
+| `solicitud` | `(estado)`, `(registrada_por, fecha_registro DESC)`, `(fecha_registro DESC)` | Visibilidad por registrador (RN-SER-15) y filtros de RF-37, RF-60 e indicador RF-49. |
 | `solicitud` | `(estado, fecha_cierre)` | Ingresos por servicios del día (RN-IND-04). |
 | `producto` | `(categoria)`, `(activo)`, `(stock)` | Catálogo filtrado y existencias bajas (RF-13, RF-50). |
 | `evento_solicitud` | `(solicitud, fecha_hora)` | Historial ordenado de una solicitud. |
