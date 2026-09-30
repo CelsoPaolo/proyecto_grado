@@ -1,0 +1,254 @@
+{% comment %}
+Informe de servicio tecnico en PDF (RF-67).
+
+Es el UNICO documento que sale del sistema hacia el cliente. No es un
+documento fiscal: spec.md 2.2 sigue excluyendo la facturacion.
+
+El pie lo escribe el servidor -fecha y autor-, que es la razon de que
+el informe se genere aqui y no en el navegador.
+
+Se escribe con tablas y estilos en linea a proposito: xhtml2pdf no
+implementa flexbox ni grid, y una maquetacion moderna saldria
+descolocada en el PDF.
+{% endcomment %}
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      /* El pie va en un marco estatico, que es el mecanismo propio de
+         xhtml2pdf: `position: fixed` lo ignora y el pie acabaria
+         flotando al final del texto en lugar de anclado abajo. Asi
+         ademas se repite en cada pagina si la descripcion es larga.
+
+         Carta = 21,59 x 27,94 cm. Margenes de 1,8 y 2 cm dejan
+         17,6 cm utiles de ancho. */
+      @page {
+        size: letter portrait;
+        margin: 1.8cm 2cm;
+
+        @frame contenido {
+          left: 2cm;
+          width: 17.6cm;
+          top: 1.8cm;
+          height: 24.3cm;
+        }
+
+        @frame pie_pagina {
+          -pdf-frame-content: pie;
+          left: 2cm;
+          width: 17.6cm;
+          top: 26.3cm;
+          height: 1.2cm;
+        }
+      }
+
+      body {
+        font-family: Helvetica, sans-serif;
+        font-size: 10.5pt;
+        color: #18181b;
+        line-height: 1.45;
+      }
+
+      .membrete td {
+        vertical-align: middle;
+      }
+
+      .membrete .marca {
+        font-size: 17pt;
+        font-weight: bold;
+        letter-spacing: 0.5pt;
+      }
+
+      .membrete .giro {
+        font-size: 9pt;
+        color: #52525b;
+      }
+
+      /* Linea morada de la identidad (plan.md 7.6).
+
+         Se dibuja con <hr> y no con el borde de un div vacio: sin
+         contenido, xhtml2pdf no le da altura al div y el borde no
+         llega a dibujarse.
+
+         El grosor y el color van en los ATRIBUTOS del <hr>, no en el
+         CSS: xhtml2pdf construye la linea leyendo `color` y `size`
+         del propio tag e ignora las reglas de hoja de estilo, por lo
+         que la regla salia negra y fina. Del CSS solo respeta los
+         margenes. */
+      .regla {
+        margin: 10pt 0 14pt;
+      }
+
+      h1 {
+        font-size: 13pt;
+        margin: 0;
+        text-transform: uppercase;
+        letter-spacing: 0.6pt;
+      }
+
+      .numero {
+        font-size: 13pt;
+        font-weight: bold;
+        color: #6d28d9;
+      }
+
+      h2 {
+        font-size: 10pt;
+        text-transform: uppercase;
+        letter-spacing: 0.5pt;
+        color: #52525b;
+        border-bottom: 0.5pt solid #d4d4d8;
+        padding-bottom: 3pt;
+        margin: 16pt 0 6pt;
+      }
+
+      .datos td {
+        padding: 2.5pt 0;
+      }
+
+      .datos .etiqueta {
+        color: #52525b;
+        width: 32%;
+      }
+
+      .parrafo {
+        margin: 0;
+        text-align: justify;
+      }
+
+      .monto {
+        font-size: 13pt;
+        font-weight: bold;
+      }
+
+      .sin-cotizar {
+        color: #b45309;
+      }
+
+      #pie {
+        border-top: 0.5pt solid #d4d4d8;
+        padding-top: 5pt;
+        font-size: 8pt;
+        color: #71717a;
+      }
+    </style>
+  </head>
+
+  <body>
+    <table class="membrete" width="100%">
+      <tr>
+        <td width="80">
+          <img src="{{ logo }}" width="72" alt="PC-Solution" />
+        </td>
+        <td>
+          <div class="marca">PC-SOLUTION</div>
+          <div class="giro">
+            Laboratorio técnico de computadoras<br />
+            Sucre, Bolivia
+          </div>
+        </td>
+      </tr>
+    </table>
+
+    <hr class="regla" color="#7c3aed" size="2.5" />
+
+    <table width="100%">
+      <tr>
+        <td><h1>Informe de servicio técnico</h1></td>
+        <td align="right" class="numero">N.º {{ solicitud.id }}</td>
+      </tr>
+    </table>
+
+    <h2>Datos de la solicitud</h2>
+    <table class="datos" width="100%">
+      <tr>
+        <td class="etiqueta">Cliente</td>
+        <td>{{ solicitud.cliente_nombre }}</td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Teléfono</td>
+        <td>{{ solicitud.cliente_telefono }}</td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Tipo de servicio</td>
+        <td>
+          {{ solicitud.get_tipo_display }}
+          ({{ solicitud.get_modalidad_display|lower }})
+        </td>
+      </tr>
+      {% if solicitud.direccion %}
+        <tr>
+          <td class="etiqueta">Dirección</td>
+          <td>{{ solicitud.direccion }}</td>
+        </tr>
+      {% endif %}
+      <tr>
+        <td class="etiqueta">Estado</td>
+        <td>{{ solicitud.get_estado_display }}</td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Fecha de registro</td>
+        <td>{{ solicitud.fecha_registro|date:"d/m/Y H:i" }}</td>
+      </tr>
+      {% if solicitud.fecha_cierre %}
+        <tr>
+          <td class="etiqueta">Fecha de cierre</td>
+          <td>{{ solicitud.fecha_cierre|date:"d/m/Y H:i" }}</td>
+        </tr>
+      {% endif %}
+    </table>
+
+    <h2>Problema reportado</h2>
+    <p class="parrafo">{{ solicitud.descripcion|linebreaksbr }}</p>
+
+    {% if solicitud.observaciones %}
+      <h2>Trabajo realizado</h2>
+      <p class="parrafo">{{ solicitud.observaciones|linebreaksbr }}</p>
+    {% endif %}
+
+    {% if solicitud.motivo_cancelacion %}
+      <h2>Motivo de la cancelación</h2>
+      <p class="parrafo">{{ solicitud.motivo_cancelacion|linebreaksbr }}</p>
+    {% endif %}
+
+    <h2>Responsable e importe</h2>
+    <table class="datos" width="100%">
+      <tr>
+        <td class="etiqueta">Técnico</td>
+        {# RN-SER-09: anotacion de texto libre; puede no estar puesta. #}
+        <td>{{ solicitud.tecnico|default:"Por asignar" }}</td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Monto</td>
+        <td>
+          {% if solicitud.esta_cotizada %}
+            {% comment %}
+              RN-SER-17: cero es un monto valido y significa cortesia o
+              garantia, no ausencia de cotizacion. Va con {% comment %}
+              y no con {#...#}, que en Django solo funciona en UNA
+              linea: en varias, el texto se imprime tal cual dentro del
+              documento que se entrega al cliente.
+            {% endcomment %}
+            <span class="monto">Bs {{ solicitud.monto_cobrado|floatformat:2 }}</span>
+          {% else %}
+            <span class="sin-cotizar">Pendiente de cotización</span>
+          {% endif %}
+        </td>
+      </tr>
+    </table>
+
+    {% if not solicitud.fecha_cierre %}
+      <h2>Nota</h2>
+      <p class="parrafo">
+        Este servicio se encuentra en curso. El presente documento sirve
+        como constancia de recepción del equipo.
+      </p>
+    {% endif %}
+
+    <div id="pie">
+      Generado el {{ generado_en|date:"d/m/Y H:i" }} por {{ generado_por }} ·
+      PC-Solution, Sucre · Documento interno, no válido como factura.
+    </div>
+  </body>
+</html>

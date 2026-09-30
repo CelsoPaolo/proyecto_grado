@@ -214,4 +214,53 @@ describe('normalizacion de errores (plan.md 4.3)', () => {
     expect(normalizado).toHaveProperty('errores')
     expect(normalizado).toHaveProperty('estado')
   })
+
+  it('recupera el mensaje de un error que llega como blob', async () => {
+    /* RF-67: la descarga del informe pide responseType blob, y axios
+       aplica ese tipo TAMBIEN al cuerpo del error. Sin desempaquetarlo,
+       un 404 se degradaria a «Ocurrio un error inesperado» y quien
+       pidiera el informe de una solicitud ajena no sabria por que. */
+    estadoDeSesion()
+    simularServidor(async (config) => {
+      throw {
+        config,
+        response: {
+          status: 404,
+          data: new Blob(
+            [JSON.stringify({ codigo: 'NO_ENCONTRADO', detalle: 'No existe.' })],
+            { type: 'application/json' },
+          ),
+          headers: {},
+        },
+      }
+    })
+
+    const fallo = await http
+      .get('/solicitudes/99/pdf', { responseType: 'blob' })
+      .catch((e) => e)
+
+    expect(fallo.codigo).toBe('NO_ENCONTRADO')
+    expect(fallo.detalle).toBe('No existe.')
+  })
+
+  it('un cuerpo blob que no es JSON no rompe la normalizacion', async () => {
+    estadoDeSesion()
+    simularServidor(async (config) => {
+      throw {
+        config,
+        response: {
+          status: 500,
+          data: new Blob(['<html>error</html>'], { type: 'text/html' }),
+          headers: {},
+        },
+      }
+    })
+
+    const fallo = await http
+      .get('/solicitudes/1/pdf', { responseType: 'blob' })
+      .catch((e) => e)
+
+    expect(fallo.codigo).toBe('ERROR_INTERNO')
+    expect(fallo.estado).toBe(500)
+  })
 })

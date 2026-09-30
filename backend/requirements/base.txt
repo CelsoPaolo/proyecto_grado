@@ -8,3 +8,7 @@ django-cors-headers>=4.4
 django-filter>=24.3
 Pillow>=10.4
 drf-spectacular>=0.27
+# Informe en PDF de la solicitud de servicio (RF-67). Python puro: se
+# instala con pip sin dependencias nativas. Se descarto WeasyPrint,
+# que en Windows exige GTK instalado aparte.
+xhtml2pdf>=0.2.16

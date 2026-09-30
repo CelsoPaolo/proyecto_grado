@@ -10,11 +10,15 @@ Y dentro del modulo, cada usuario ve solo lo que registro (RN-SER-15),
 igual que en ventas.
 """
 
+from django.http import HttpResponse
+from django.utils import timezone
 from django.utils.dateparse import parse_date
+from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from core.pdf import imagen_incrustada, render_a_pdf
 from core.permissions import EsAdministrador, PuedeAtenderServicios
 from servicios.models import ESTADOS_PENDIENTES, SolicitudServicio
 from servicios.serializers import (
@@ -178,3 +182,50 @@ class SolicitudViewSet(
             motivo=entrada.validated_data["motivo"],
         )
         return self._responder(solicitud)
+
+    @extend_schema(
+        summary="Informe de la solicitud en PDF",
+        responses={
+            (200, "application/pdf"): OpenApiResponse(
+                description="El informe, listo para imprimir o entregar."
+            )
+        },
+    )
+    @action(detail=True, methods=["get"])
+    def pdf(self, request, pk=None):
+        """GET /solicitudes/{id}/pdf - RF-67.
+
+        No lleva permiso propio a proposito. Usa `get_object()`, que
+        pasa por `get_queryset()`, de modo que la visibilidad del
+        informe es EXACTAMENTE la del detalle (RN-SER-15, RF-64): quien
+        no puede abrir la solicitud recibe 404 al pedir su PDF, sin una
+        segunda regla de autorizacion que pudiera quedar desalineada de
+        la primera.
+
+        Disponible en cualquier estado, no solo finalizada: una
+        solicitud en curso sirve de constancia de recepcion para el
+        cliente que acaba de dejar su equipo.
+        """
+        solicitud = self.get_object()
+
+        contenido = render_a_pdf(
+            "servicios/informe_servicio.html",
+            {
+                "solicitud": solicitud,
+                # Fecha y autor los pone el SERVIDOR (RF-67): son el
+                # motivo de que el informe no se genere en el navegador.
+                "generado_en": timezone.localtime(),
+                "generado_por": request.user.nombre_completo,
+                "logo": imagen_incrustada("img/logo-pcsolution.png"),
+            },
+        )
+
+        respuesta = HttpResponse(contenido, content_type="application/pdf")
+        # `inline` y no `attachment`: el navegador lo abre en una
+        # pestaña y desde ahi se decide imprimir o guardar. Quien quiera
+        # elegir carpeta lo hace desde la interfaz (RF-68), que pide el
+        # archivo por su cuenta.
+        respuesta["Content-Disposition"] = (
+            f'inline; filename="informe-servicio-{solicitud.pk}.pdf"'
+        )
+        return respuesta

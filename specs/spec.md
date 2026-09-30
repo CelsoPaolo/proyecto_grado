@@ -2,8 +2,8 @@
 
 - **Proyecto:** Sistema ERP interno para PC-Solution (Sucre, Bolivia)
 - **Documento:** Etapa 1 de Spec-Driven Development — Especificación funcional
-- **Versión:** 1.2
-- **Fecha:** 2026-09-29
+- **Versión:** 1.3
+- **Fecha:** 2026-09-30
 - **Estado:** **Aprobada** — incorpora las decisiones PA-01 a PA-05
   (ver sección 11)
 
@@ -14,6 +14,7 @@
 | 1.0 | 2026-09-22 | Versión inicial para revisión. |
 | 1.1 | 2026-09-22 | Se resuelven las preguntas abiertas PA-01 a PA-05. Cambios principales: umbral global de existencias bajas configurable (PA-01); anulación de ventas sin plazo (PA-02); monto cobrado por servicio e indicador de ingresos por servicios (PA-03); visibilidad compartida de las solicitudes entre el personal de servicios (PA-04); técnico asignado distinto del usuario registrador (PA-05). |
 | 1.2 | 2026-09-29 | **Se revisan PA-03, PA-04 y PA-05 antes de implementar el módulo de servicios.** El monto lo cotiza y registra el **Administrador** tras la revisión, no el técnico al finalizar (PA-03). Cada solicitud la ven **solo quien la registró y el Administrador**, no toda el área (PA-04). El técnico deja de ser una entidad asignable y pasa a ser **una anotación de texto libre** del Administrador (PA-05). Consecuencia notable: desaparece la asimetría entre ventas y servicios que la v1.1 declaraba intencional. |
+| 1.3 | 2026-09-30 | **Se añade el informe en PDF de la solicitud de servicio (RF-67, RF-68).** Surge del uso real: el cliente deja su equipo y se va sin nada en la mano, y al recogerlo no hay forma de entregarle por escrito qué se le hizo. Es el único documento que sale del sistema hacia el cliente; §2.2 sigue excluyendo la facturación y el portal del cliente, y esto no lo contradice. |
 
 > **Nota sobre la numeración:** los identificadores (RF-, RN-, RNF-, CU-,
 > SUP-) son estables entre versiones. Los requerimientos añadidos en la
@@ -74,6 +75,14 @@ Queda explícitamente **excluido** de este sistema:
 - Comercio electrónico o catálogo público en internet.
 - Notificaciones automáticas al cliente (correo, SMS, WhatsApp).
 - Aplicación móvil nativa.
+
+> **Precisión sobre el informe en PDF (v1.3, RF-67).** El informe de
+> servicio que el personal imprime o descarga para entregar en mano al
+> cliente **no** contradice ninguna de estas exclusiones. No es un
+> documento fiscal, no se envía solo a ningún lado y no supone que el
+> cliente entre al sistema: lo genera un usuario autenticado y se lo da
+> al cliente igual que le daría un papel escrito a mano. Sigue siendo
+> el personal quien lo entrega.
 
 ### 2.3 Nota sobre los datos del cliente
 
@@ -725,6 +734,8 @@ precondición, flujo principal, flujos alternativos y postcondición.
 | RF-62 | El sistema debe aceptar un monto de cero y rechazar montos negativos. |
 | RF-63 | El sistema debe impedir la edición del monto, de las observaciones y del técnico una vez finalizada la solicitud. |
 | RF-64 | El sistema debe impedir que un Encargado de Servicios acceda a una solicitud que no registró, ni siquiera solicitando su identificador directamente. |
+| RF-67 | El sistema debe permitir descargar en PDF el informe de una solicitud de servicio, con el membrete de la empresa, la fecha de generación y quién lo generó. |
+| RF-68 | El sistema debe ofrecer al usuario elegir la ubicación de guardado del informe cuando el navegador lo permita. |
 
 ### 7.5 Gestión de usuarios
 

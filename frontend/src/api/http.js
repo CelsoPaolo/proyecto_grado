@@ -73,10 +73,38 @@ async function renovarToken() {
   return data.access
 }
 
+/**
+ * Convierte a objeto el cuerpo de error que llega como Blob.
+ *
+ * La descarga del informe en PDF (RF-67) pide `responseType: 'blob'`,
+ * y axios aplica ese tipo TAMBIEN a las respuestas de error. Un 404
+ * llegaria entonces como un Blob con el JSON dentro, `cuerpo.codigo`
+ * seria undefined y normalizarError() lo degradaria a un
+ * «Ocurrio un error inesperado», escondiendo el motivo real.
+ *
+ * Se desempaqueta aqui, y no dentro de normalizarError(), porque leer
+ * un Blob es asincrono: meterlo alli obligaria a volver asincrona una
+ * funcion que usan todas las vistas.
+ */
+async function desempaquetarBlobDeError(error) {
+  const cuerpo = error.response?.data
+
+  if (typeof Blob === 'undefined' || !(cuerpo instanceof Blob)) return
+
+  try {
+    error.response.data = JSON.parse(await cuerpo.text())
+  } catch {
+    // No era JSON. Se deja como esta: normalizarError() dara el
+    // mensaje generico, que para un cuerpo ilegible es lo correcto.
+  }
+}
+
 // ── 2 y 3. Interceptor de respuesta ───────────────────────────────────
 http.interceptors.response.use(
   (respuesta) => respuesta,
   async (error) => {
+    await desempaquetarBlobDeError(error)
+
     const original = error.config
     const estado = error.response?.status
 

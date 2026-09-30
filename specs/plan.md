@@ -6,7 +6,7 @@
 - **Fecha:** 2026-09-30
 - **Estado:** **Aprobado** — incorpora las decisiones PT-01 a PT-04
   (ver sección 13)
-- **Deriva de:** `spec.md` v1.1
+- **Deriva de:** `spec.md` v1.3
 
 ### Historial de versiones
 
@@ -14,7 +14,7 @@
 |---|---|---|
 | 1.0 | 2026-09-22 | Versión inicial para revisión. |
 | 1.1 | 2026-09-22 | Se resuelven los puntos pendientes PT-01 a PT-04. Alcance limitado a entorno de desarrollo (PT-01); **invalidación inmediata de sesiones** al bloquear una cuenta, con corrección de un error técnico de la v1.0 (PT-02); PrimeVue confirmado (PT-03); sin carga de datos de ejemplo, salvo el arranque del primer administrador (PT-04). |
-| 1.2 | 2026-09-30 | Se añaden §7.6 (paleta e identidad visual: cromo oscuro sobre área clara, morado como color de marca y los estados semánticos conservando sus colores) y §7.7 (pantalla de Inicio por rol, decorativa, que deja de duplicar la barra lateral). Decisiones de presentación posteriores a las primeras sesiones de uso; ninguna altera un comportamiento y por eso no generan RF nuevos. |
+| 1.2 | 2026-09-30 | Se añaden §7.6 (paleta e identidad visual: cromo oscuro sobre área clara, morado como color de marca y los estados semánticos conservando sus colores) y §7.7 (pantalla de Inicio por rol, decorativa, que deja de duplicar la barra lateral). Decisiones de presentación posteriores a las primeras sesiones de uso; ninguna altera un comportamiento y por eso no generan RF nuevos. Se añade además §7.8 y el endpoint `GET /solicitudes/{id}/pdf` en §4.4, que implementan RF-67 y RF-68 de `spec.md` v1.3. |
 
 > Este documento traduce la especificación funcional a **decisiones
 > técnicas concretas**: arquitectura, modelo de datos, contrato de la API,
@@ -755,6 +755,15 @@ permitiría alterarlo desde el navegador.
 | POST | `/solicitudes/{id}/iniciar` | A, S | Pasa a *En atención*. Sin guardas: el trabajo empieza antes de cotizar. | RF-31 |
 | POST | `/solicitudes/{id}/finalizar` | A, S | Cierra con observaciones; 409 si no hay monto cotizado. | RF-32, RF-33, RF-61 |
 | POST | `/solicitudes/{id}/cancelar` | A, S | Cancela con motivo. | RF-34 |
+| GET | `/solicitudes/{id}/pdf` | A (todas), S (propias) | Informe para el cliente, `application/pdf`. Disponible en cualquier estado. Sin permiso propio: hereda el del detalle. | RF-67 |
+
+> **Por qué el informe no lleva permiso propio.** Usa `get_object()`,
+> que pasa por el mismo `get_queryset()` que el detalle. Así la
+> visibilidad del PDF **no puede** desalinearse de la de la solicitud:
+> quien recibe 404 al abrirla recibe 404 al pedir su informe. Una
+> segunda regla de autorización, escrita aparte, sería una regla que
+> algún día se quedaría atrás —y el informe lleva el nombre y el
+> teléfono de un cliente.
 
 Cada transición es un endpoint con nombre propio en lugar de un
 `PATCH {"estado": "..."}`. Así la máquina de estados de RN-SER-02 vive en
@@ -1163,6 +1172,52 @@ nada que la frase de al lado no diga ya. El saludo sigue siendo un
 **Queda cubierto por prueba** que el Inicio no contiene ningún
 elemento pulsable. Es lo que impide que la duplicación del menú
 vuelva a colarse más adelante.
+
+### 7.8 Informe en PDF (RF-67, RF-68)
+
+**Se genera en el servidor.** Se evaluó generarlo en el navegador con
+jsPDF y se descartó por dos razones, la segunda de más peso:
+
+1. La plantilla queda en un solo sitio y en HTML, en vez de maquetada
+   a mano dentro de JavaScript.
+2. **La fecha de generación y el nombre de quien genera el informe los
+   pone el servidor**, que ya sabe quién está autenticado. Generado en
+   el cliente, ese pie sería un dato que el propio cliente escribe.
+
+`html2pdf.js` quedó descartado de entrada: produce una captura de
+pantalla, no texto. Un PDF de imagen no se puede buscar, ni copiar, ni
+leer con un lector de pantalla. Hay una prueba que extrae el texto del
+PDF generado para dejarlo comprobado y no solo dicho.
+
+**Librería: `xhtml2pdf`.** Python puro, se instala con `pip` sin
+dependencias nativas. Se descartó WeasyPrint: en Windows exige GTK
+instalado aparte, y el entorno de desarrollo de este proyecto es
+Windows.
+
+La plantilla se escribe con tablas y estilos en línea a propósito:
+`xhtml2pdf` no implementa *flexbox* ni *grid*.
+
+**Dónde se guarda (RF-68).** Una página web no puede elegir la carpeta
+por su cuenta; eso lo decide el navegador. Lo que sí puede es **abrir
+el cuadro de guardado nativo** con `showSaveFilePicker()`, y entonces
+es el usuario quien elige Descargas, Documentos o donde prefiera, con
+el nombre ya propuesto (`informe-servicio-12.pdf`). En los navegadores
+que no lo implementan —Firefox, Safari— se descarga a la carpeta
+predeterminada; de ahí el «cuando el navegador lo permita» del
+requerimiento. Vive en `composables/useDescarga.js`, reutilizable el
+día que haya un comprobante de venta.
+
+Cerrar el cuadro de guardado **no** se trata como error: es una
+decisión del usuario y no produce ningún mensaje.
+
+**Un detalle del cliente HTTP.** La descarga pide
+`responseType: 'blob'`, y axios aplica ese tipo también al cuerpo de
+los errores. Sin desempaquetarlo, un 404 llegaría como blob,
+`cuerpo.codigo` sería `undefined` y el mensaje se degradaría a un
+«Ocurrió un error inesperado». Se desempaqueta en el interceptor de
+`api/http.js`, antes de normalizar, porque leer un blob es asíncrono y
+hacerlo dentro de `normalizarError()` obligaría a volver asíncrona una
+función que usan todas las vistas.
 
 ---
 

@@ -60,4 +60,17 @@ export const serviciosApi = {
 
   cancelar: (id, motivo) =>
     http.post(`/solicitudes/${id}/cancelar`, { motivo }).then((r) => r.data),
+
+  /**
+   * RF-67 — el informe en PDF, generado por el servidor.
+   *
+   * `responseType: 'blob'` hace que axios no intente interpretar los
+   * bytes como texto; sin él, el PDF llegaría corrompido. El
+   * interceptor de http.js sabe desempaquetar el cuerpo de error que
+   * llega como blob cuando la petición falla.
+   */
+  informePdf: (id) =>
+    http
+      .get(`/solicitudes/${id}/pdf`, { responseType: 'blob' })
+      .then((r) => r.data),
 }

@@ -56,6 +56,7 @@ class Codigo:
     ULTIMO_ADMINISTRADOR = "ULTIMO_ADMINISTRADOR"
     AUTOMODIFICACION_PROHIBIDA = "AUTOMODIFICACION_PROHIBIDA"
     CATEGORIA_CON_PRODUCTOS = "CATEGORIA_CON_PRODUCTOS"
+    ERROR_AL_GENERAR_PDF = "ERROR_AL_GENERAR_PDF"
     ERROR_INTERNO = "ERROR_INTERNO"
 
 
@@ -211,3 +212,17 @@ class PermisoInsuficiente(ErrorDeNegocio):
     status_code = status.HTTP_403_FORBIDDEN
     codigo = Codigo.PERMISO_INSUFICIENTE
     default_detail = "No tiene permiso para realizar esta operación."
+
+
+class ErrorAlGenerarPdf(ErrorDeNegocio):
+    """RF-67: la plantilla del informe no pudo renderizarse.
+
+    No es un error del usuario: no hay nada que pueda corregir en su
+    peticion. Es un 500, pero pasa por el formato uniforme de error
+    para que el frontend lo trate por el mismo camino que los demas y
+    para no devolver una traza (RNF-06).
+    """
+
+    status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+    codigo = Codigo.ERROR_AL_GENERAR_PDF
+    default_detail = "No se pudo generar el informe en PDF."

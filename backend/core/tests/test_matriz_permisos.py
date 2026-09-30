@@ -80,6 +80,9 @@ MATRIZ = {
         Rol.SERVICIOS,
     ),
     ("POST", "/api/v1/solicitudes/{id}/cotizar"): (Rol.ADMINISTRADOR,),
+    # RF-67: el informe no tiene permiso propio, hereda el del detalle,
+    # por eso declara exactamente los mismos roles que el GET de arriba.
+    ("GET", "/api/v1/solicitudes/{id}/pdf"): (Rol.ADMINISTRADOR, Rol.SERVICIOS),
     # ── Configuracion del sistema: solo Administrador ────────────────
     ("GET", "/api/v1/configuracion"): (Rol.ADMINISTRADOR,),
     ("PATCH", "/api/v1/configuracion"): (Rol.ADMINISTRADOR,),

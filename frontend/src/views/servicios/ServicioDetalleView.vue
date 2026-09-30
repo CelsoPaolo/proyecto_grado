@@ -23,6 +23,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { serviciosApi } from '@/api/servicios'
+import { useDescarga } from '@/composables/useDescarga'
 import { useErroresApi } from '@/composables/useErroresApi'
 import { usePermisos } from '@/composables/usePermisos'
 
@@ -31,6 +32,7 @@ const router = useRouter()
 const toast = useToast()
 const { esAdministrador } = usePermisos()
 const { mensajeGeneral, registrar, limpiar, errorDe } = useErroresApi()
+const { descargando, guardar } = useDescarga()
 
 const solicitud = ref(null)
 const trabajando = ref(false)
@@ -143,6 +145,31 @@ const cancelar = () =>
     'Solicitud cancelada',
   )
 
+/* RF-67 y RF-68 — el informe para el cliente.
+
+   Se ofrece en cualquier estado, no solo finalizada: cuando el cliente
+   acaba de dejar el equipo, el papel que se lleva es la constancia de
+   recepción. */
+async function descargarInforme() {
+  try {
+    const guardado = await guardar(
+      () => serviciosApi.informePdf(solicitud.value.id),
+      `informe-servicio-${solicitud.value.id}.pdf`,
+    )
+    // `false` significa que el usuario cerró el cuadro de guardado.
+    // Cancelar no es un error y no merece ningún mensaje.
+    if (guardado) {
+      toast.add({
+        severity: 'success',
+        summary: 'Informe descargado',
+        life: 3000,
+      })
+    }
+  } catch (error) {
+    toast.add({ severity: 'error', summary: error.detalle, life: 5000 })
+  }
+}
+
 onMounted(cargar)
 </script>
 
@@ -159,6 +186,15 @@ onMounted(cargar)
         <Tag
           :value="solicitud.estado_display"
           :severity="severidadEstado(solicitud.estado)"
+        />
+        <!-- RF-67: en cualquier estado. Una solicitud en curso sirve
+             de constancia de recepción del equipo. -->
+        <Button
+          label="Descargar informe"
+          icon="pi pi-file-pdf"
+          outlined
+          :loading="descargando"
+          @click="descargarInforme"
         />
         <RouterLink :to="{ name: 'servicios' }">
           <Button label="Volver" icon="pi pi-arrow-left" text />
