@@ -14,7 +14,7 @@
 |---|---|---|
 | 1.0 | 2026-09-22 | Versión inicial para revisión. |
 | 1.1 | 2026-09-22 | Se resuelven los puntos pendientes PT-01 a PT-04. Alcance limitado a entorno de desarrollo (PT-01); **invalidación inmediata de sesiones** al bloquear una cuenta, con corrección de un error técnico de la v1.0 (PT-02); PrimeVue confirmado (PT-03); sin carga de datos de ejemplo, salvo el arranque del primer administrador (PT-04). |
-| 1.2 | 2026-09-30 | Se añade §7.6 con la paleta e identidad visual: cromo oscuro sobre área clara, morado como color de marca y los estados semánticos conservando sus colores. Decisión de presentación posterior a las primeras sesiones de uso; no altera ningún comportamiento y por eso no genera RF nuevos. |
+| 1.2 | 2026-09-30 | Se añaden §7.6 (paleta e identidad visual: cromo oscuro sobre área clara, morado como color de marca y los estados semánticos conservando sus colores) y §7.7 (pantalla de Inicio por rol, decorativa, que deja de duplicar la barra lateral). Decisiones de presentación posteriores a las primeras sesiones de uso; ninguna altera un comportamiento y por eso no generan RF nuevos. |
 
 > Este documento traduce la especificación funcional a **decisiones
 > técnicas concretas**: arquitectura, modelo de datos, contrato de la API,
@@ -1044,6 +1044,7 @@ permite navegar nunca puedan divergir**.
 | Módulo | Vistas |
 |---|---|
 | Autenticación | Inicio de sesión; cambio de contraseña propia. |
+| Inicio | Pantalla de entrada por rol: saludo, rol, fecha e ilustración. Sin datos y sin navegación (ver §7.7). |
 | Catálogo | Lista de productos con búsqueda, filtro y marca de stock bajo; formulario de producto; gestión de categorías. |
 | Ventas | Registro de venta (buscador de productos, carrito interno de la pantalla, total en vivo); historial con filtros; detalle con líneas congeladas; diálogo de anulación con motivo. |
 | Servicios | Lista con filtros y accesos rápidos «asignadas a mí» / «sin asignar»; formulario de registro con dirección condicional al tipo; detalle con línea de tiempo del historial; diálogos de asignar, iniciar, finalizar (observaciones + monto) y cancelar. |
@@ -1113,6 +1114,55 @@ y estados de interacción (`#6d28d9` al pasar el ratón, anillo de foco
 
 Verificado en navegador con los tres puntos de corte de §7.5 (1440,
 1024 y 768 px).
+
+### 7.7 Pantalla de Inicio por rol
+
+Decidido el 30/09/2026, junto con la paleta. Tampoco lleva RF, y por
+el mismo motivo: no muestra ningún dato ni cambia ningún
+comportamiento. Es presentación.
+
+**El problema.** La versión de arranque construía sus tarjetas de
+acceso con `menuPara()`, la misma función que levanta la barra
+lateral, de modo que eran los mismos enlaces dos veces. Y como el
+número de tarjetas depende de los módulos del rol, al Encargado de
+Servicios —que tiene uno solo— le quedaba una tarjeta suelta en una
+pantalla en blanco.
+
+**La decisión: identidad, no resumen.** Se evaluó sustituir las
+tarjetas por un resumen con cifras reales por rol. Se descartó: exigía
+un endpoint nuevo y dejaba una segunda vista de los mismos números que
+ya da el panel, que habría que mantener sincronizada. La pantalla
+queda **puramente decorativa**: saluda, nombra el rol, da la fecha y
+explica en una frase de qué se ocupa.
+
+Lo que se pierde está asumido: quien quiera saber qué tiene pendiente
+entra a su módulo, que es donde la lista está completa y al día.
+
+| Rol | Icono | Degradado |
+|---|---|---|
+| Administrador | `pi-shield` | `--pcs-degradado-admin` |
+| Encargado de Ventas | `pi-shopping-cart` | `--pcs-degradado-ventas` |
+| Encargado de Servicios | `pi-wrench` | `--pcs-degradado-servicios` |
+
+La identidad de los tres vive en un único objeto plano,
+`config/identidadRol.js`, porque el encabezado y la ilustración
+necesitan los mismos valores y duplicarlos garantizaba que acabaran
+divergiendo.
+
+**La ilustración** es un SVG en línea —sin dependencias ni archivos de
+imagen nuevos—, dibujado con los tokens del tema. El motivo son trazos
+de circuito, los mismos del logo, para que la pantalla hable el
+lenguaje visual de la marca en lugar de traer un dibujo genérico.
+
+**Accesibilidad.** El SVG y el icono del encabezado son decoración:
+llevan `aria-hidden` y el SVG no lleva `<title>`, porque anunciarlos
+solo alargaría el recorrido de un lector de pantalla sin informar de
+nada que la frase de al lado no diga ya. El saludo sigue siendo un
+`<h1>` real: la estructura del documento no depende de la decoración.
+
+**Queda cubierto por prueba** que el Inicio no contiene ningún
+elemento pulsable. Es lo que impide que la duplicación del menú
+vuelva a colarse más adelante.
 
 ---
 
