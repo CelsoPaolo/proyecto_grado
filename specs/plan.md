@@ -1056,7 +1056,7 @@ permite navegar nunca puedan divergir**.
 | Inicio | Pantalla de entrada por rol: saludo, rol, fecha e ilustración. Sin datos y sin navegación (ver §7.7). |
 | Catálogo | Lista de productos con búsqueda, filtro y marca de stock bajo; formulario de producto; gestión de categorías. |
 | Ventas | Registro de venta (buscador de productos, carrito interno de la pantalla, total en vivo); historial con filtros; detalle con líneas congeladas; diálogo de anulación con motivo. |
-| Servicios | Lista con filtros y accesos rápidos «asignadas a mí» / «sin asignar»; formulario de registro con dirección condicional al tipo; detalle con línea de tiempo del historial; diálogos de asignar, iniciar, finalizar (observaciones + monto) y cancelar. |
+| Servicios | Lista con filtros de estado y tipo, más un acceso rápido a «pendientes de cotizar» que solo ve el Administrador (RF-60); formulario de registro con dirección condicional al tipo, sin monto ni técnico; detalle con línea de tiempo del historial; diálogos de cotizar (monto y técnico, solo Administrador), finalizar (observaciones) y cancelar (motivo), más la acción directa de iniciar. Botón de descarga del informe en PDF (RF-67). |
 | Usuarios | Lista con rol y estado; formulario de alta y edición; acciones de bloqueo y restablecimiento de contraseña. |
 | Panel | Tarjetas de indicadores, desglose de ingresos y tabla de productos con stock bajo, cada una enlazando a su módulo (RF-51). |
 | Configuración | Umbral global de existencias bajas. |
