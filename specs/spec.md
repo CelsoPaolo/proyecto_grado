@@ -108,7 +108,7 @@ ningún acceso al sistema y no constituye un módulo de gestión de clientes.
 | **Anulación** | Invalidación de una venta registrada por error, que devuelve las existencias al inventario. |
 | **Solicitud de servicio** | Registro de un trabajo técnico pedido por un cliente, con su contacto, descripción del problema y seguimiento de estado. |
 | **Usuario registrador** | Usuario que dio de alta la solicitud de servicio. Queda fijo y no cambia nunca. |
-| **Técnico asignado** | Usuario responsable de atender la solicitud. Puede ser distinto del registrador y puede reasignarse mientras la solicitud siga abierta. |
+| **Técnico** | Nombre anotado en **texto libre** por el Administrador al cotizar la solicitud (RN-SER-09). No es una cuenta del sistema ni una relación con `Usuario`: es un dato informativo para el seguimiento, nunca un mecanismo de acceso. |
 | **Monto cobrado** | Importe cobrado al cliente por un servicio técnico, registrado al finalizarlo. |
 | **Servicio en taller** | Servicio atendido en las instalaciones de PC-Solution (mantenimiento, reparación). No requiere dirección. |
 | **Servicio a domicilio** | Servicio atendido en el lugar del cliente (instalación de redes, videovigilancia). Requiere dirección. |
