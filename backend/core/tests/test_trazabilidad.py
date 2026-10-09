@@ -59,9 +59,11 @@ NO_FUNCIONALES = _requerimientos_declarados("RNF")
 def test_la_especificacion_declara_los_requerimientos_esperados():
     """Cifra de control: si cambia, es que se anadio o quito alguno."""
     # 66 hasta spec.md v1.2; 68 desde la v1.3, que anade el informe en
-    # PDF de la solicitud de servicio (RF-67, RF-68).
-    assert len(FUNCIONALES) == 68, f"RF declarados: {len(FUNCIONALES)}"
-    assert len(NO_FUNCIONALES) == 23, f"RNF declarados: {len(NO_FUNCIONALES)}"
+    # PDF de la solicitud de servicio (RF-67, RF-68); 97 y 29 desde la
+    # v1.4, que anade codigo de producto, garantia, reportes,
+    # movimientos de stock y clientes (RF-69 a RF-97, RNF-24 a RNF-29).
+    assert len(FUNCIONALES) == 97, f"RF declarados: {len(FUNCIONALES)}"
+    assert len(NO_FUNCIONALES) == 29, f"RNF declarados: {len(NO_FUNCIONALES)}"
 
 
 @pytest.mark.parametrize("requerimiento", FUNCIONALES)

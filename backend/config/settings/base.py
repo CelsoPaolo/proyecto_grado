@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'configuracion',
     'ventas',
     'servicios',
+    'inventario',  # v1.4: depende de catalogo y ventas (plan.md 2.3)
     'panel',
 ]
 
