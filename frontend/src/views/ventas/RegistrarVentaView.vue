@@ -30,20 +30,48 @@ import DataTable from 'primevue/datatable'
 import InputNumber from 'primevue/inputnumber'
 import InputText from 'primevue/inputtext'
 import Message from 'primevue/message'
+import SelectButton from 'primevue/selectbutton'
 import { useToast } from 'primevue/usetoast'
 import { computed, nextTick, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { productosApi } from '@/api/catalogo'
+import { clientesApi } from '@/api/clientes'
 import { ventasApi } from '@/api/ventas'
 import { useErroresApi } from '@/composables/useErroresApi'
+import FormularioCliente from '@/views/clientes/FormularioCliente.vue'
 
 const router = useRouter()
 const toast = useToast()
 const { mensajeGeneral, codigo, registrar, limpiar, errorDe } = useErroresApi()
 
+// RF-79: cliente ocasional (como hasta la v1.3) o cliente registrado.
+const MODOS = [
+  { label: 'Cliente ocasional', value: 'ocasional' },
+  { label: 'Cliente registrado', value: 'registrado' },
+]
+const modoCliente = ref('ocasional')
 const clienteNombre = ref('')
 const clienteTelefono = ref('')
+const clienteElegido = ref(null)
+const sugerenciasClientes = ref([])
+const dialogoCliente = ref(false)
+
+/** Solo clientes ACTIVOS (RN-CLI-03): un inactivo no se ofrece. */
+async function buscarClientes(evento) {
+  try {
+    const datos = await clientesApi.listar({ buscar: evento.query, activo: 'true', page_size: 10 })
+    sugerenciasClientes.value = datos.results
+  } catch {
+    sugerenciasClientes.value = []
+  }
+}
+
+/** Un cliente registrado desde la venta queda elegido (RNF-16). */
+function alRegistrarCliente(cliente) {
+  modoCliente.value = 'registrado'
+  clienteElegido.value = cliente
+}
 const lineas = ref([])
 const sugerencias = ref([])
 const productoElegido = ref(null)
@@ -70,8 +98,9 @@ const total = computed(() =>
 const puedeConfirmar = computed(
   () =>
     lineas.value.length > 0 &&
-    clienteNombre.value.trim() !== '' &&
-    clienteTelefono.value.trim() !== '',
+    (modoCliente.value === 'registrado'
+      ? Boolean(clienteElegido.value?.id)
+      : clienteNombre.value.trim() !== '' && clienteTelefono.value.trim() !== ''),
 )
 
 async function buscarProductos(evento) {
@@ -176,6 +205,7 @@ function quitar(linea) {
 function limpiarTodo() {
   clienteNombre.value = ''
   clienteTelefono.value = ''
+  clienteElegido.value = null
   lineas.value = []
   faltantes.value = []
   limpiar()
@@ -187,6 +217,7 @@ async function confirmar() {
   confirmando.value = true
   try {
     const venta = await ventasApi.registrar({
+      clienteId: modoCliente.value === 'registrado' ? clienteElegido.value?.id : null,
       clienteNombre: clienteNombre.value,
       clienteTelefono: clienteTelefono.value,
       items: lineas.value,
@@ -227,7 +258,53 @@ async function confirmar() {
       <Card class="panel">
         <template #title>Cliente</template>
         <template #content>
-          <div class="campos">
+          <SelectButton
+            v-model="modoCliente"
+            :options="MODOS"
+            option-label="label"
+            option-value="value"
+            :allow-empty="false"
+            class="modo-cliente"
+            data-prueba="modo-cliente"
+          />
+
+          <div v-if="modoCliente === 'registrado'" class="campos">
+            <div class="campo">
+              <label for="cliente-registrado">Cliente</label>
+              <AutoComplete
+                v-model="clienteElegido"
+                input-id="cliente-registrado"
+                :suggestions="sugerenciasClientes"
+                option-label="nombre"
+                placeholder="Buscar por nombre, teléfono o carnet"
+                force-selection
+                fluid
+                :invalid="Boolean(errorDe('cliente_id'))"
+                @complete="buscarClientes"
+              >
+                <template #option="{ option }">
+                  <div class="sugerencia">
+                    <span>{{ option.nombre }}</span>
+                    <small>{{ option.telefono }}</small>
+                  </div>
+                </template>
+              </AutoComplete>
+              <small v-if="errorDe('cliente_id')" class="error">{{ errorDe('cliente_id') }}</small>
+              <small v-if="clienteElegido?.id" class="ayuda" data-prueba="cliente-elegido">
+                {{ clienteElegido.nombre }} · {{ clienteElegido.telefono }}
+              </small>
+            </div>
+            <Button
+              label="Registrar cliente nuevo"
+              icon="pi pi-user-plus"
+              text
+              size="small"
+              data-prueba="nuevo-cliente"
+              @click="dialogoCliente = true"
+            />
+          </div>
+
+          <div v-else class="campos">
             <div class="campo">
               <label for="cliente">Nombre</label>
               <InputText
@@ -252,9 +329,10 @@ async function confirmar() {
             </div>
           </div>
           <small class="ayuda">
-            Estos datos quedan registrados en la venta. No crean una cuenta
-            para el cliente.
+            El nombre y el teléfono quedan copiados en la venta. Ningún
+            cliente tiene cuenta ni acceso al sistema.
           </small>
+          <FormularioCliente v-model:visible="dialogoCliente" @guardado="alRegistrarCliente" />
         </template>
       </Card>
 
@@ -432,6 +510,10 @@ h1 {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+}
+
+.modo-cliente {
+  margin-bottom: 0.75rem;
 }
 
 .campo-codigo {

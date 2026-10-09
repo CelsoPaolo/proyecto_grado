@@ -1340,7 +1340,7 @@ final del documento.
   - Mutaciones detectadas: cambiar el estado sin confirmación, y mostrar
     la acción a Ventas.
 
-### [ ] T-11.6 — Selector de cliente en el registro de venta
+### [x] T-11.6 — Selector de cliente en el registro de venta
 - **Cubre:** RF-79, RNF-16
 - **Depende de:** T-11.4, T-11.5
 - **Trabajo:** Tres opciones: buscar y elegir, registrar uno nuevo en un
@@ -1348,6 +1348,16 @@ final del documento.
 - **Hecho cuando:** elegir un cliente rellena sus datos; registrar uno
   nuevo desde la venta lo deja elegido; el modo ocasional funciona como
   en la v1.3; los clientes inactivos no se ofrecen.
+- **Resultado (2026-10-09):** selector «Cliente ocasional / Cliente
+  registrado».
+  - En modo registrado hay un autocompletado que solo ofrece clientes
+    activos, y «Registrar cliente nuevo» abre `FormularioCliente`; el
+    cliente creado queda elegido.
+  - Con un cliente registrado, la petición lleva solo `cliente_id`.
+  - El modo ocasional, que es el de por defecto, funciona como en la
+    v1.3: sus pruebas no cambiaron.
+  - 5 pruebas nuevas. Mutaciones detectadas: buscar sin el filtro de
+    activos, y no dejar elegido el cliente nuevo.
 
 ### [ ] T-11.7 — Revisión del bloque 11
 - **Depende de:** T-11.1 a T-11.6

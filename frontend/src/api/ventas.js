@@ -15,11 +15,14 @@ export const ventasApi = {
    * tendria efecto, y mandarlo daria la falsa impresion de que el
    * navegador decide el importe.
    */
-  registrar: ({ clienteNombre, clienteTelefono, items }) =>
+  registrar: ({ clienteId = null, clienteNombre, clienteTelefono, items }) =>
     http
       .post('/ventas', {
-        cliente_nombre: clienteNombre,
-        cliente_telefono: clienteTelefono,
+        // RF-79: con un cliente registrado basta su id; el servidor copia
+        // su nombre y teléfono (RN-VEN-10). Sin él, cliente ocasional.
+        ...(clienteId
+          ? { cliente_id: clienteId }
+          : { cliente_nombre: clienteNombre, cliente_telefono: clienteTelefono }),
         items: items.map((i) => ({
           producto_id: i.producto_id,
           cantidad: i.cantidad,

@@ -41,7 +41,8 @@ bloque 13.
 | 2026-10-09 | T-11.2 Servicio de clientes | `4ebc392` | B 908 / 13 · F 190 / 0 | Desactivar un cliente ya inactivo no es un error, solo no cambia nada. El mensaje de carnet duplicado **no dice a qué cliente pertenece**, para no revelar un dato personal (RN-CLI-06). Hay dos defensas ante el duplicado; la mutación de una sola sobrevive, y es lo esperado. |
 | 2026-10-09 | T-11.3 API de clientes | `db558b2` | B 952 / 10 · F 190 / 0 | Sin `?activo=`, la lista incluye a los inactivos, porque el Administrador los necesita para reactivarlos; el selector de la venta pedirá `activo=true`. El carnet se busca **solo por coincidencia exacta**, para que no se pueda adivinar cifra a cifra. La edición es solo `PATCH`, sin `PUT`. |
 | 2026-10-09 | T-11.4 Cliente en la venta ⚠️ | `39a782b` | B 964 / 8 · F 190 / 0 | La fila del cliente se bloquea con `select_for_update` para que una desactivación simultánea no se cuele. Un `cliente_id` inexistente responde 400 junto al campo. **Incidente corregido:** al insertar la función auxiliar quedó bajo el `@transaction.atomic` de `registrar_venta`, y la venta dejó de ser atómica. Lo detectaron las pruebas de concurrencia de T-8.5 (6 fallos) y se corrigió antes del commit. Se actualizó la prueba de firma de T-4.2 para incluir `cliente_id`; sigue garantizando que no entra precio. |
-| 2026-10-09 | T-11.5 Pantallas de clientes | siguiente commit | B 964 / 8 · F 200 / 0 | La lista muestra los activos por defecto; el filtro se puede limpiar para ver todos. Tras registrar un cliente desde la lista se abre su detalle. El formulario avisa junto al carnet de que es un dato personal. |
+| 2026-10-09 | T-11.5 Pantallas de clientes | `d093179` | B 964 / 8 · F 200 / 0 | La lista muestra los activos por defecto; el filtro se puede limpiar para ver todos. Tras registrar un cliente desde la lista se abre su detalle. El formulario avisa junto al carnet de que es un dato personal. |
+| 2026-10-09 | T-11.6 Selector de cliente en la venta | siguiente commit | B 964 / 8 · F 205 / 0 | El modo por defecto es «Cliente ocasional», para que la pantalla funcione igual que en la v1.3. Con un cliente registrado solo se envía su id, porque el nombre y el teléfono los copia el servidor. |
 
 ## Pendiente para revisión humana
 
@@ -102,6 +103,11 @@ bloque 13.
     junto al campo.
   - En el detalle, como Administrador, desactivar y reactivar con
     confirmación. Como Encargado de Ventas, no debe aparecer esa acción.
+- **T-11.6, venta con cliente:**
+  - En «Registrar venta», cambiar a «Cliente registrado», buscar uno y
+    confirmar la venta.
+  - Repetir registrando un cliente nuevo desde el botón del diálogo.
+  - Comprobar que un cliente desactivado no aparece en la búsqueda.
 - **Dependencias:** `npm audit` informa de 1 vulnerabilidad alta en
   `source-map-js`, una herramienta de desarrollo que ya estaba instalada
   antes de esta versión; no viene de JsBarcode. No apliqué `npm audit
@@ -109,4 +115,4 @@ bloque 13.
 
 ## Dónde se detuvo la sesión
 
-T-11.5 terminada. **Siguiente: T-11.6** (selector de cliente en la venta).
+T-11.6 terminada. **Siguiente: T-11.7** (revisión del bloque 11).
