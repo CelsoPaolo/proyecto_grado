@@ -3,7 +3,10 @@
 from django.db import transaction
 from django.db.models import ProtectedError
 
+from catalogo.models import Producto
 from core.exceptions import Codigo, ErrorDeNegocio
+from inventario.models import TipoMovimiento
+from inventario.services import registrar_movimiento
 
 
 class CategoriaConProductos(ErrorDeNegocio):
@@ -45,6 +48,31 @@ def eliminar_categoria(*, categoria):
         categoria.delete()
     except ProtectedError as exc:
         raise CategoriaConProductos() from exc
+
+
+@transaction.atomic
+def crear_producto(*, usuario, **datos):
+    """CU-CAT-02 — Registrar un producto con su movimiento de alta.
+
+    Las existencias iniciales son el primer cambio de existencias del
+    producto, y como todo cambio dejan su movimiento (RN-MOV-01). Se
+    registra aunque sean cero: asi todo producto tiene en el libro un
+    punto de partida, y la suma de sus movimientos es siempre su stock
+    (RN-MOV-03).
+
+    Antes lo creaba directamente el serializer. Sacarlo a un servicio
+    es lo que permite que el producto y su movimiento vayan en una sola
+    transaccion: si el movimiento falla, el producto no se crea.
+    """
+    producto = Producto.objects.create(**datos)
+    registrar_movimiento(
+        producto=producto,
+        tipo=TipoMovimiento.ALTA,
+        cantidad=producto.stock,
+        stock_resultante=producto.stock,
+        usuario=usuario,
+    )
+    return producto
 
 
 @transaction.atomic

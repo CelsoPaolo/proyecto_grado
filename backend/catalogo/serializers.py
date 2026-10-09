@@ -55,6 +55,22 @@ class ProductoSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["activo"]
 
+    def get_fields(self):
+        """RN-CAT-10: las existencias solo se fijan al crear.
+
+        Despues cambian unicamente por venta, anulacion o ajuste, que
+        dejan su movimiento. Se marcan de solo lectura en vez de
+        descartarlas en update(): asi DRF las ignora del todo, y un
+        PATCH con `stock` no recibe un 400 por un campo que de todos
+        modos no se aplicaria. Un cliente antiguo que siga enviandolas
+        no rompe; simplemente no puede cambiar las existencias por la
+        puerta equivocada (plan.md 4.4).
+        """
+        campos = super().get_fields()
+        if self.instance is not None:
+            campos["stock"].read_only = True
+        return campos
+
     @extend_schema_field(serializers.BooleanField)
     def get_stock_bajo(self, obj):
         """RF-53 — la regla se calcula en el SERVIDOR.

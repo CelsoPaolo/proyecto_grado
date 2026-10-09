@@ -161,17 +161,39 @@ def test_se_rechazan_precio_no_positivo_y_stock_negativo(como_admin, campo, valo
     assert campo in respuesta.data["errores"]
 
 
-def test_el_administrador_edita_un_producto_incluidas_sus_existencias(como_admin):
-    """RF-10: el ajuste de inventario es una edicion normal."""
-    producto = ProductoFactory(stock=10)
+def test_editar_un_producto_no_cambia_sus_existencias(como_admin):
+    """RF-10 revisado en spec.md v1.4 y RN-CAT-10.
+
+    Hasta la v1.3 esta prueba verificaba lo contrario: que un PATCH con
+    `stock` las cambiaba, porque el ajuste de inventario era una edicion
+    normal. Desde la v1.4 las existencias solo cambian por venta,
+    anulacion o ajuste con motivo (CU-CAT-07), que dejan su movimiento.
+    El resto del PATCH se sigue aplicando.
+    """
+    producto = ProductoFactory(stock=10, precio=100)
 
     respuesta = como_admin.patch(
-        f"{PRODUCTOS}/{producto.id}", {"stock": 25}, format="json"
+        f"{PRODUCTOS}/{producto.id}", {"stock": 25, "precio": "120.00"}, format="json"
     )
 
     assert respuesta.status_code == status.HTTP_200_OK
     producto.refresh_from_db()
-    assert producto.stock == 25
+    assert producto.stock == 10
+    assert producto.precio == 120
+
+
+def test_un_stock_invalido_en_la_edicion_se_ignora_sin_error(como_admin):
+    """El campo es de solo lectura al editar: no se valida porque no se
+    aplica. Responder 400 por un dato que se descarta confundiria."""
+    producto = ProductoFactory(stock=10)
+
+    respuesta = como_admin.patch(
+        f"{PRODUCTOS}/{producto.id}", {"stock": -5}, format="json"
+    )
+
+    assert respuesta.status_code == status.HTTP_200_OK
+    producto.refresh_from_db()
+    assert producto.stock == 10
 
 
 def test_se_admite_una_imagen_valida(como_admin):

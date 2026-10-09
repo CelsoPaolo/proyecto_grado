@@ -14,6 +14,7 @@ from rest_framework.response import Response
 from catalogo.models import Categoria, Producto
 from catalogo.serializers import CategoriaSerializer, ProductoSerializer
 from catalogo.services import (
+    crear_producto,
     eliminar_categoria,
     retirar_producto,
     umbral_stock_bajo,
@@ -92,6 +93,17 @@ class ProductoViewSet(
             consulta = consulta.filter(stock__lte=umbral_stock_bajo())
 
         return consulta
+
+    def perform_create(self, serializer):
+        """CU-CAT-02 — el alta pasa por el servicio, no por el serializer.
+
+        El serializer solo valida; crear el producto y su movimiento de
+        alta, en una sola transaccion, es una regla de negocio y vive en
+        catalogo.services (plan.md 2.2).
+        """
+        serializer.instance = crear_producto(
+            usuario=self.request.user, **serializer.validated_data
+        )
 
     def destroy(self, request, *args, **kwargs):
         """RF-11 - borrado suave, no eliminacion.
