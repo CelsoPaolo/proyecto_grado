@@ -16,7 +16,7 @@
 | 1.0 | 2026-09-22 | Versión inicial para revisión. |
 | 1.1 | 2026-09-22 | Se resuelven los puntos pendientes PT-01 a PT-04. Alcance limitado a entorno de desarrollo (PT-01); **invalidación inmediata de sesiones** al bloquear una cuenta, con corrección de un error técnico de la v1.0 (PT-02); PrimeVue confirmado (PT-03); sin carga de datos de ejemplo, salvo el arranque del primer administrador (PT-04). |
 | 1.2 | 2026-09-30 | Se añaden §7.6 (paleta e identidad visual: cromo oscuro sobre área clara, morado como color de marca y los estados semánticos conservando sus colores) y §7.7 (pantalla de Inicio por rol, decorativa, que deja de duplicar la barra lateral). Decisiones de presentación posteriores a las primeras sesiones de uso; ninguna altera un comportamiento y por eso no generan RF nuevos. Se añade además §7.8 y el endpoint `GET /solicitudes/{id}/pdf` en §4.4, que implementan RF-67 y RF-68 de `spec.md` v1.3. |
-| 1.3 | 2026-10-08 | **Diseño de las cinco funcionalidades de `spec.md` v1.4.** Dos apps nuevas, `inventario` (movimientos de stock) y `clientes`; `panel` pasa a servir también los reportes por rango, y el panel diario se reescribe como el reporte de un día para que ambos no puedan divergir (RN-REP-08). Modelo de datos en §3.5; endpoints nuevos en §4.4; el libro de movimientos dentro del patrón de concurrencia en §6.5; lector de códigos, garantía y reportes en §7.9 a §7.11. Dependencias nuevas: `openpyxl` (backend) y `JsBarcode` (frontend), ambas sin componentes nativos. **Hallazgo que condiciona el diseño:** hoy las existencias se editan con el `PATCH` genérico del producto, **sin bloquear la fila**; con un libro de movimientos eso deja de ser aceptable y el ajuste pasa a un servicio propio con `select_for_update()` (§6.5). **De paso se corrigen cinco restos** de versiones anteriores: PostgreSQL 16 en §2.1, «asignación» en §2.3, una restricción de §3.3 que no existe en el modelo, y el ejemplo de `finalizar` y la nota sobre `iniciar` de §4.4, ambos anteriores a la v1.2. **Aprobado con las decisiones PA-06 a PA-08** de `spec.md` §12: se diseña el **código de fábrica** opcional (§3.5, §4.4, §7.9) y «servicios por estado» incluye las canceladas. **Revisado el 2026-10-09:** editar un producto con `stock` en la petición responde 400 en lugar de ignorarlo (§4.4). |
+| 1.3 | 2026-10-08 | **Diseño de las cinco funcionalidades de `spec.md` v1.4.** Dos apps nuevas, `inventario` (movimientos de stock) y `clientes`; `panel` pasa a servir también los reportes por rango, y el panel diario se reescribe como el reporte de un día para que ambos no puedan divergir (RN-REP-08). Modelo de datos en §3.5; endpoints nuevos en §4.4; el libro de movimientos dentro del patrón de concurrencia en §6.5; lector de códigos, garantía y reportes en §7.9 a §7.11. Dependencias nuevas: `openpyxl` (backend) y `JsBarcode` (frontend), ambas sin componentes nativos. **Hallazgo que condiciona el diseño:** hoy las existencias se editan con el `PATCH` genérico del producto, **sin bloquear la fila**; con un libro de movimientos eso deja de ser aceptable y el ajuste pasa a un servicio propio con `select_for_update()` (§6.5). **De paso se corrigen cinco restos** de versiones anteriores: PostgreSQL 16 en §2.1, «asignación» en §2.3, una restricción de §3.3 que no existe en el modelo, y el ejemplo de `finalizar` y la nota sobre `iniciar` de §4.4, ambos anteriores a la v1.2. **Aprobado con las decisiones PA-06 a PA-08** de `spec.md` §12: se diseña el **código de fábrica** opcional (§3.5, §4.4, §7.9) y «servicios por estado» incluye las canceladas. **Revisado el 2026-10-09:** editar un producto con `stock` en la petición responde 400 en lugar de ignorarlo (§4.4). **Revisado otra vez el 2026-10-09 (T-9.2):** el reverso del paso 2 de la migración del código ya no borra los códigos; volver a aplicarlo cambiaría el código de productos ya etiquetados (§3.5, RN-CAT-08). |
 
 > Este documento traduce la especificación funcional a **decisiones
 > técnicas concretas**: arquitectura, modelo de datos, contrato de la API,
@@ -682,9 +682,21 @@ de golpe a una tabla con filas:
    `id` ascendente para que el orden sea reproducible.
 3. Imponer `NOT NULL` y `UNIQUE`.
 
-Cada paso tiene su reverso (RNF-29): el paso 2 deja `codigo` en nulo y
-el 1 elimina la columna y la secuencia. Se prueba con más de 160
-productos sintéticos, aunque la base de desarrollo tiene hoy siete.
+Cada paso tiene su reverso (RNF-29). El paso 3 quita `NOT NULL` y
+`UNIQUE`, y el 1 elimina la columna y la secuencia. El paso 2 **no
+borra los códigos al revertirse**, y al aplicarse solo asigna los que
+faltan *(revisado el 2026-10-09, T-9.2)*.
+
+La primera versión decía que el reverso del paso 2 dejaba `codigo` en
+nulo. Pero al volver a aplicarlo, cada producto recibiría un código
+**distinto** del que ya tenía, y las etiquetas impresas dejarían de
+corresponder: eso contradice RN-CAT-08, porque el código no cambia
+nunca.
+
+Revertir los tres pasos sigue devolviendo la tabla a su estado
+anterior, porque el paso 1 elimina la columna entera. Se prueba con
+más de 160 productos sintéticos, aunque la base de desarrollo tiene
+hoy siete.
 
 #### El código de fábrica: opcional, editable y fuera del espacio interno *(PA-07)*
 

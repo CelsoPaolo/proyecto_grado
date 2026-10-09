@@ -79,7 +79,7 @@ class Producto(models.Model):
     codigo = models.CharField(
         "código",
         max_length=13,
-        null=True,
+        unique=True,
         editable=False,
         help_text="EAN-13 interno asignado por el sistema (RN-CAT-08).",
     )

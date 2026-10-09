@@ -971,7 +971,7 @@ final del documento.
     - si se calcula como `COUNT + 1` en lugar de usar la secuencia, falla
       la prueba de la transacción revertida.
 
-### [ ] T-9.2 — Migración: código para todos los productos existentes
+### [x] T-9.2 — Migración: código para todos los productos existentes
 - **Cubre:** RNF-29, RN-CAT-08
 - **Depende de:** T-9.1
 - **Trabajo:** Las tres migraciones de `plan.md` §3.5: columna nula →
@@ -980,6 +980,16 @@ final del documento.
 - **Hecho cuando:** sobre una base con más de 160 productos, todos
   quedan con un código EAN-13 válido y distinto, y revertir las tres
   migraciones devuelve la tabla a su estado anterior sin pérdida.
+- **Resultado (2026-10-09):** migraciones `0003` (asignación por `id`
+  ascendente, idempotente) y `0004` (`NOT NULL` y `UNIQUE`).
+  - Probado con 165 productos: códigos válidos, distintos y en orden; el
+    resto de los datos no cambia; revertir los tres pasos devuelve la
+    tabla idéntica.
+  - **Cambio en el plan (§3.5):** el reverso del paso 2 no borra los
+    códigos, porque reaplicarlo cambiaría el código de productos ya
+    etiquetados (RN-CAT-08). Una prueba lo vigila.
+  - Aplicado a la base de desarrollo: sus 7 productos tienen ya códigos
+    de `2000000000015` a `2000000000077`.
 
 ### [ ] T-9.3 — Búsqueda por código
 - **Cubre:** RF-70
