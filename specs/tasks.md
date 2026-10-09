@@ -1225,12 +1225,24 @@ final del documento.
     `query: { recien: '1' }`.
   - **Pendiente de revisión humana:** abrir el PDF descargado.
 
-### [ ] T-10.7 — Revisión del bloque 10
+### [x] T-10.7 — Revisión del bloque 10
 - **Depende de:** T-10.1 a T-10.6
 - **Hecho cuando:** vender un producto con garantía, emitir la garantía,
   cambiar los meses del producto y volver a emitirla da el mismo
   vencimiento; abrir el PDF lo confirma visualmente. Suite completa
   ejecutada y resultado mostrado.
+- **Resultado (2026-10-09):** el ciclo vender → emitir → cambiar los
+  meses → volver a emitir da el mismo vencimiento; lo prueba
+  `test_garantia_pdf.py` sobre el texto del PDF.
+  - **Punto de extensión** para las condiciones de la garantía: la
+    constante `CONDICIONES_DE_GARANTIA` de `ventas/garantia.py`, el único
+    sitio donde pegar el texto. Si está vacía, la sección no aparece.
+    Hay pruebas de los dos casos.
+  - Todos los requisitos del bloque 10 están citados.
+    `makemigrations --check`: sin cambios.
+  - Suites: B 878 pasan y 17 fallan, todas de trazabilidad de bloques
+    11 a 13; F 190 pasan.
+  - **Abrir el PDF queda para revisión humana.**
 
 ---
 

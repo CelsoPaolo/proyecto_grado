@@ -213,3 +213,27 @@ def test_cambiar_los_meses_del_producto_despues_no_cambia_la_garantia(vendedor, 
     assert [l for l in antes.splitlines() if "Generado el" not in l] == [
         l for l in despues.splitlines() if "Generado el" not in l
     ]
+
+
+# ─────────────────────────────────────────────────────────────────────
+# Punto de extension de las condiciones (T-10.7)
+# ─────────────────────────────────────────────────────────────────────
+def test_sin_condiciones_definidas_no_aparece_la_seccion(vendedor, venta, monkeypatch):
+    monkeypatch.setattr("ventas.garantia.CONDICIONES_DE_GARANTIA", "")
+
+    texto = _texto(_garantia(_autenticar(vendedor), venta))
+
+    assert "CONDICIONES DE LA GARANTÍA" not in texto.upper()
+
+
+def test_las_condiciones_pegadas_en_su_constante_aparecen_en_el_pdf(vendedor, venta, monkeypatch):
+    monkeypatch.setattr(
+        "ventas.garantia.CONDICIONES_DE_GARANTIA",
+        "Cubre defectos de fábrica.\nNo cubre golpes ni humedad.",
+    )
+
+    texto = _texto(_garantia(_autenticar(vendedor), venta))
+
+    assert "CONDICIONES DE LA GARANTÍA" in texto.upper()
+    assert "Cubre defectos de fábrica." in texto
+    assert "No cubre golpes ni humedad." in texto

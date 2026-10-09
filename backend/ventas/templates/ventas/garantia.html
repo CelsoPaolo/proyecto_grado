@@ -86,6 +86,15 @@ pie.
       {% endfor %}
     </table>
 
+    {% if condiciones %}
+      {% comment %}
+        El texto vive en ventas/garantia.py, CONDICIONES_DE_GARANTIA:
+        es el unico sitio que hay que tocar para cambiarlo.
+      {% endcomment %}
+      <h2>Condiciones de la garantía</h2>
+      <p class="parrafo">{{ condiciones|linebreaksbr }}</p>
+    {% endif %}
+
     <p class="aviso">
       Conserve este certificado: lo necesitará para hacer valer la garantía
       de los productos listados hasta su fecha de vencimiento. Este documento

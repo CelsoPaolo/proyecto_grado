@@ -35,7 +35,8 @@ bloque 13.
 | 2026-10-09 | T-10.3 Cálculo del vencimiento | `7a23f75` | B 852 / 20 · F 184 / 0 | Módulo nuevo `ventas/garantia.py`. Además de `sumar_meses`, incluye `vencimiento()`, que parte de la fecha de la venta en hora de Bolivia, como exige RN-VEN-13. |
 | 2026-10-09 | T-10.4 Plantilla base de documentos PDF | `3b9b431` | B 854 / 20 · F 184 / 0 | Los «mismos colores en su flujo» se verifican comparando los operadores `rg`/`RG` del PDF con los registrados **antes** de la extracción. El pie admite una leyenda propia por documento (bloque `leyenda`), con la del informe por defecto. |
 | 2026-10-09 | T-10.5 Endpoint de la garantía | `3730ac7` | B 875 / 18 · F 184 / 0 | Dos códigos de error distintos para los dos 409, de modo que la interfaz pueda distinguirlos. El documento se titula «Certificado de garantía». Incluye una frase neutra («Conserve este certificado…»), pero **no condiciones de garantía, que la spec no define**. La fecha que se imprime es la de la venta en hora de Bolivia. |
-| 2026-10-09 | T-10.6 Garantía en la interfaz | siguiente commit | B 876 / 17 · F 190 / 0 | La oferta de RF-77 se hace en el detalle de la venta, al que ya se llegaba tras confirmar, marcado con `?recien=1`: no hace falta otra pantalla. Se actualizó la prueba de navegación de T-4.9 porque el comportamiento cambia por RF-77; no se silenció. |
+| 2026-10-09 | T-10.6 Garantía en la interfaz | `e519c21` | B 876 / 17 · F 190 / 0 | La oferta de RF-77 se hace en el detalle de la venta, al que ya se llegaba tras confirmar, marcado con `?recien=1`: no hace falta otra pantalla. Se actualizó la prueba de navegación de T-4.9 porque el comportamiento cambia por RF-77; no se silenció. |
+| 2026-10-09 | T-10.7 Revisión del bloque 10 | siguiente commit | B 878 / 17 · F 190 / 0 | Punto de extensión para las condiciones de la garantía, como pediste: la constante `CONDICIONES_DE_GARANTIA` en `ventas/garantia.py`, que se lee en cada petición y cuya sección solo aparece si tiene texto. |
 
 ## Pendiente para revisión humana
 
@@ -82,6 +83,13 @@ bloque 13.
   presentarla), habría que decidir si van en el documento: hoy la spec
   no las define y no las inventé.
 - **T-10.6:** confirmar una venta con un producto con garantía. Al llegar al detalle debe aparecer «Emitir garantía»; descargarla, elegir la carpeta y abrir el PDF para revisar membrete, línea morada, tabla de líneas y vencimientos. En una venta anulada no debe haber botón.
+- **Condiciones de la garantía (para ti y el dueño):** pegar el texto en
+  `backend/ventas/garantia.py`, constante `CONDICIONES_DE_GARANTIA`, que
+  es el único lugar. Los saltos de línea se respetan. Mientras esté
+  vacía, el PDF no muestra la sección «Condiciones de la garantía».
+- **T-10.7:** vender un producto con garantía, emitirla y abrir el PDF.
+  Cambiar los meses del producto, emitirla otra vez y comprobar que el
+  vencimiento es el mismo.
 - **Dependencias:** `npm audit` informa de 1 vulnerabilidad alta en
   `source-map-js`, una herramienta de desarrollo que ya estaba instalada
   antes de esta versión; no viene de JsBarcode. No apliqué `npm audit
@@ -89,4 +97,4 @@ bloque 13.
 
 ## Dónde se detuvo la sesión
 
-T-10.6 terminada. **Siguiente: T-10.7** (revisión del bloque 10), luego los bloques 11 a 13 y T-OP.2 a T-OP.4.
+T-10.7 terminada. **Siguiente: T-11.1** (app `clientes`), luego el resto de los bloques 11 a 13 y T-OP.2 a T-OP.4.

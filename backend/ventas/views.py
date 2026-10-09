@@ -25,6 +25,7 @@ from ventas.serializers import (
     VentaResumenSerializer,
     VentaSerializer,
 )
+from ventas import garantia as modulo_garantia
 from ventas.garantia import fecha_local, lineas_con_garantia
 from ventas.services import anular_venta, registrar_venta
 
@@ -158,6 +159,9 @@ class VentaViewSet(
                 "venta": venta,
                 "lineas": lineas,
                 "fecha_venta": fecha_local(venta.fecha_hora),
+                # Se lee del modulo en cada peticion, no al importar:
+                # asi cambiarlo no exige tocar esta vista.
+                "condiciones": modulo_garantia.CONDICIONES_DE_GARANTIA.strip(),
                 # Fecha y autor los pone el SERVIDOR (RN-VEN-15).
                 "generado_en": timezone.localtime(),
                 "generado_por": request.user.nombre_completo,

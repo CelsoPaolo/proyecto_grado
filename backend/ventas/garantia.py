@@ -13,6 +13,19 @@ from django.utils import timezone
 from ventas.exceptions import GarantiaDeVentaAnulada, VentaSinGarantia
 from ventas.models import EstadoVenta
 
+# ─────────────────────────────────────────────────────────────────────
+# PUNTO DE EXTENSION: condiciones de la garantia
+# ─────────────────────────────────────────────────────────────────────
+#: Texto fijo de las condiciones que PC-Solution aplica a sus garantias
+#: (que cubre, que no, donde presentarla). Lo definen el responsable del
+#: proyecto y el dueno de la empresa; la spec no lo fija.
+#:
+#: Es el UNICO lugar donde pegarlo. Mientras este vacio, el PDF no
+#: muestra la seccion «Condiciones de la garantia». Los saltos de linea
+#: se respetan. Una prueba (test_garantia_pdf.py) comprueba los dos
+#: casos.
+CONDICIONES_DE_GARANTIA = ""
+
 
 def sumar_meses(fecha, meses):
     """RN-VEN-13 — suma meses de calendario a una fecha.
