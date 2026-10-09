@@ -2,10 +2,22 @@
  * Guardian de la recoleccion de pruebas del frontend.
  *
  * Una ejecucion de la suite recogio 2 archivos de prueba en lugar de
- * 13, sin ningun fallo: el resumen decia «Test Files 2 passed (2)». No
- * se pudo reproducir en 31 intentos ni encontrar la causa. Este
- * reporter hace que, si vuelve a ocurrir, la ejecucion FALLE en lugar
- * de pasar en verde con la mayor parte de la suite sin ejecutar.
+ * 13: el resumen decia «Test Files 2 passed (2)». No se reprodujo en
+ * 31 intentos.
+ *
+ * Causa probable, encontrada despues (2026-10-09): un proceso de
+ * vitest que NO ARRANCA a tiempo. Volvio a pasar con un solo archivo:
+ * «[vitest-pool]: Failed to start forks worker … Timeout waiting for
+ * worker to respond», y el archivo desaparecio del recuento («Test
+ * Files no tests») con una linea aparte «Errors 1 error». En la
+ * investigacion original la salida se filtro con
+ * grep "Test Files|Tests ", y ese filtro ocultaba justo la linea
+ * «Errors». Es transitorio —el segundo intento arranco normal—, propio
+ * de Windows bajo carga.
+ *
+ * Este reporter hace dos cosas: si se recogen menos archivos de los que
+ * hay en disco, la ejecucion FALLA; y si la causa es un proceso que no
+ * arranco, lo DICE, con los archivos afectados.
  *
  * Cuenta los archivos de prueba del disco POR SU CUENTA, recorriendo
  * las carpetas, en vez de preguntarle a vitest: si el fallo estuviera
@@ -63,12 +75,36 @@ function filtrosDeArchivo(enDisco) {
     .filter((a) => enDisco.some((ruta) => ruta.includes(normalizar(a))))
 }
 
+/** Archivos cuyos procesos de vitest no llegaron a arrancar. */
+function archivosSinProceso(errores) {
+  const PATRON = /Failed to start \w+ worker for test files (.+?)\.?$/m
+  return errores
+    .map((e) => PATRON.exec(e?.message ?? '')?.[1])
+    .filter(Boolean)
+    .flatMap((lista) => lista.split(/,\s*/))
+}
+
 export default class GuardianRecoleccion {
   onInit(vitest) {
     this.raiz = vitest.config.root
   }
 
-  onTestRunEnd(testModules) {
+  onTestRunEnd(testModules, unhandledErrors = []) {
+    const sinProceso = archivosSinProceso(unhandledErrors)
+    if (sinProceso.length > 0) {
+      console.error(
+        [
+          '',
+          '[guardian de recoleccion] FALLO: vitest no pudo arrancar el proceso de estos archivos,',
+          'que por eso no se ejecutaron (suele ser transitorio en Windows bajo carga;',
+          'repita la ejecucion):',
+          ...sinProceso.map((f) => `    ! ${normalizar(relative(this.raiz, f))}`),
+          '',
+        ].join('\n'),
+      )
+      process.exitCode = 1
+    }
+
     const enDisco = archivosDePruebaEnDisco(this.raiz).sort()
 
     const filtros = filtrosDeArchivo(enDisco)
