@@ -1380,7 +1380,7 @@ final del documento.
 
 ## Bloque 12 — Reportes
 
-### [ ] T-12.1 — Cálculo del reporte por rango
+### [x] T-12.1 — Cálculo del reporte por rango
 - **Cubre:** RN-REP-01, **RN-REP-02**, RN-REP-03, RF-91
 - **Depende de:** T-11.7
 - **Trabajo:** `panel/reportes.py` con `calcular(desde, hasta)`: ventas,
@@ -1390,6 +1390,13 @@ final del documento.
   un servicio cancelado no suma; un servicio registrado antes del rango y
   cerrado dentro **sí** suma; una venta a las 23:59 del último día cuenta
   y una a las 00:00 del día siguiente no.
+- **Resultado (2026-10-09):** `panel/reportes.py` con `calcular(desde,
+  hasta)`: ventas confirmadas, servicios finalizados por fecha de cierre
+  e ingreso desglosado, con `__date__range` en hora de Bolivia.
+  - 8 pruebas con datos límite (23:59 y 00:00, venta anulada, servicio
+    cancelado, cerrado dentro y registrado fuera).
+  - Mutaciones detectadas: sin filtro de estado, servicios por fecha de
+    registro, y rango sin `__date`.
 
 ### [ ] T-12.2 — El panel diario como reporte de un día
 - **Cubre:** **RN-REP-08**
