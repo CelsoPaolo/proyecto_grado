@@ -26,9 +26,13 @@ function cuerpoDe(datos) {
     return { cuerpo: resto, config: {} }
   }
 
+  // La cadena vacia SI viaja: es como se vacia un campo de texto (la
+  // descripcion, el codigo de fabrica). Omitirla hacia que, al editar un
+  // producto subiendo a la vez una imagen nueva, vaciar esos campos no
+  // tuviera efecto. Solo se omite lo que no tiene valor.
   const formulario = new FormData()
   for (const [clave, valor] of Object.entries(datos)) {
-    if (valor !== null && valor !== undefined && valor !== '') {
+    if (valor !== null && valor !== undefined) {
       formulario.append(clave, valor)
     }
   }

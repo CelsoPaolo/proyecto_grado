@@ -24,7 +24,8 @@ bloque 13.
 | 2026-10-09 | T-8.8 Revisión del bloque 8 | `59342e8` | B 755 / 28 · F 153 / 0 | La comprobación «en el navegador» se sustituye, en lo automatizable, por una prueba del ciclo completo a través de la API, que verifica el libro cuadrado. La parte visual queda abajo, para revisión humana. Se marca como hecha porque no queda nada automatizable pendiente; si la revisión visual encuentra algo, se reabre. |
 | 2026-10-09 | T-9.1 Generación del código EAN-13 | `e6e28b0` | B 783 / 27 · F 153 / 0 | El código se asigna en `Producto.save()` al insertar, y no en el servicio de alta, para que lo reciba todo producto, incluidos los de las fábricas de prueba y la importación. El campo nace nulo en esta tarea porque la migración en tres pasos del plan empieza aquí. `catalogo/codigos.py` no importa modelos, para que la migración de T-9.2 use las mismas funciones. Se retiró una cita prematura a RNF-27, que llega en T-9.5. |
 | 2026-10-09 | T-9.2 Migración del código para los productos existentes | `dfbc04b` | B 787 / 27 · F 153 / 0 | **Cambio en `plan.md` §3.5 (RNF-22):** el reverso del paso 2 ya no deja los códigos en nulo, porque reaplicarlo daría códigos distintos a productos ya etiquetados (RN-CAT-08). Revertir los tres pasos sigue dejando la tabla idéntica. Aplicado a la base de desarrollo (7 productos). |
-| 2026-10-09 | T-9.3 Búsqueda por código | siguiente commit | B 798 / 26 · F 153 / 0 | `?codigo=` vacío da una lista vacía en lugar de ignorarse: un Intro con el campo vacío no debe traer el catálogo entero. Se mantiene el filtro de activos por defecto del listado; los retirados se buscan con `activo=false`. |
+| 2026-10-09 | T-9.3 Búsqueda por código | `923fae7` | B 798 / 26 · F 153 / 0 | `?codigo=` vacío da una lista vacía en lugar de ignorarse: un Intro con el campo vacío no debe traer el catálogo entero. Se mantiene el filtro de activos por defecto del listado; los retirados se buscan con `activo=false`. |
+| 2026-10-09 | T-9.7 Código de fábrica opcional (PA-07) | siguiente commit | B 823 / 25 · F 158 / 0 | Se hace antes que T-9.4 porque T-9.5 lo necesita, como indica `tasks.md`. El mensaje de duplicado nombra el producto que ya tiene el código: solo lo ve el Administrador. **Defecto anterior corregido:** el envío multipart omitía las cadenas vacías. Las pruebas de migración pasan a usar los modelos **históricos**, porque los actuales tienen columnas que en los estados intermedios no existen. |
 
 ## Pendiente para revisión humana
 
@@ -46,3 +47,7 @@ bloque 13.
     ajustar a 8.
   - En su detalle deben verse cuatro movimientos: Alta +10, Venta −3,
     Anulación +3 y Ajuste −2, y las existencias deben quedar en 8.
+- **T-9.7:** en el formulario de producto, el campo «Código de fábrica»:
+  - registrarlo, corregirlo y vaciarlo;
+  - con uno repetido, el error debe aparecer junto al campo;
+  - repetir la prueba de vaciarlo **subiendo a la vez una imagen nueva**.

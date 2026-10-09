@@ -18,7 +18,6 @@ from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
 
 from catalogo.codigos import PATRON_INTERNO, es_ean13_valido
-from catalogo.models import Producto
 from catalogo.tests.factories import CategoriaFactory, ProductoFactory
 
 pytestmark = pytest.mark.django_db(transaction=True)
@@ -48,6 +47,19 @@ def migraciones():
     """Devuelve la base a la ultima migracion al terminar, pase lo que pase."""
     yield _migrar
     _al_final()
+
+
+def _apps_en(estado):
+    """Los modelos tal como eran en ese punto de las migraciones.
+
+    El modelo actual no sirve: tiene columnas que en un estado
+    intermedio todavia no existen (codigo_fabrica, garantia...), y
+    cualquier consulta con el fallaria. El historico, ademas, no ejecuta
+    el save() propio que asigna el codigo, que es justo lo que se quiere
+    para reproducir los productos anteriores a la v1.4.
+    """
+    executor = MigrationExecutor(connection)
+    return executor.loader.project_state(estado[0]).apps
 
 
 def _existe_secuencia():
@@ -82,16 +94,21 @@ def catalogo_sin_codigos(migraciones):
     como quedan los productos que existian antes de la v1.4."""
     migraciones(PASO_1)
     azar = random.Random(20261009)
-    categoria = CategoriaFactory()
-    ids = [
-        ProductoFactory(categoria=categoria, stock=azar.randint(0, 60), activo=azar.random() > 0.1).pk
-        for _ in range(CANTIDAD)
+    historicos = _apps_en(PASO_1)
+    Categoria = historicos.get_model("catalogo", "Categoria")
+    Producto = historicos.get_model("catalogo", "Producto")
+    categoria = Categoria.objects.create(nombre="Migración", descripcion="")
+    return [
+        Producto.objects.create(
+            nombre=f"Anterior a la v1.4 n.º {i}",
+            descripcion="",
+            precio=10 + i,
+            stock=azar.randint(0, 60),
+            activo=azar.random() > 0.1,
+            categoria=categoria,
+        ).pk
+        for i in range(CANTIDAD)
     ]
-    # El modelo actual asigna codigo al crear; aqui se borra para
-    # reproducir la base anterior a la migracion.
-    with connection.cursor() as cursor:
-        cursor.execute("UPDATE catalogo_producto SET codigo = NULL")
-    return ids
 
 
 def test_el_paso_1_se_aplica_y_se_revierte(migraciones):
@@ -171,9 +188,37 @@ def test_el_paso_2_respeta_los_codigos_que_ya_existen(catalogo_sin_codigos, migr
 
 
 def test_un_producto_creado_despues_de_migrar_sigue_la_secuencia(catalogo_sin_codigos, migraciones):
-    migraciones(PASO_3)
+    _al_final()
     ultimo = max(f["codigo"] for f in _filas())
 
-    nuevo = ProductoFactory(categoria=Producto.objects.first().categoria)
+    nuevo = ProductoFactory(categoria=CategoriaFactory())
 
     assert nuevo.codigo > ultimo
+
+
+# ─────────────────────────────────────────────────────────────────────
+# T-9.7 — codigo de fabrica
+# ─────────────────────────────────────────────────────────────────────
+FABRICA = [("catalogo", "0005_codigo_fabrica")]
+
+
+def _restricciones():
+    with connection.cursor() as cursor:
+        return set(connection.introspection.get_constraints(cursor, "catalogo_producto"))
+
+
+def test_la_migracion_del_codigo_de_fabrica_se_aplica_y_se_revierte(catalogo_sin_codigos, migraciones):
+    migraciones(PASO_3)
+    antes = _filas()
+    assert "codigo_fabrica" not in _columnas_de_producto()
+
+    migraciones(FABRICA)
+    assert "codigo_fabrica" in _columnas_de_producto()
+    assert {"producto_codigo_fabrica_unico", "producto_codigo_fabrica_fuera_del_interno"} <= _restricciones()
+    # Todos los existentes quedan sin codigo de fabrica, sin conflicto.
+    assert {f["codigo_fabrica"] for f in _filas()} == {""}
+
+    migraciones(PASO_3)
+    assert "codigo_fabrica" not in _columnas_de_producto()
+    assert not {"producto_codigo_fabrica_unico", "producto_codigo_fabrica_fuera_del_interno"} & _restricciones()
+    assert _filas() == antes

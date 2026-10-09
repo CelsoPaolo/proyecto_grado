@@ -3,6 +3,7 @@
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
+from catalogo.codigos import PATRON_INTERNO, normalizar_codigo_fabrica
 from catalogo.models import Categoria, Producto
 
 #: Formatos de imagen admitidos y tamano maximo (plan.md 5.4).
@@ -44,6 +45,7 @@ class ProductoSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "codigo",
+            "codigo_fabrica",
             "nombre",
             "descripcion",
             "precio",
@@ -57,6 +59,10 @@ class ProductoSerializer(serializers.ModelSerializer):
         # RN-CAT-08: el codigo lo asigna el sistema; si la peticion lo
         # trae, al crear o al editar, se ignora.
         read_only_fields = ["activo", "codigo"]
+        # El validador de unicidad que DRF deriva de la restriccion compara
+        # el valor SIN normalizar y con un mensaje generico; la unicidad la
+        # comprueba validate_codigo_fabrica sobre el valor normalizado.
+        extra_kwargs = {"codigo_fabrica": {"validators": []}}
 
     def get_fields(self):
         """RN-CAT-10: las existencias solo se fijan al crear.
@@ -119,6 +125,31 @@ class ProductoSerializer(serializers.ModelSerializer):
         if consulta.exists():
             raise serializers.ValidationError("Ya existe un producto con ese nombre.")
         return valor.strip()
+
+    def validate_codigo_fabrica(self, valor):
+        """RN-CAT-11 y RF-97: opcional, unico y fuera del espacio interno.
+
+        La base ya impide las dos cosas (T-9.7); aqui se anticipan para
+        devolver el error junto al campo en lugar de un fallo de
+        integridad (RNF-15). Una cadena vacia quita el codigo.
+        """
+        valor = normalizar_codigo_fabrica(valor)
+        if not valor:
+            return ""
+        if PATRON_INTERNO.match(valor):
+            raise serializers.ValidationError(
+                "Ese número tiene la forma de un código interno de PC-Solution "
+                "(13 cifras que empiezan por 20) y no puede usarse como código "
+                "de fábrica."
+            )
+        consulta = Producto.objects.filter(codigo_fabrica=valor)
+        if self.instance is not None:
+            consulta = consulta.exclude(pk=self.instance.pk)
+        if otro := consulta.first():
+            raise serializers.ValidationError(
+                f"Ese código de fábrica ya está registrado en «{otro.nombre}»."
+            )
+        return valor
 
     def validate_precio(self, valor):
         """RN-CAT-01."""

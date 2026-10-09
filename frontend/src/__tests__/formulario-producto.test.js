@@ -103,3 +103,40 @@ describe('al crear', () => {
     expect(wrapper.find('#stock').attributes('disabled')).toBeUndefined()
   })
 })
+
+describe('código de fábrica (RF-97)', () => {
+  it('al editar carga el que tiene y envía el corregido', async () => {
+    const wrapper = await abrir({ ...PRODUCTO, codigo_fabrica: '7501031311309' })
+    expect(wrapper.find('#codigo_fabrica').element.value).toBe('7501031311309')
+
+    await wrapper.find('#codigo_fabrica').setValue('7501031311316')
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+
+    expect(productosApi.actualizar.mock.calls[0][1]).toMatchObject({ codigo_fabrica: '7501031311316' })
+  })
+
+  it('vaciarlo envía la cadena vacía, que es como se quita', async () => {
+    const wrapper = await abrir({ ...PRODUCTO, codigo_fabrica: '7501031311309' })
+
+    await wrapper.find('#codigo_fabrica').setValue('')
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+
+    expect(productosApi.actualizar.mock.calls[0][1]).toHaveProperty('codigo_fabrica', '')
+  })
+
+  it('muestra junto al campo el rechazo del servidor', async () => {
+    productosApi.crear.mockRejectedValueOnce({
+      codigo: 'VALIDACION',
+      detalle: 'Revise los datos.',
+      errores: { codigo_fabrica: ['Ese código de fábrica ya está registrado en «Teclado USB».'] },
+    })
+    const wrapper = await abrir(null)
+
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('ya está registrado en «Teclado USB»')
+  })
+})

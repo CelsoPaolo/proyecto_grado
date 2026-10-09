@@ -83,6 +83,15 @@ class Producto(models.Model):
         editable=False,
         help_text="EAN-13 interno asignado por el sistema (RN-CAT-08).",
     )
+    # RN-CAT-11 (PA-07). Cadena vacia, no NULL: el UNIQUE parcial de Meta
+    # deja convivir a todos los productos sin codigo de fabrica.
+    codigo_fabrica = models.CharField(
+        "código de fábrica",
+        max_length=50,
+        blank=True,
+        default="",
+        help_text="Opcional: el código que trae impreso el producto o su caja (RN-CAT-11).",
+    )
     creado_en = models.DateTimeField(auto_now_add=True)
     actualizado_en = models.DateTimeField(auto_now=True)
 
@@ -111,6 +120,24 @@ class Producto(models.Model):
                 condition=models.Q(stock__gte=0),
                 name="producto_stock_no_negativo",
                 violation_error_message="Las existencias no pueden ser negativas.",
+            ),
+            # RN-CAT-11: unico si se informa, entre activos y retirados.
+            models.UniqueConstraint(
+                fields=["codigo_fabrica"],
+                condition=~models.Q(codigo_fabrica=""),
+                name="producto_codigo_fabrica_unico",
+                violation_error_message="Ya hay otro producto con ese código de fábrica.",
+            ),
+            # RN-CAT-11: fuera del espacio de los codigos internos. Es lo
+            # que garantiza que ?codigo= encuentre como mucho UN producto:
+            # sin esto, el codigo de fabrica de uno podria ser el interno
+            # de otro.
+            models.CheckConstraint(
+                condition=~models.Q(codigo_fabrica__regex=r"^20[0-9]{11}$"),
+                name="producto_codigo_fabrica_fuera_del_interno",
+                violation_error_message=(
+                    "Un código de fábrica no puede tener la forma de un código interno."
+                ),
             ),
         ]
         indexes = [

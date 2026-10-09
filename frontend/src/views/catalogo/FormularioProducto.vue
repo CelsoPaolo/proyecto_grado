@@ -41,6 +41,7 @@ const VACIO = {
   precio: null,
   stock: 0,
   categoria: null,
+  codigo_fabrica: '',
   imagen: null,
 }
 
@@ -64,6 +65,7 @@ watch(
           precio: Number(props.producto.precio),
           stock: props.producto.stock,
           categoria: props.producto.categoria,
+          codigo_fabrica: props.producto.codigo_fabrica ?? '',
           imagen: null,
         }
       : { ...VACIO }
@@ -179,6 +181,28 @@ async function guardar() {
       <div class="campo">
         <label for="descripcion">Descripción</label>
         <Textarea id="descripcion" v-model="formulario.descripcion" rows="3" />
+      </div>
+
+      <!-- RF-97: el código que trae impreso el producto o su caja. El
+           código interno no aparece aquí: lo asigna el sistema y no se
+           edita (RN-CAT-08). -->
+      <div class="campo">
+        <label for="codigo_fabrica">
+          Código de fábrica <span class="ayuda">(opcional)</span>
+        </label>
+        <InputText
+          id="codigo_fabrica"
+          v-model="formulario.codigo_fabrica"
+          maxlength="50"
+          :invalid="Boolean(errorDe('codigo_fabrica'))"
+        />
+        <small v-if="errorDe('codigo_fabrica')" class="error">
+          {{ errorDe('codigo_fabrica') }}
+        </small>
+        <small v-else class="ayuda">
+          Si la caja trae código de barras, regístrelo para venderlo leyéndolo
+          directamente. Déjelo vacío si no tiene.
+        </small>
       </div>
 
       <div class="campo">

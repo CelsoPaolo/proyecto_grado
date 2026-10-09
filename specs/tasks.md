@@ -1007,7 +1007,7 @@ final del documento.
     ignora el código vacío.
   - La búsqueda por código de fábrica llega con T-9.7.
 
-### [ ] T-9.7 — Código de fábrica opcional *(PA-07)*
+### [x] T-9.7 — Código de fábrica opcional *(PA-07)*
 > Insertada al aprobar la v1.4. Conserva el número siguiente al último
 > del bloque porque los identificadores no se renumeran; se ejecuta en
 > esta posición, antes de T-9.4, porque T-9.5 la necesita.
@@ -1022,6 +1022,20 @@ final del documento.
   la validación de Django; dos productos sin código de fábrica →
   aceptados; `?codigo=` encuentra el producto por cualquiera de sus dos
   códigos; la migración se aplica y se revierte.
+- **Resultado (2026-10-09):** `codigo_fabrica` con `UNIQUE` parcial y el
+  `CHECK` contra la forma interna, ambos probados en SQL crudo.
+  - Se normaliza quitando los espacios y pasando a mayúsculas.
+  - `?codigo=` busca en los dos campos. El código vacío devuelve
+    `none()`, porque si no traería todos los productos sin código de
+    fábrica.
+  - Campo en el formulario de producto. Migración `0005` probada en los
+    dos sentidos y aplicada a la base de desarrollo.
+  - **De paso se corrige un defecto anterior:** con imagen, el envío
+    multipart omitía las cadenas vacías, así que no se podía vaciar la
+    descripción ni quitar el código de fábrica al subir una imagen
+    nueva.
+  - Se desactiva el validador de unicidad que DRF genera para el campo,
+    porque compara el valor sin normalizar.
 
 ### [ ] T-9.4 — Código de barras y etiqueta
 - **Cubre:** RF-71, RNF-27, CU-CAT-09

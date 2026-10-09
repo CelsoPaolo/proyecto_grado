@@ -29,6 +29,17 @@ CIFRAS_DE_SECUENCIA = 10
 PATRON_INTERNO = re.compile(r"^20[0-9]{11}$")
 
 
+def normalizar_codigo_fabrica(texto):
+    """RN-CAT-11 — sin espacios y en mayusculas.
+
+    No se valida el formato: puede ser EAN-13, UPC-A de 12 cifras, EAN-8
+    o un Code128 alfanumerico, y exigir uno solo dejaria fuera mercaderia
+    real (plan.md 3.5). Normalizar si hace falta: el mismo codigo
+    tecleado con un espacio o en minusculas debe ser el mismo codigo.
+    """
+    return "".join((texto or "").split()).upper()
+
+
 def calcular_digito_control(doce_cifras):
     """Digito de control EAN-13 de las 12 primeras cifras.
 

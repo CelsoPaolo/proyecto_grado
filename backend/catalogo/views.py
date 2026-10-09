@@ -4,7 +4,7 @@ Gestion exclusiva del Administrador; consulta tambien para el
 Encargado de Ventas (spec.md matriz 4.4).
 """
 
-from django.db.models import Count
+from django.db.models import Count, Q
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
@@ -12,6 +12,7 @@ from rest_framework.filters import SearchFilter
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
 
+from catalogo.codigos import normalizar_codigo_fabrica
 from catalogo.models import Categoria, Producto
 from catalogo.serializers import CategoriaSerializer, ProductoSerializer
 from catalogo.services import (
@@ -101,11 +102,19 @@ class ProductoViewSet(
         if self.request.query_params.get("stock_bajo") == "true":
             consulta = consulta.filter(stock__lte=umbral_stock_bajo())
 
-        # RF-70 — coincidencia EXACTA, nunca parcial: un lector que lea
-        # mal un digito no debe encontrar otro producto (RN-VEN-17). Un
-        # codigo incompleto o inexistente da una lista vacia, no un error.
+        # RF-70 — coincidencia EXACTA con el codigo interno o con el de
+        # fabrica, nunca parcial: un lector que lea mal un digito no debe
+        # encontrar otro producto (RN-VEN-17). Un codigo incompleto o
+        # inexistente da una lista vacia, no un error. Como el de fabrica
+        # no puede tener la forma de un interno (RN-CAT-11), una lectura
+        # encuentra como mucho un producto.
         if (codigo := self.request.query_params.get("codigo")) is not None:
-            consulta = consulta.filter(codigo=codigo.strip())
+            codigo = normalizar_codigo_fabrica(codigo)
+            if not codigo:
+                # Sin esto, codigo_fabrica="" coincidiria con todos los
+                # productos que no tienen codigo de fabrica.
+                return consulta.none()
+            consulta = consulta.filter(Q(codigo=codigo) | Q(codigo_fabrica=codigo))
 
         return consulta
 
