@@ -4,7 +4,12 @@
    El detalle muestra los datos CONGELADOS de la venta (RN-VEN-04): el
    nombre y el precio que tenía el producto ese día, no los actuales.
    Se advierte explícitamente, porque si no un encargado podría pensar
-   que la pantalla muestra datos desactualizados. */
+   que la pantalla muestra datos desactualizados.
+
+   Garantía (CU-VEN-04, RF-77): el botón aparece solo en una venta
+   confirmada con alguna línea con garantía (RN-VEN-14). Al llegar recién
+   confirmada (?recien=1) además se ofrece emitirla, que es el momento en
+   que el cliente sigue en el mostrador. */
 import Button from 'primevue/button'
 import Card from 'primevue/card'
 import Column from 'primevue/column'
@@ -17,7 +22,8 @@ import { useToast } from 'primevue/usetoast'
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import { ventasApi } from '@/api/ventas'
+import { tieneGarantia, ventasApi } from '@/api/ventas'
+import { useDescarga } from '@/composables/useDescarga'
 import { useErroresApi } from '@/composables/useErroresApi'
 
 const route = useRoute()
@@ -47,6 +53,25 @@ function comoFecha(valor) {
 }
 
 const anulada = computed(() => venta.value?.estado === 'ANULADA')
+const conGarantia = computed(() => tieneGarantia(venta.value))
+const recienConfirmada = computed(() => route.query?.recien === '1')
+
+const { descargando, guardar } = useDescarga()
+
+async function descargarGarantia() {
+  try {
+    const guardado = await guardar(
+      () => ventasApi.garantiaPdf(venta.value.id),
+      `garantia-venta-${venta.value.id}.pdf`,
+    )
+    // false: el usuario cerró el cuadro de guardado; no es un error.
+    if (guardado) {
+      toast.add({ severity: 'success', summary: 'Garantía descargada', life: 3000 })
+    }
+  } catch (error) {
+    toast.add({ severity: 'error', summary: error.detalle, life: 5000 })
+  }
+}
 
 async function cargar() {
   cargando.value = true
@@ -103,6 +128,15 @@ onMounted(cargar)
         <RouterLink :to="{ name: 'ventas' }">
           <Button label="Volver" icon="pi pi-arrow-left" text />
         </RouterLink>
+        <Button
+          v-if="conGarantia"
+          label="Garantía"
+          icon="pi pi-verified"
+          outlined
+          :loading="descargando"
+          data-prueba="garantia"
+          @click="descargarGarantia"
+        />
         <!-- RN-VEN-08: una venta anulada no se anula otra vez. -->
         <Button
           v-if="!anulada"
@@ -114,6 +148,28 @@ onMounted(cargar)
         />
       </div>
     </header>
+
+    <Message
+      v-if="recienConfirmada && conGarantia"
+      severity="success"
+      :closable="false"
+      class="aviso"
+      data-prueba="ofrecer-garantia"
+    >
+      <div class="oferta">
+        <span>
+          <strong>Venta registrada.</strong> Incluye productos con garantía:
+          puede entregar el certificado ahora.
+        </span>
+        <Button
+          label="Emitir garantía"
+          icon="pi pi-verified"
+          size="small"
+          :loading="descargando"
+          @click="descargarGarantia"
+        />
+      </div>
+    </Message>
 
     <Message v-if="anulada" severity="warn" :closable="false" class="aviso">
       <p>
@@ -156,6 +212,11 @@ onMounted(cargar)
               </template>
             </Column>
             <Column field="cantidad" header="Cantidad" style="width: 7rem" />
+            <Column header="Garantía" style="width: 8rem">
+              <template #body="{ data }">
+                {{ data.meses_garantia > 0 ? `${data.meses_garantia} meses` : '—' }}
+              </template>
+            </Column>
             <Column header="Subtotal" style="width: 10rem">
               <template #body="{ data }">
                 {{ bolivianos.format(data.subtotal) }}
@@ -244,6 +305,14 @@ h1 {
   flex-wrap: wrap;
   gap: 0.5rem;
   align-items: center;
+}
+
+.oferta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .aviso {

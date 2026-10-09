@@ -198,7 +198,8 @@ async function confirmar() {
       life: 5000,
     })
     limpiarTodo()
-    router.push({ name: 'venta-detalle', params: { id: venta.id } })
+    // RF-77: el detalle ofrece la garantía al llegar desde aquí.
+    router.push({ name: 'venta-detalle', params: { id: venta.id }, query: { recien: '1' } })
   } catch (error) {
     registrar(error)
     if (error.codigo === 'STOCK_INSUFICIENTE') {

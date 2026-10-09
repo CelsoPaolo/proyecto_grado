@@ -1206,7 +1206,7 @@ final del documento.
   - Mutaciones detectadas: listar también las líneas sin garantía, y
     usar los meses actuales del producto en lugar de los congelados.
 
-### [ ] T-10.6 — Garantía en la interfaz
+### [x] T-10.6 — Garantía en la interfaz
 - **Cubre:** RF-77
 - **Depende de:** T-10.5
 - **Trabajo:** Campo de meses de garantía en el formulario de producto;
@@ -1215,6 +1215,15 @@ final del documento.
 - **Hecho cuando:** el botón solo aparece en ventas confirmadas con
   alguna línea con garantía, y el PDF se descarga con el cuadro de
   guardado.
+- **Resultado (2026-10-09):** botón «Garantía» en el detalle de venta,
+  solo si la venta está confirmada y tiene alguna línea con garantía.
+  - Al llegar desde la confirmación (`?recien=1`) se ofrece emitirla.
+  - La descarga usa `useDescarga.js`, y el detalle muestra la columna
+    de garantía.
+  - El campo de meses en el formulario se hizo en T-10.1.
+  - Se actualizó la prueba de navegación de T-4.9, que ahora incluye
+    `query: { recien: '1' }`.
+  - **Pendiente de revisión humana:** abrir el PDF descargado.
 
 ### [ ] T-10.7 — Revisión del bloque 10
 - **Depende de:** T-10.1 a T-10.6

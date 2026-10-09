@@ -210,9 +210,12 @@ describe('confirmacion', () => {
     await wrapper.vm.confirmar()
     await flushPromises()
 
+    // T-10.6 (RF-77): llega marcada como recién confirmada para que el
+    // detalle ofrezca la garantía.
     expect(push).toHaveBeenCalledWith({
       name: 'venta-detalle',
       params: { id: 42 },
+      query: { recien: '1' },
     })
   })
 })

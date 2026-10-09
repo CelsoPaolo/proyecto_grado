@@ -30,4 +30,20 @@ export const ventasApi = {
   /** No es un borrado: la venta permanece, con su motivo (RN-VEN-06). */
   anular: (id, motivo) =>
     http.post(`/ventas/${id}/anular`, { motivo }).then((r) => r.data),
+
+  /**
+   * RF-76 — la garantía en PDF, generada por el servidor. Como el
+   * informe de servicio: `blob` para que axios no corrompa los bytes;
+   * el interceptor de http.js desempaqueta el error que llega como blob
+   * (el 409 de venta anulada o sin garantía).
+   */
+  garantiaPdf: (id) =>
+    http.get(`/ventas/${id}/garantia`, { responseType: 'blob' }).then((r) => r.data),
+}
+
+/** RN-VEN-14: solo una venta confirmada con alguna línea con garantía. */
+export function tieneGarantia(venta) {
+  return (
+    venta?.estado === 'CONFIRMADA' && (venta.items ?? []).some((l) => l.meses_garantia > 0)
+  )
 }
