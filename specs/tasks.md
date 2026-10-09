@@ -796,7 +796,7 @@ final del documento.
 > la v1.4: igual que en el bloque 4, **el servicio y su prueba de
 > concurrencia van antes que la API**.
 
-### [ ] T-8.1 — App `inventario` y modelo `MovimientoStock` ⚠️
+### [x] T-8.1 — App `inventario` y modelo `MovimientoStock` ⚠️
 - **Cubre:** RN-MOV-02, RN-MOV-03, RN-MOV-04, RNF-25
 - **Depende de:** T-7.5
 - **Trabajo:** App `inventario`; modelo con `tipo` (`SALDO_INICIAL`,
@@ -813,7 +813,7 @@ final del documento.
   negativo y un movimiento sin autor que no sea `SALDO_INICIAL`. Otra
   prueba verifica que actualizar o borrar un movimiento lanza excepción.
 
-### [ ] T-8.2 — `registrar_movimiento()` dentro de la venta y la anulación ⚠️
+### [x] T-8.2 — `registrar_movimiento()` dentro de la venta y la anulación ⚠️
 - **Cubre:** **RN-MOV-01**, RNF-09, RNF-10, RNF-24, RF-81
 - **Depende de:** T-8.1
 - **Trabajo:** `inventario/services.py` con `registrar_movimiento()`.
@@ -829,7 +829,7 @@ final del documento.
     descuento de stock y la venta;
   - una anulación deja un movimiento `ANULACION` por producto.
 
-### [ ] T-8.3 — Alta con movimiento y ajuste con bloqueo
+### [x] T-8.3 — Alta con movimiento y ajuste con bloqueo
 - **Cubre:** RN-CAT-10, RN-MOV-05, RF-73, RF-81, CU-CAT-02, CU-CAT-07
 - **Depende de:** T-8.2
 - **Trabajo:** Crear un producto registra su movimiento `ALTA`, aunque
@@ -838,21 +838,33 @@ final del documento.
   contra el valor bloqueado. En el serializer de producto, `stock` pasa a
   `read_only` en la edición: solo se fija al crear.
 - **Hecho cuando:** ajuste sin motivo → 400; ajuste sin diferencia →
-  409 `AJUSTE_SIN_DIFERENCIA`; un `PATCH` con otro `stock` no lo cambia
-  ni crea movimiento; un ajuste registra la diferencia con signo y el
-  resultante.
+  409 `AJUSTE_SIN_DIFERENCIA`; un `PATCH` con `stock` → 400 sin cambiar
+  nada ni crear movimiento; un ajuste registra la diferencia con signo y
+  el resultante.
+- > **Revisada el 2026-10-09**, después de hecha: se implementó
+  > ignorando el `stock` del `PATCH`, como decía entonces el plan, y se
+  > cambió a rechazarlo con 400, porque el formulario de producto lo
+  > enviaba al editar y el cambio se perdía sin aviso (`plan.md` §4.4).
+  > El formulario deja de enviarlo en la misma corrección; la acción
+  > «Ajustar existencias» que lo sustituye sigue siendo T-8.7.
 
 ### [ ] T-8.4 — Migración de saldos iniciales
 - **Cubre:** RNF-29, RN-MOV-02
 - **Depende de:** T-8.1
 - **Trabajo:** Migración de datos que crea un movimiento
-  `SALDO_INICIAL`, sin autor, por **cada** producto existente con su stock
-  actual —también los de cero—. Reverso que borra solo las filas
-  `SALDO_INICIAL`.
-- **Hecho cuando:** una prueba de migración, sobre una base con más de
-  160 productos con stock variado, verifica que tras aplicar cada
-  producto tiene exactamente un saldo inicial igual a su stock, y que al
-  revertir no queda ninguno y los productos no cambiaron.
+  `SALDO_INICIAL`, sin autor, por **cada** producto existente que **aún
+  no tenga punto de partida en el libro** —también los de cero—. Su
+  cantidad es el stock menos lo que ya sumen sus movimientos, para que
+  el libro cuadre aunque el producto se hubiera vendido después de
+  T-8.2. Reverso que borra solo las filas `SALDO_INICIAL`.
+  **Idempotente**: aplicarla, revertirla y volver a aplicarla, o ejecutar
+  su función dos veces, no duplica ningún movimiento. Un producto que ya
+  tiene su `ALTA` (creado después de T-8.3) no recibe saldo inicial.
+- **Hecho cuando:** una prueba de migración, sobre una base con **más de
+  160 productos** con stock variado, verifica que tras aplicar cada
+  producto tiene exactamente un saldo inicial igual a su stock y el libro
+  cuadra; que al revertir no queda ninguno y los productos no cambiaron;
+  y que aplicarla dos veces deja exactamente los mismos movimientos.
 
 ### [ ] T-8.5 — Concurrencia ampliada y guardián del libro ⚠️
 - **Cubre:** **RNF-08**, **RNF-24**, RN-MOV-03

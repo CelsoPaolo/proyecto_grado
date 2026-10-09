@@ -16,7 +16,7 @@
 | 1.0 | 2026-09-22 | Versión inicial para revisión. |
 | 1.1 | 2026-09-22 | Se resuelven los puntos pendientes PT-01 a PT-04. Alcance limitado a entorno de desarrollo (PT-01); **invalidación inmediata de sesiones** al bloquear una cuenta, con corrección de un error técnico de la v1.0 (PT-02); PrimeVue confirmado (PT-03); sin carga de datos de ejemplo, salvo el arranque del primer administrador (PT-04). |
 | 1.2 | 2026-09-30 | Se añaden §7.6 (paleta e identidad visual: cromo oscuro sobre área clara, morado como color de marca y los estados semánticos conservando sus colores) y §7.7 (pantalla de Inicio por rol, decorativa, que deja de duplicar la barra lateral). Decisiones de presentación posteriores a las primeras sesiones de uso; ninguna altera un comportamiento y por eso no generan RF nuevos. Se añade además §7.8 y el endpoint `GET /solicitudes/{id}/pdf` en §4.4, que implementan RF-67 y RF-68 de `spec.md` v1.3. |
-| 1.3 | 2026-10-08 | **Diseño de las cinco funcionalidades de `spec.md` v1.4.** Dos apps nuevas, `inventario` (movimientos de stock) y `clientes`; `panel` pasa a servir también los reportes por rango, y el panel diario se reescribe como el reporte de un día para que ambos no puedan divergir (RN-REP-08). Modelo de datos en §3.5; endpoints nuevos en §4.4; el libro de movimientos dentro del patrón de concurrencia en §6.5; lector de códigos, garantía y reportes en §7.9 a §7.11. Dependencias nuevas: `openpyxl` (backend) y `JsBarcode` (frontend), ambas sin componentes nativos. **Hallazgo que condiciona el diseño:** hoy las existencias se editan con el `PATCH` genérico del producto, **sin bloquear la fila**; con un libro de movimientos eso deja de ser aceptable y el ajuste pasa a un servicio propio con `select_for_update()` (§6.5). **De paso se corrigen cinco restos** de versiones anteriores: PostgreSQL 16 en §2.1, «asignación» en §2.3, una restricción de §3.3 que no existe en el modelo, y el ejemplo de `finalizar` y la nota sobre `iniciar` de §4.4, ambos anteriores a la v1.2. **Aprobado con las decisiones PA-06 a PA-08** de `spec.md` §12: se diseña el **código de fábrica** opcional (§3.5, §4.4, §7.9) y «servicios por estado» incluye las canceladas. |
+| 1.3 | 2026-10-08 | **Diseño de las cinco funcionalidades de `spec.md` v1.4.** Dos apps nuevas, `inventario` (movimientos de stock) y `clientes`; `panel` pasa a servir también los reportes por rango, y el panel diario se reescribe como el reporte de un día para que ambos no puedan divergir (RN-REP-08). Modelo de datos en §3.5; endpoints nuevos en §4.4; el libro de movimientos dentro del patrón de concurrencia en §6.5; lector de códigos, garantía y reportes en §7.9 a §7.11. Dependencias nuevas: `openpyxl` (backend) y `JsBarcode` (frontend), ambas sin componentes nativos. **Hallazgo que condiciona el diseño:** hoy las existencias se editan con el `PATCH` genérico del producto, **sin bloquear la fila**; con un libro de movimientos eso deja de ser aceptable y el ajuste pasa a un servicio propio con `select_for_update()` (§6.5). **De paso se corrigen cinco restos** de versiones anteriores: PostgreSQL 16 en §2.1, «asignación» en §2.3, una restricción de §3.3 que no existe en el modelo, y el ejemplo de `finalizar` y la nota sobre `iniciar` de §4.4, ambos anteriores a la v1.2. **Aprobado con las decisiones PA-06 a PA-08** de `spec.md` §12: se diseña el **código de fábrica** opcional (§3.5, §4.4, §7.9) y «servicios por estado» incluye las canceladas. **Revisado el 2026-10-09:** editar un producto con `stock` en la petición responde 400 en lugar de ignorarlo (§4.4). |
 
 > Este documento traduce la especificación funcional a **decisiones
 > técnicas concretas**: arquitectura, modelo de datos, contrato de la API,
@@ -902,7 +902,7 @@ Leyenda de roles: **A** = Administrador, **V** = Encargado de Ventas,
 | GET | `/productos` | A, V | Lista paginada. Filtros `?categoria=`, `?buscar=`, `?stock_bajo=true`, `?activo=`, **`?codigo=`** *(v1.3, coincidencia exacta con `codigo` **o** `codigo_fabrica`)*. | RF-12, RF-13, RF-53, RF-70 |
 | POST | `/productos` | A | Crea (`multipart` si lleva imagen). Asigna el código y registra el movimiento de alta. **`codigo` en la petición se ignora**; `codigo_fabrica` es opcional. | RF-09, RF-14, RF-69, RF-72, RF-81, RF-97 |
 | GET | `/productos/{id}` | A, V | Detalle, con `codigo`, `codigo_fabrica` y `meses_garantia`. | RF-12, RF-71 |
-| PATCH | `/productos/{id}` | A | Edita los datos descriptivos, incluido `codigo_fabrica`. **Ya no acepta `stock` ni `codigo`**: ambos son `read_only` *(v1.3)*. | RF-10, RF-97 |
+| PATCH | `/productos/{id}` | A | Edita los datos descriptivos, incluido `codigo_fabrica`. **Si la petición trae `stock`, responde 400** con el error en ese campo y no aplica nada; `codigo` se ignora *(v1.3, revisado el 2026-10-09)*. | RF-10, RF-97 |
 | DELETE | `/productos/{id}` | A | Borrado suave (`activo = false`). | RF-11 |
 | POST | `/productos/{id}/ajustar-existencias` *(v1.3)* | **solo A** | `{ "cantidad_real": 12, "motivo": "Recuento físico" }`. Bloquea la fila, calcula la diferencia y registra el movimiento (§6.5). | RF-73, RF-81 |
 | GET | `/productos/{id}/movimientos` *(v1.3)* | **solo A** | Historial de movimientos del producto, paginado, del más reciente al más antiguo. | RF-83 |
@@ -911,13 +911,25 @@ Cada producto listado incluye `stock_bajo: true|false`, calculado contra
 el umbral global vigente, para que el frontend no tenga que conocer la
 regla (RF-53).
 
-> **El cambio de `PATCH` rompe el formulario actual a propósito.** Hoy el
-> formulario de producto envía `stock` al editar. En la v1.3 el servidor
-> lo ignora —el campo pasa a `read_only`—, y el formulario deja de
-> ofrecerlo al editar y lo sustituye por la acción «Ajustar
-> existencias». Ignorar en lugar de rechazar con 400 es deliberado: un
-> cliente antiguo que siga enviando el campo no rompe, simplemente no
-> puede cambiar las existencias por la puerta equivocada.
+> **Editar con `stock` se rechaza, no se ignora** *(revisado el
+> 2026-10-09)*. La primera versión de este plan decía lo contrario
+> —ignorarlo, para no romper a un cliente antiguo que siguiera
+> enviándolo—, y T-8.3 se implementó así. Al usarlo apareció el
+> problema: el formulario de producto **enviaba las existencias al
+> editar**, de modo que quien cambiaba ese número y guardaba recibía un
+> 200 y el cambio no se aplicaba, sin ningún aviso. Un error explícito
+> («las existencias se corrigen con Ajustar existencias») es mejor que
+> un éxito falso.
+>
+> Dos consecuencias:
+>
+> - **`stock` sigue siendo de solo lectura al editar**, así que su valor
+>   nunca se aplica; el rechazo se añade además, en `validate()`,
+>   mirando la petición original.
+> - **El formulario deja de enviar las existencias al editar** y las
+>   muestra sin poder cambiarlas. Sin eso, el 400 haría fallar **toda**
+>   edición hecha desde la interfaz. La acción «Ajustar existencias» que
+>   las sustituye llega en T-8.7.
 
 #### Inventario (`/api/v1/movimientos-stock`) *(v1.3)*
 
@@ -1856,7 +1868,7 @@ incumplir la especificación):
 | RN-ACC-05 | Las tres pruebas de invalidación inmediata de §1.3. |
 | RNF-08 | Prueba de concurrencia de §6.4, **ampliada en §6.5** con los movimientos. |
 | RN-CAT-08 *(v1.3)* | Un `PATCH` con otro `codigo` no lo cambia; el código generado es EAN-13 válido; tras retirar un producto, el siguiente creado recibe un código distinto. |
-| RN-CAT-10 *(v1.3)* | Un `PATCH` con otro `stock` no lo cambia ni crea movimiento. |
+| RN-CAT-10 *(v1.3)* | Un `PATCH` que incluye `stock` → 400 con el error en ese campo; no cambia las existencias, no crea movimiento y no aplica los demás campos de la petición. |
 | RN-CAT-11 *(v1.3)* | Código de fábrica repetido → 400; con forma de código interno → 400, también saltando la validación de Django; dos productos sin código de fábrica → aceptados; `?codigo=` encuentra un producto por cualquiera de sus dos códigos. |
 | RN-VEN-12 *(v1.3)* | Cambiar los meses de garantía del producto tras la venta → la línea y la garantía emitida no cambian. |
 | RN-VEN-13 *(v1.3)* | Venta del 31 de enero con 1 mes → vence el 28 de febrero; en año bisiesto, el 29. |

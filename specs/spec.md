@@ -16,7 +16,7 @@
 | 1.1 | 2026-09-22 | Se resuelven las preguntas abiertas PA-01 a PA-05. Cambios principales: umbral global de existencias bajas configurable (PA-01); anulación de ventas sin plazo (PA-02); monto cobrado por servicio e indicador de ingresos por servicios (PA-03); visibilidad compartida de las solicitudes entre el personal de servicios (PA-04); técnico asignado distinto del usuario registrador (PA-05). |
 | 1.2 | 2026-09-29 | **Se revisan PA-03, PA-04 y PA-05 antes de implementar el módulo de servicios.** El monto lo cotiza y registra el **Administrador** tras la revisión, no el técnico al finalizar (PA-03). Cada solicitud la ven **solo quien la registró y el Administrador**, no toda el área (PA-04). El técnico deja de ser una entidad asignable y pasa a ser **una anotación de texto libre** del Administrador (PA-05). Consecuencia notable: desaparece la asimetría entre ventas y servicios que la v1.1 declaraba intencional. |
 | 1.3 | 2026-09-30 | **Se añade el informe en PDF de la solicitud de servicio (RF-67, RF-68).** Surge del uso real: el cliente deja su equipo y se va sin nada en la mano, y al recogerlo no hay forma de entregarle por escrito qué se le hizo. Es el único documento que sale del sistema hacia el cliente; §2.2 sigue excluyendo la facturación y el portal del cliente, y esto no lo contradice. |
-| 1.4 | 2026-10-08 | **Cinco funcionalidades nuevas.** (1) **Código por producto** EAN-13 generado por el sistema e inmutable, con búsqueda por código y entrada por lector de código de barras en la venta. (2) **Garantía imprimible**: meses de garantía por producto, congelados en la venta, y PDF de garantía reutilizando el membrete del informe de servicio. (3) **Reportes por rango de fechas** con exportación a PDF y Excel. (4) **Historial de movimientos de stock**, inmutable y registrado en la misma transacción que el cambio de existencias; las existencias dejan de editarse con el resto del producto y pasan a ajustarse con motivo. (5) **Módulo de Clientes** como registro de datos de contacto: **cambia el alcance** de §2.1 y §2.3, pero los clientes siguen **sin cuenta, sin inicio de sesión y sin acceso**. Se revisan RN-VEN-10, CU-CAT-02, CU-CAT-03, CU-CAT-05, CU-VEN-01 y CU-VEN-03. **De paso se corrigen tres restos de la v1.1** que la revisión de la v1.2 no alcanzó: la definición de «Monto cobrado» del glosario, el desglose «sin técnico asignado» de CU-PAN-01, y la mención a un «técnico asignado» en el criterio 4 de §9. **Aprobada con tres decisiones** (§12): las solicitudes de servicio no usan Clientes hasta la v1.5 (PA-06); se añade un **código de fábrica** opcional por producto, reconocido por la búsqueda y por el lector junto al código interno (PA-07, RN-CAT-11, RF-97); y las solicitudes canceladas cuentan como fila informativa en «servicios por estado» (PA-08). |
+| 1.4 | 2026-10-08 | **Cinco funcionalidades nuevas.** (1) **Código por producto** EAN-13 generado por el sistema e inmutable, con búsqueda por código y entrada por lector de código de barras en la venta. (2) **Garantía imprimible**: meses de garantía por producto, congelados en la venta, y PDF de garantía reutilizando el membrete del informe de servicio. (3) **Reportes por rango de fechas** con exportación a PDF y Excel. (4) **Historial de movimientos de stock**, inmutable y registrado en la misma transacción que el cambio de existencias; las existencias dejan de editarse con el resto del producto y pasan a ajustarse con motivo. (5) **Módulo de Clientes** como registro de datos de contacto: **cambia el alcance** de §2.1 y §2.3, pero los clientes siguen **sin cuenta, sin inicio de sesión y sin acceso**. Se revisan RN-VEN-10, CU-CAT-02, CU-CAT-03, CU-CAT-05, CU-VEN-01 y CU-VEN-03. **De paso se corrigen tres restos de la v1.1** que la revisión de la v1.2 no alcanzó: la definición de «Monto cobrado» del glosario, el desglose «sin técnico asignado» de CU-PAN-01, y la mención a un «técnico asignado» en el criterio 4 de §9. **Aprobada con tres decisiones** (§12): las solicitudes de servicio no usan Clientes hasta la v1.5 (PA-06); se añade un **código de fábrica** opcional por producto, reconocido por la búsqueda y por el lector junto al código interno (PA-07, RN-CAT-11, RF-97); y las solicitudes canceladas cuentan como fila informativa en «servicios por estado» (PA-08). **Revisada el 2026-10-09:** una edición de producto que incluya las existencias se **rechaza** con un error junto al campo, en lugar de ignorarse en silencio (CU-CAT-03, RN-CAT-10). |
 
 > **Nota sobre la numeración:** los identificadores (RF-, RN-, RNF-, CU-,
 > SUP-) son estables entre versiones. Los requerimientos añadidos en la
@@ -351,10 +351,18 @@ alta.)*
   —nombre, descripción, precio, meses de garantía, categoría, imagen y
   código de fábrica, que puede añadirse, corregirse o quitarse—.
 - **Alternativos:** el formulario no ofrece las existencias ni el código
-  interno, y el servidor **ignora** cualquier intento de cambiarlos por
-  esta vía (RN-CAT-08, RN-CAT-10). Las existencias se corrigen con
-  CU-CAT-07, que exige motivo y deja movimiento. Un código de fábrica
-  inválido o repetido se rechaza (RN-CAT-11).
+  interno.
+  - Si la petición incluye las **existencias**, el sistema la
+    **rechaza** con un error junto a ese campo, que indica que se
+    corrigen con «Ajustar existencias» (RN-CAT-10). No se aplica ningún
+    otro cambio de la misma petición. *(Revisado el 2026-10-09: antes se
+    ignoraban en silencio, y una persona podía creer que el cambio se
+    había guardado.)*
+  - Si incluye el **código interno**, se ignora (RN-CAT-08).
+  - Un código de fábrica inválido o repetido se rechaza (RN-CAT-11).
+
+  Las existencias se corrigen con CU-CAT-07, que exige motivo y deja
+  movimiento.
 - **Postcondición:** el producto queda actualizado. Las ventas ya
   confirmadas **no** se ven afectadas (RN-VEN-04, RN-VEN-12): cambiar el
   precio o los meses de garantía solo rige para ventas futuras.
@@ -826,7 +834,10 @@ congelada y movimientos de stock.)*
   cambian **únicamente** por una venta, una anulación o un ajuste manual
   (CU-CAT-07). La edición general del producto no las modifica. Así,
   cada cambio de existencias tiene su movimiento (RN-MOV-01) y ninguno
-  queda sin explicar.
+  queda sin explicar. Una edición que **incluya** las existencias **se
+  rechaza** indicando que se corrigen con el ajuste *(revisado el
+  2026-10-09)*: ignorarlas en silencio haría creer que el cambio se
+  aplicó.
 - **RN-CAT-11** *(v1.4, PA-07)* — Un producto puede tener, además de su
   código interno, un **código de fábrica** opcional: el que trae impreso
   el producto o su caja. Ese código:

@@ -59,17 +59,41 @@ class ProductoSerializer(serializers.ModelSerializer):
         """RN-CAT-10: las existencias solo se fijan al crear.
 
         Despues cambian unicamente por venta, anulacion o ajuste, que
-        dejan su movimiento. Se marcan de solo lectura en vez de
-        descartarlas en update(): asi DRF las ignora del todo, y un
-        PATCH con `stock` no recibe un 400 por un campo que de todos
-        modos no se aplicaria. Un cliente antiguo que siga enviandolas
-        no rompe; simplemente no puede cambiar las existencias por la
-        puerta equivocada (plan.md 4.4).
+        dejan su movimiento. Al editar, el campo es de solo lectura: su
+        valor nunca llega a los datos validados ni, por tanto, al
+        producto. Que la peticion lo traiga se rechaza aparte, en
+        validate().
         """
         campos = super().get_fields()
         if self.instance is not None:
             campos["stock"].read_only = True
         return campos
+
+    def validate(self, datos):
+        """RN-CAT-10 revisada el 2026-10-09: editar con existencias es un
+        error, no un dato que se descarta.
+
+        La primera version las ignoraba en silencio, y el formulario de
+        producto las enviaba al editar: quien cambiaba ese numero y
+        guardaba recibia un 200 y el cambio se perdia sin aviso. Se mira
+        la peticion ORIGINAL (`initial_data`) porque el campo, al ser de
+        solo lectura, ya no esta en `datos`.
+
+        Se rechaza aunque el valor coincida con el vigente: la regla es
+        que las existencias no se editan por esta via, no que no se
+        cambien.
+        """
+        if self.instance is not None and "stock" in self.initial_data:
+            raise serializers.ValidationError(
+                {
+                    "stock": [
+                        "Las existencias no se editan aquí: use «Ajustar "
+                        "existencias», que exige un motivo y deja constancia "
+                        "del cambio."
+                    ]
+                }
+            )
+        return super().validate(datos)
 
     @extend_schema_field(serializers.BooleanField)
     def get_stock_bajo(self, obj):

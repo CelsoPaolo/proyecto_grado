@@ -111,12 +111,19 @@ def test_si_el_alta_no_puede_registrarse_el_producto_no_se_crea(admin):
 # El PATCH ya no toca existencias (RN-CAT-10)
 # ─────────────────────────────────────────────────────────────────────
 def test_editar_un_producto_no_crea_movimientos(admin):
+    """Ni la edicion rechazada (con existencias) ni la aceptada (sin
+    ellas) tocan el libro."""
     producto = crear_producto(usuario=admin, **_datos(stock=10))
+    cliente = _autenticar(admin)
 
-    _autenticar(admin).patch(
+    rechazada = cliente.patch(
         f"{PRODUCTOS}/{producto.id}", {"stock": 99, "nombre": "Otro nombre"}, format="json"
     )
+    aceptada = cliente.patch(
+        f"{PRODUCTOS}/{producto.id}", {"nombre": "Otro nombre"}, format="json"
+    )
 
+    assert (rechazada.status_code, aceptada.status_code) == (400, 200)
     producto.refresh_from_db()
     assert producto.stock == 10
     assert producto.nombre == "Otro nombre"

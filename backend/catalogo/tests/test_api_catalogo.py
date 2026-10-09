@@ -161,39 +161,57 @@ def test_se_rechazan_precio_no_positivo_y_stock_negativo(como_admin, campo, valo
     assert campo in respuesta.data["errores"]
 
 
-def test_editar_un_producto_no_cambia_sus_existencias(como_admin):
-    """RF-10 revisado en spec.md v1.4 y RN-CAT-10.
+@pytest.mark.parametrize("stock", [25, 10, -5])
+def test_editar_un_producto_con_existencias_se_rechaza(como_admin, stock):
+    """RF-10 y RN-CAT-10, revisadas el 2026-10-09.
 
-    Hasta la v1.3 esta prueba verificaba lo contrario: que un PATCH con
-    `stock` las cambiaba, porque el ajuste de inventario era una edicion
-    normal. Desde la v1.4 las existencias solo cambian por venta,
-    anulacion o ajuste con motivo (CU-CAT-07), que dejan su movimiento.
-    El resto del PATCH se sigue aplicando.
+    Esta prueba ha cambiado dos veces. Hasta la v1.3 verificaba que un
+    PATCH con `stock` las cambiaba. En T-8.3, que se ignoraba. Desde el
+    2026-10-09, que se RECHAZA: el formulario las enviaba al editar y el
+    cambio se perdia sin aviso.
+
+    Se rechaza con cualquier valor, tambien el vigente (10): la regla es
+    que no se editan por esta via. Y la peticion entera se rechaza: el
+    precio que viene en ella tampoco se aplica.
     """
     producto = ProductoFactory(stock=10, precio=100)
 
     respuesta = como_admin.patch(
-        f"{PRODUCTOS}/{producto.id}", {"stock": 25, "precio": "120.00"}, format="json"
+        f"{PRODUCTOS}/{producto.id}", {"stock": stock, "precio": "120.00"}, format="json"
+    )
+
+    assert respuesta.status_code == status.HTTP_400_BAD_REQUEST
+    assert respuesta.data["codigo"] == Codigo.VALIDACION
+    assert "Ajustar existencias" in respuesta.data["errores"]["stock"][0]
+    producto.refresh_from_db()
+    assert (producto.stock, producto.precio) == (10, 100)
+
+
+def test_editar_un_producto_sin_existencias_se_aplica(como_admin):
+    """El rechazo es solo por el campo: la edicion normal sigue
+    funcionando."""
+    producto = ProductoFactory(stock=10, precio=100)
+
+    respuesta = como_admin.patch(
+        f"{PRODUCTOS}/{producto.id}", {"precio": "120.00"}, format="json"
     )
 
     assert respuesta.status_code == status.HTTP_200_OK
     producto.refresh_from_db()
-    assert producto.stock == 10
-    assert producto.precio == 120
+    assert (producto.stock, producto.precio) == (10, 120)
 
 
-def test_un_stock_invalido_en_la_edicion_se_ignora_sin_error(como_admin):
-    """El campo es de solo lectura al editar: no se valida porque no se
-    aplica. Responder 400 por un dato que se descarta confundiria."""
+def test_editar_con_existencias_en_multipart_tambien_se_rechaza(como_admin):
+    """El formulario envia multipart cuando lleva imagen. La comprobacion
+    mira la peticion original, sea JSON o multipart."""
     producto = ProductoFactory(stock=10)
 
     respuesta = como_admin.patch(
-        f"{PRODUCTOS}/{producto.id}", {"stock": -5}, format="json"
+        f"{PRODUCTOS}/{producto.id}", {"stock": "25", "nombre": "Otro"}, format="multipart"
     )
 
-    assert respuesta.status_code == status.HTTP_200_OK
-    producto.refresh_from_db()
-    assert producto.stock == 10
+    assert respuesta.status_code == status.HTTP_400_BAD_REQUEST
+    assert "stock" in respuesta.data["errores"]
 
 
 def test_se_admite_una_imagen_valida(como_admin):

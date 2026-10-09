@@ -4,7 +4,13 @@
    Los errores de validacion llegan del servidor asociados a su campo y
    se muestran junto a el (RNF-15). La interfaz no reimplementa las
    reglas: el precio y las existencias se validan en el servidor, que
-   es donde viven RN-CAT-01 y RN-CAT-02. */
+   es donde viven RN-CAT-01 y RN-CAT-02.
+
+   Las existencias solo se fijan al CREAR el producto (RN-CAT-10). Al
+   editar se muestran sin poder cambiarlas y no se envian: el servidor
+   rechaza con 400 una edicion que las incluya, porque desde la v1.4
+   solo cambian por venta, anulacion o ajuste con motivo, que dejan su
+   movimiento. La accion «Ajustar existencias» llega en T-8.7. */
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import InputNumber from 'primevue/inputnumber'
@@ -81,6 +87,9 @@ async function guardar() {
     if (!datos.imagen) delete datos.imagen
 
     if (editando.value) {
+      // RN-CAT-10: enviarlas, aunque no hayan cambiado, haria que el
+      // servidor rechazara la edicion entera.
+      delete datos.stock
       await productosApi.actualizar(props.producto.id, datos)
       toast.add({ severity: 'success', summary: 'Producto actualizado', life: 3000 })
     } else {
@@ -154,10 +163,15 @@ async function guardar() {
             input-id="stock"
             v-model="formulario.stock"
             :min="0"
-            show-buttons
+            :show-buttons="!editando"
+            :disabled="editando"
             :invalid="Boolean(errorDe('stock'))"
           />
           <small v-if="errorDe('stock')" class="error">{{ errorDe('stock') }}</small>
+          <small v-else-if="editando" class="ayuda">
+            No se editan aquí: se corrigen con un ajuste de inventario, que
+            exige un motivo.
+          </small>
         </div>
       </div>
 
