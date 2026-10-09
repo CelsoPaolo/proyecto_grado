@@ -1467,13 +1467,23 @@ final del documento.
   - Las pruebas leen el texto real del PDF. Mutación detectada: quitar
     una sección.
 
-### [ ] T-12.6 — Exportación a Excel
+### [x] T-12.6 — Exportación a Excel
 - **Cubre:** RF-96
 - **Depende de:** T-12.4
 - **Trabajo:** `openpyxl` como dependencia nueva; una hoja por sección;
   importes como números con formato monetario (`plan.md` §7.11).
 - **Hecho cuando:** el archivo se abre con `openpyxl` en la prueba y los
   importes son celdas numéricas, no texto.
+- **Resultado (2026-10-09):** `GET /reportes/xlsx` con
+  `panel/exportar_xlsx.py`.
+  - `openpyxl==3.1.5` es la dependencia aprobada; queda anotada en
+    `requirements/base.txt`.
+  - Hojas: Resumen, Productos, Usuarios y Servicios.
+  - Los importes son números con formato `"Bs" #,##0.00`.
+  - Las etiquetas de estado son compartidas con el PDF
+    (`estados_con_etiqueta`).
+  - La prueba abre el archivo con `openpyxl`. Mutación detectada: un
+    importe escrito como texto.
 
 ### [ ] T-12.7 — Coherencia de las tres salidas ⚠️
 - **Cubre:** **RN-REP-07**, **RN-REP-09**, RNF-26, RNF-28

@@ -107,6 +107,7 @@ MATRIZ = {
     # ── Reportes: solo Administrador (RN-REP-10) ──────────────────────
     ("GET", "/api/v1/reportes"): (Rol.ADMINISTRADOR,),
     ("GET", "/api/v1/reportes/pdf"): (Rol.ADMINISTRADOR,),
+    ("GET", "/api/v1/reportes/xlsx"): (Rol.ADMINISTRADOR,),
     # ── Gestion de usuarios: solo Administrador ──────────────────────
     ("GET", "/api/v1/usuarios"): (Rol.ADMINISTRADOR,),
     ("POST", "/api/v1/usuarios"): (Rol.ADMINISTRADOR,),

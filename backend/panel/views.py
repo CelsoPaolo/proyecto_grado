@@ -9,7 +9,7 @@ from rest_framework.views import APIView
 from core.pdf import imagen_incrustada, render_a_pdf
 from core.permissions import EsAdministrador
 from panel import reportes
-from servicios.models import EstadoSolicitud
+from panel.exportar_xlsx import libro_del_reporte
 from panel.serializers import ReporteSerializer, ResumenPanelSerializer
 from panel.services import resumen_del_panel
 
@@ -73,12 +73,7 @@ class ReportePdfView(APIView):
             "panel/reporte.html",
             {
                 "reporte": reporte,
-                # Las etiquetas en espanol, en el orden del modelo: los
-                # cuatro estados siempre (RN-REP-06).
-                "estados": [
-                    (etiqueta, reporte["servicios_por_estado"][valor])
-                    for valor, etiqueta in EstadoSolicitud.choices
-                ],
+                "estados": reportes.estados_con_etiqueta(reporte),
                 "generado_en": timezone.localtime(),
                 "generado_por": request.user.nombre_completo,
                 "logo": imagen_incrustada("img/logo-pcsolution.png"),
@@ -86,5 +81,29 @@ class ReportePdfView(APIView):
         )
         respuesta = HttpResponse(contenido, content_type="application/pdf")
         respuesta["Content-Disposition"] = f'inline; filename="{nombre_de_archivo(desde, hasta, "pdf")}"'
+        return respuesta
+
+
+XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
+
+class ReporteXlsxView(APIView):
+    """GET /reportes/xlsx?desde=&hasta= — RF-96. Solo el Administrador.
+
+    Mismo resultado de reportes.calcular() que el JSON y el PDF
+    (RN-REP-07).
+    """
+
+    permission_classes = [EsAdministrador]
+
+    @extend_schema(
+        summary="Reporte por rango en Excel",
+        responses={(200, XLSX): OpenApiResponse(description="Una hoja por sección.")},
+    )
+    def get(self, request):
+        desde, hasta = reportes.rango_de_la_peticion(request.query_params)
+        contenido = libro_del_reporte(reportes.calcular(desde, hasta))
+        respuesta = HttpResponse(contenido, content_type=XLSX)
+        respuesta["Content-Disposition"] = f'attachment; filename="{nombre_de_archivo(desde, hasta, "xlsx")}"'
         return respuesta
 

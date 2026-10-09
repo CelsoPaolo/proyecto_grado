@@ -48,7 +48,8 @@ bloque 13.
 | 2026-10-09 | T-12.2 El panel diario como reporte de un día | `fa41efe` | B 975 / 7 · F 205 / 0 | **Precisión en `tasks.md` (RNF-22):** la prueba estructural del panel, que buscaba `Sum(` en `panel/services.py`, pasa a leer también `panel/reportes.py`, adonde se movió la suma. Su intención no cambia. No dejé un `Sum(` artificial en `services.py` para que pasara sin tocarla. Se quitaron imports que quedaron sin uso. |
 | 2026-10-09 | T-12.3 Detalles del reporte | `2b5c934` | B 983 / 4 · F 205 / 0 | `calcular(..., con_detalles=False)` para el panel, que no usa las tablas. Ventas por usuario ordenadas por importe descendente. Desempate final por id en las dos tablas, para que el orden sea estable entre la pantalla, el PDF y el Excel. |
 | 2026-10-09 | T-12.4 API del reporte | `6c4481b` | B 998 / 3 · F 205 / 0 | La validación del rango vive en `panel/reportes.py` y la usarán también el PDF y el Excel, así que las tres salidas rechazan lo mismo. No se pone un tope al rango (RNF-28 habla de rendimiento con hasta un año, no de un límite). |
-| 2026-10-09 | T-12.5 Exportación a PDF | siguiente commit | B 1008 / 2 · F 205 / 0 | Título «Reporte de operación», con el rango en el lugar del número. Leyenda propia en el pie: «Reporte interno de operación, no válido como documento fiscal». Las secciones vacías dicen «Sin ventas en el período». |
+| 2026-10-09 | T-12.5 Exportación a PDF | `572292d` | B 1008 / 2 · F 205 / 0 | Título «Reporte de operación», con el rango en el lugar del número. Leyenda propia en el pie: «Reporte interno de operación, no válido como documento fiscal». Las secciones vacías dicen «Sin ventas en el período». |
+| 2026-10-09 | T-12.6 Exportación a Excel | siguiente commit | B 1017 / 1 · F 205 / 0 | `openpyxl` fijado en 3.1.5 en el entorno; en `requirements/base.txt` queda como `>=3.1.5`, al estilo del resto. Trae una sola dependencia, `et-xmlfile`, también Python puro. Las fechas del rango van como fechas de Excel con formato `DD/MM/YYYY`, y el archivo se sirve como `attachment`. |
 
 ## Pendiente para revisión humana
 
@@ -126,4 +127,4 @@ bloque 13.
 
 ## Dónde se detuvo la sesión
 
-T-12.5 terminada. **Siguiente: T-12.6** (exportación a Excel).
+T-12.6 terminada. **Siguiente: T-12.7** (coherencia de las tres salidas).

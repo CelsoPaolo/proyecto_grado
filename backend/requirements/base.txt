@@ -12,3 +12,6 @@ drf-spectacular>=0.27
 # instala con pip sin dependencias nativas. Se descarto WeasyPrint,
 # que en Windows exige GTK instalado aparte.
 xhtml2pdf>=0.2.16
+# Exportacion del reporte a Excel (RF-96, plan.md 7.11). Python puro,
+# como xhtml2pdf; su unica dependencia (et-xmlfile) tambien lo es.
+openpyxl>=3.1.5

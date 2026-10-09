@@ -143,6 +143,16 @@ def calcular(desde, hasta, con_detalles=True):
     return reporte
 
 
+def estados_con_etiqueta(reporte):
+    """Los cuatro estados con su etiqueta en espanol, en el orden del
+    modelo. La usan el PDF y el Excel, para que muestren las mismas filas
+    con el mismo texto (RN-REP-06, RN-REP-07)."""
+    return [
+        (etiqueta, reporte["servicios_por_estado"][valor])
+        for valor, etiqueta in EstadoSolicitud.choices
+    ]
+
+
 class RangoInvalido(ErrorDeNegocio):
     """RN-REP-01: «desde» posterior a «hasta». 400 con codigo propio, para
     que la pantalla pueda senalar las dos fechas a la vez."""
