@@ -68,6 +68,11 @@ el de lógica más delicada.
 > cambio a ese servicio, con su prueba, antes de que llegue el
 > siguiente.
 
+**Además, 4 tareas operativas** (`T-OP.1` a `T-OP.4`): la importación
+única del catálogo del proyecto anterior (`plan.md` §11.3). No son
+funcionalidad del sistema y no cuentan en el total de tareas; están al
+final del documento.
+
 ---
 
 ## Bloque 0 — Andamiaje del proyecto
@@ -1216,6 +1221,75 @@ el de lógica más delicada.
   actualizar README, guion de la demostración y documentación de la API.
 - **Hecho cuando:** `spec.md` describe el sistema tal como quedó, y toda
   diferencia encontrada se resolvió editando primero `specs/`.
+
+---
+
+## Tareas operativas — importación del catálogo anterior *(PT-05)*
+
+> No son funcionalidad del sistema: no tienen pantalla, ni caso de uso,
+> ni requerimiento (`plan.md` §11.3). Se rigen igual por el método —un
+> *commit* por tarea que cambie código y un criterio comprobable—, pero
+> **dos de ellas terminan en una aprobación del usuario**, no solo en
+> una prueba.
+>
+> **Regla firme desde el 2026-10-09:** no se arranca ningún servidor de
+> base de datos sobre archivos fuera del proyecto. Los datos antiguos se
+> leen de los CSV exportados.
+
+### [ ] T-OP.1 — Exportar el catálogo antiguo a CSV
+- **Depende de:** —
+- **Trabajo:** Exportar `productos` (todas las columnas, incluidas la
+  marca y la ruta de imagen) y `categorias` a
+  `Documents\backup_xampp_mariadb\catalogo_export\`, leyendo **solo de la
+  copia** de la base, nunca de XAMPP.
+- **Hecho cuando:** existen `productos.csv` (153 filas) y
+  `categorias.csv` (14 filas), y los archivos de XAMPP no cambiaron.
+- > **En espera de confirmación**: exportar exige arrancar un servidor
+  > sobre la copia, que está fuera del proyecto, y la regla de arriba lo
+  > prohíbe.
+
+### [ ] T-OP.2 — Comando `importar_catalogo` con informe y huella
+- **Depende de:** T-9.6 (código interno y de fábrica) y T-8.3 (servicio
+  de alta con movimiento)
+- **Trabajo:** Comando de gestión que lee los dos CSV y la carpeta de
+  imágenes del proyecto antiguo, y crea cada producto **a través del
+  servicio de alta**: existencias 0, garantía 0, sin marca. Modo
+  `--informe` por defecto, que no escribe nada; modo `--aplicar --huella`;
+  opción `--mapa-categorias` (`plan.md` §11.3).
+- **Hecho cuando:** pruebas con CSV de muestra verifican que:
+  - `--informe` no escribe nada en la base;
+  - cada producto importado tiene código EAN-13, un único movimiento
+    `ALTA` de cantidad 0 con el autor indicado, existencias 0 y 0 meses
+    de garantía;
+  - los problemáticos —nombre vacío, largo o repetido, categoría
+    inexistente, precio no positivo— no se importan y aparecen en el
+    informe con su motivo;
+  - una imagen faltante deja el producto sin imagen y aparece en el
+    informe;
+  - una huella distinta de la del plan no importa nada;
+  - un fallo a mitad no deja ningún producto importado;
+  - ejecutarlo dos veces no duplica nada.
+
+### [ ] T-OP.3 — Informe de importación y aprobación ⚠️
+- **Depende de:** T-OP.1, T-OP.2
+- **Trabajo:** Ejecutar `--informe` sobre los CSV reales y presentarlo:
+  cuántos productos se importarían; **cuántos tienen nombre o categoría
+  problemáticos, y cuáles**; **cuáles tienen la imagen faltante**; qué
+  categorías se crearían, cuáles coinciden y cuáles son parecidas a una
+  existente; y la huella.
+- **Hecho cuando:** **el usuario aprueba el informe** y, si hace falta,
+  el mapa de categorías. Sin aprobación explícita no se pasa a T-OP.4.
+
+### [ ] T-OP.4 — Aplicar la importación
+- **Depende de:** T-OP.3, con la aprobación del usuario
+- **Trabajo:** `--aplicar --huella <la aprobada>`.
+- **Hecho cuando:** el número de productos creados coincide con el del
+  informe; el libro de movimientos cuadra para todos (`SUM(cantidad) = 0`
+  para cada importado); una segunda ejecución no importa nada.
+- > **Después**, fuera del sistema: la empresa cuenta su inventario
+  > físico y carga las existencias con **«Ajustar existencias»**
+  > (CU-CAT-07), con un motivo del tipo «recuento inicial». Ese es el
+  > primer uso real del libro de movimientos.
 
 ---
 

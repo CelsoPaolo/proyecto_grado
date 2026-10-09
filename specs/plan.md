@@ -1971,6 +1971,90 @@ conforme a PT-04.
 > panel. Vale la pena ensayarlo cronometrado; si al probarlo resulta
 > demasiado largo, siempre se puede reconsiderar PT-04.
 
+### 11.3 Importación del catálogo anterior: operación de una sola vez *(PT-05)*
+
+**Qué es y qué no es.** Un **comando de gestión de Django** que se
+ejecuta una vez para cargar el catálogo del intento anterior en Laravel.
+**No es una funcionalidad del sistema**: no tiene pantalla, ni caso de
+uso, ni requerimiento propio, igual que el `createsuperuser` adaptado de
+§11.1. Por eso vive aquí y en las tareas operativas de `tasks.md`, y no
+en `spec.md`.
+
+**Origen de los datos.** 153 productos en 14 categorías, de la base
+MariaDB `pcsolution` del proyecto Laravel. El seeder de ese proyecto
+declara que **los productos y las categorías son reales, pero los
+precios son referenciales** y las existencias inventadas. De ahí dos
+decisiones (PT-05):
+
+- **Se importa con existencias 0.** Las existencias reales se cargan
+  después con el **ajuste por recuento** (CU-CAT-07), una vez contado el
+  inventario físico. Importar las existencias del seeder llenaría el
+  libro de movimientos de altas ficticias, y el libro existe justamente
+  para que cada unidad tenga una explicación verdadera.
+- **Los precios se importan tal cual**, y el informe lo advierte para
+  que el Administrador los revise. Un precio referencial se corrige con
+  la edición normal; una existencia inventada en el libro no se borra.
+
+**Se lee de CSV, nunca de la base.** El comando lee `productos.csv` y
+`categorias.csv`, exportados de una copia de la base antigua. No
+necesita un controlador de MariaDB ni que ningún servidor esté en
+marcha, y no puede escribir en la base de origen porque no la conoce.
+
+**Pasa por el servicio de alta**, no por el ORM directamente. Así cada
+producto importado nace exactamente igual que uno creado a mano: con su
+código EAN-13 interno (RN-CAT-08), su movimiento `ALTA` con cantidad 0 y
+como autor el Administrador que ejecuta el comando (`--usuario`), y 0
+meses de garantía. Por eso se ejecuta **después del bloque 9**: antes no
+existirían ni el código ni el movimiento de alta.
+
+**Qué se importa y qué no:**
+
+| Columna antigua | Destino | |
+|---|---|---|
+| `nombre` | `nombre` | Recortado; es problemático si queda vacío, pasa de 150 caracteres o se repite —dentro del CSV o con un producto ya existente—. |
+| `descripcion` | `descripcion` | Tal cual. |
+| `precio` | `precio` | Tal cual; es problemático si no es positivo. |
+| `categoria_id` → nombre | `categoria` | Por nombre, sin distinguir mayúsculas ni tildes; se crea si no existe. Es problemática si no existe en `categorias.csv` o su nombre pasa de 100 caracteres. |
+| `imagen` | `imagen` | Se copia el archivo desde el proyecto antiguo, con la misma validación que una subida (Pillow, 2 MB). Si falta o no es válido, el producto se importa **sin imagen** y el informe lo lista (RN-CAT-06 la hace opcional). |
+| `stock` | — | **No**: existencias 0 (PT-05). |
+| `marca` | — | **No**: los nombres ya la incluyen. |
+| `slug`, `destacado`, fechas | — | Propias de la tienda online; sin equivalente aquí. |
+
+**Tablas que no se importan nunca:** `pedidos`, `detalle_pedidos` y
+`mensajes_contacto` —restos de la tienda online que `spec.md` §2.2
+excluye—, ni `users`, `solicitudes_servicio` o las tablas internas de
+Laravel.
+
+**Dos modos y una huella.**
+
+1. **`--informe`** (por defecto): no escribe nada. Produce el informe con
+   los productos que se importarían; **cuántos y cuáles tienen nombre o
+   categoría problemáticos**, y por qué; **cuáles tienen la imagen
+   faltante** o inválida; y las categorías que se crearían, las que
+   coinciden con una existente y las **parecidas** a una existente
+   —«Redes» frente a «Redes y Conectividad»—, para decidir si se fusionan
+   con `--mapa-categorias`. Termina con una **huella**: un resumen
+   criptográfico del conjunto exacto que se importaría.
+2. **`--aplicar --huella <huella>`**: recalcula el plan y **solo importa
+   si la huella coincide** con la del informe aprobado. Si algo cambió
+   entre el informe y la ejecución —un producto creado a mano, un CSV
+   tocado—, la huella no coincide y no se importa nada. Así lo que se
+   ejecuta es exactamente lo que se aprobó.
+
+Los productos problemáticos **no se importan** y quedan listados para
+corregirlos a mano. La importación del resto es **todo o nada**: una
+sola transacción. Ejecutarla dos veces no duplica nada, porque la
+segunda vez todos los nombres ya existen.
+
+**Lectura de la base antigua: solo sobre una copia.** Al preparar este
+plan se leyó la base antigua y hubo un incidente: `my.ini` de XAMPP fija
+con ruta absoluta los archivos de sistema de InnoDB, y una instancia
+arrancada «sobre la copia» usó los originales. Se revirtió restaurando
+los tres archivos afectados desde la copia, verificado byte a byte, y
+sin que ninguna tabla cambiara. Desde entonces no se arranca ningún
+servidor de base de datos sobre archivos fuera del proyecto; los datos
+antiguos se leen de los CSV exportados.
+
 ---
 
 ## 12. Riesgos técnicos y cómo se mitigan
@@ -2004,6 +2088,7 @@ Los cuatro puntos pendientes de la versión 1.0 fueron resueltos el
 | **PT-02** | Invalidación de sesiones | **Inmediata** al bloquear una cuenta, por las cuatro vías. | §1.2 (corrección), **§1.3 completa**, §9, §12 |
 | **PT-03** | Biblioteca de componentes | **PrimeVue 4** confirmada. | §1.1, §1.2, §7 |
 | **PT-04** | Datos de ejemplo | **No se cargan.** Todo se registra a mano en la demostración. Se mantiene solo el arranque del primer administrador, que no es dato de ejemplo sino requisito de acceso. | §11.1 |
+| **PT-05** *(2026-10-09)* | Catálogo del proyecto anterior | **Se importa una vez** con un comando de gestión, después del bloque 9, pasando por el servicio de alta: **existencias 0**, sin marca, con imágenes, precios a revisar. Las existencias reales se cargan por ajuste de recuento. No contradice PT-04: son los productos reales de la empresa, no datos inventados para la demostración; lo inventado —las existencias— es justo lo que no se importa. | §11.3, tareas operativas de `tasks.md` |
 
 ### Qué cambió de fondo con PT-02
 
