@@ -848,7 +848,7 @@ final del documento.
   > El formulario deja de enviarlo en la misma corrección; la acción
   > «Ajustar existencias» que lo sustituye sigue siendo T-8.7.
 
-### [ ] T-8.4 — Migración de saldos iniciales
+### [x] T-8.4 — Migración de saldos iniciales
 - **Cubre:** RNF-29, RN-MOV-02
 - **Depende de:** T-8.1
 - **Trabajo:** Migración de datos que crea un movimiento
