@@ -16,6 +16,8 @@ from django.db.models import F
 from django.utils import timezone
 
 from catalogo.models import Producto
+from inventario.models import TipoMovimiento
+from inventario.services import registrar_movimiento
 from ventas.exceptions import (
     ProductoNoDisponible,
     StockInsuficiente,
@@ -52,8 +54,9 @@ def registrar_venta(*, usuario, cliente_nombre, cliente_telefono, items):
       1. transaction.atomic() + select_for_update() en orden de pk.
       2. Validacion con las filas YA bloqueadas: mientras se comprueba,
          nadie mas puede cambiarlas.
-      3. Descuento con F() (RF-18) y congelado de nombre y precio
-         (RF-19).
+      3. Descuento con F() (RF-18), congelado de nombre y precio
+         (RF-19) y un movimiento de stock por producto, escrito con la
+         fila todavia bloqueada (RN-MOV-01, RNF-24).
 
     El precio lo toma el SERVIDOR del catalogo, nunca del cliente:
     aceptarlo del navegador permitiria alterarlo desde alli.
@@ -135,6 +138,19 @@ def registrar_venta(*, usuario, cliente_nombre, cliente_telefono, items):
             stock=F("stock") - cantidad
         )
 
+        # El movimiento va en la MISMA transaccion y con la fila aun
+        # bloqueada (RNF-24). `producto.stock` se leyo bajo ese bloqueo,
+        # asi que restarle la cantidad da el resultante exacto: nadie
+        # mas puede haber cambiado la fila entre medias.
+        registrar_movimiento(
+            producto=producto,
+            tipo=TipoMovimiento.VENTA,
+            cantidad=-cantidad,
+            stock_resultante=producto.stock - cantidad,
+            usuario=usuario,
+            venta=venta,
+        )
+
     DetalleVenta.objects.bulk_create(detalles)
 
     venta.total = total
@@ -148,7 +164,8 @@ def anular_venta(*, venta, usuario, motivo):
     """CU-VEN-03 — Anular una venta devolviendo las existencias.
 
     Mismo patron que el registro, en sentido inverso: bloqueo ordenado,
-    devolucion con F() y todo dentro de una transaccion (RNF-10).
+    devolucion con F(), un movimiento de anulacion por producto y todo
+    dentro de una transaccion (RNF-10, RN-MOV-01, RNF-24).
 
     Sin limite de plazo (RN-VEN-11): la trazabilidad de quien anulo,
     cuando y por que es el control que sustituye a cualquier
@@ -162,12 +179,32 @@ def anular_venta(*, venta, usuario, motivo):
     if venta.esta_anulada:
         raise VentaYaAnulada()
 
-    lineas = list(venta.items.all())
-    _bloquear_productos([linea.producto_id for linea in lineas])
+    # Se agrupa por producto, como al registrar: un movimiento por
+    # producto devuelto, aunque la venta tuviera dos lineas del mismo.
+    devoluciones = {}
+    for linea in venta.items.all():
+        devoluciones[linea.producto_id] = (
+            devoluciones.get(linea.producto_id, 0) + linea.cantidad
+        )
 
-    for linea in lineas:
-        Producto.objects.filter(pk=linea.producto_id).update(
-            stock=F("stock") + linea.cantidad
+    # Antes se descartaba el resultado del bloqueo. Ahora hace falta: el
+    # stock leido bajo bloqueo es lo que da el resultante exacto.
+    productos = _bloquear_productos(devoluciones.keys())
+
+    for producto_id in sorted(devoluciones):
+        cantidad = devoluciones[producto_id]
+        producto = productos[producto_id]
+
+        Producto.objects.filter(pk=producto_id).update(
+            stock=F("stock") + cantidad
+        )
+        registrar_movimiento(
+            producto=producto,
+            tipo=TipoMovimiento.ANULACION,
+            cantidad=cantidad,
+            stock_resultante=producto.stock + cantidad,
+            usuario=usuario,
+            venta=venta,
         )
 
     venta.estado = EstadoVenta.ANULADA
