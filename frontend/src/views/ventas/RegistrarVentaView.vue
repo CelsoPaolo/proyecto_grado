@@ -8,7 +8,20 @@
    de confirmar.
 
    Los precios se muestran para que el encargado vea el total, pero el
-   importe real lo calcula el servidor al confirmar (RN-VEN-04). */
+   importe real lo calcula el servidor al confirmar (RN-VEN-04).
+
+   Campo de codigo (RF-74, RN-VEN-17, RNF-27, plan.md 7.9). Un lector en
+   modo teclado escribe el codigo y pulsa Intro, como una persona: no
+   hace falta configurarlo ni detectarlo. Al recibir Intro:
+     - el campo se vacia EN EL ACTO y conserva el foco, listo para la
+       lectura siguiente (RNF-16: sin pasos entre lectura y lectura);
+     - las lecturas se procesan en COLA y en orden: un lector puede
+       enviar la segunda antes de que responda la primera, y dos
+       lecturas del mismo codigo deben sumar dos unidades;
+     - solo una coincidencia exacta con un producto activo y con
+       existencias agrega algo; si no, se avisa junto al campo y el
+       codigo leido vuelve al campo seleccionado, para que la lectura
+       siguiente lo sustituya. */
 import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
 import Card from 'primevue/card'
@@ -18,7 +31,7 @@ import InputNumber from 'primevue/inputnumber'
 import InputText from 'primevue/inputtext'
 import Message from 'primevue/message'
 import { useToast } from 'primevue/usetoast'
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { productosApi } from '@/api/catalogo'
@@ -35,6 +48,11 @@ const lineas = ref([])
 const sugerencias = ref([])
 const productoElegido = ref(null)
 const confirmando = ref(false)
+
+const codigoLeido = ref('')
+const avisoCodigo = ref(null)
+const campoCodigo = ref(null)
+let colaDeLecturas = Promise.resolve()
 
 /** Detalle enriquecido del 422 de stock: qué falta y cuánto hay. */
 const faltantes = ref([])
@@ -90,6 +108,64 @@ function agregar(producto) {
   }
   productoElegido.value = null
   faltantes.value = []
+}
+
+function elementoCodigo() {
+  const componente = campoCodigo.value
+  return componente?.$el ?? componente ?? null
+}
+
+/** Intro en el campo de codigo. */
+function leerCodigo() {
+  const valor = codigoLeido.value.trim()
+  codigoLeido.value = ''
+  if (!valor) return colaDeLecturas
+  colaDeLecturas = colaDeLecturas.then(() => procesarCodigo(valor))
+  return colaDeLecturas
+}
+
+async function procesarCodigo(valor) {
+  avisoCodigo.value = null
+  let producto = null
+  try {
+    const datos = await productosApi.listar({ codigo: valor, activo: 'true' })
+    producto = datos.results[0] ?? null
+  } catch (error) {
+    return rechazarLectura(valor, error.detalle ?? 'No se pudo consultar el código.')
+  }
+
+  if (!producto) {
+    return rechazarLectura(
+      valor,
+      `Ningún producto del catálogo tiene el código ${valor}. No se agregó nada.`,
+    )
+  }
+  if (producto.stock <= 0) {
+    return rechazarLectura(valor, `«${producto.nombre}» no tiene existencias. No se agregó.`)
+  }
+  const enLaVenta = lineas.value.find((l) => l.producto_id === producto.id)
+  if (enLaVenta && enLaVenta.cantidad >= producto.stock) {
+    return rechazarLectura(
+      valor,
+      `Ya hay ${enLaVenta.cantidad} de «${producto.nombre}» en la venta y no quedan más existencias.`,
+    )
+  }
+  agregar(producto)
+  await enfocarCodigo()
+}
+
+/** El codigo vuelve al campo, seleccionado, solo si nadie escribio otro
+ *  mientras tanto: no se pisa una lectura que ya llego. */
+async function rechazarLectura(valor, mensaje) {
+  avisoCodigo.value = mensaje
+  if (!codigoLeido.value) codigoLeido.value = valor
+  await enfocarCodigo()
+  elementoCodigo()?.select?.()
+}
+
+async function enfocarCodigo() {
+  await nextTick()
+  elementoCodigo()?.focus?.()
 }
 
 function quitar(linea) {
@@ -184,11 +260,29 @@ async function confirmar() {
       <Card class="panel">
         <template #title>Productos</template>
         <template #content>
+          <div class="campo campo-codigo">
+            <label for="codigo-producto">Código</label>
+            <InputText
+              id="codigo-producto"
+              ref="campoCodigo"
+              v-model="codigoLeido"
+              placeholder="Escanee o escriba el código y pulse Intro"
+              autocomplete="off"
+              autofocus
+              :invalid="Boolean(avisoCodigo)"
+              data-prueba="codigo"
+              @keydown.enter.prevent="leerCodigo"
+            />
+            <small v-if="avisoCodigo" class="error" role="alert" data-prueba="aviso-codigo">
+              {{ avisoCodigo }}
+            </small>
+          </div>
+
           <AutoComplete
             v-model="productoElegido"
             :suggestions="sugerencias"
             option-label="nombre"
-            placeholder="Buscar un producto por nombre"
+            placeholder="O búsquelo por nombre"
             fluid
             complete-on-focus
             @complete="buscarProductos"
@@ -337,6 +431,14 @@ h1 {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+}
+
+.campo-codigo {
+  margin-bottom: 0.75rem;
+}
+
+.campo-codigo input {
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
 }
 
 .campo label {

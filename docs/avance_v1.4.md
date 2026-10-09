@@ -26,7 +26,8 @@ bloque 13.
 | 2026-10-09 | T-9.2 Migración del código para los productos existentes | `dfbc04b` | B 787 / 27 · F 153 / 0 | **Cambio en `plan.md` §3.5 (RNF-22):** el reverso del paso 2 ya no deja los códigos en nulo, porque reaplicarlo daría códigos distintos a productos ya etiquetados (RN-CAT-08). Revertir los tres pasos sigue dejando la tabla idéntica. Aplicado a la base de desarrollo (7 productos). |
 | 2026-10-09 | T-9.3 Búsqueda por código | `923fae7` | B 798 / 26 · F 153 / 0 | `?codigo=` vacío da una lista vacía en lugar de ignorarse: un Intro con el campo vacío no debe traer el catálogo entero. Se mantiene el filtro de activos por defecto del listado; los retirados se buscan con `activo=false`. |
 | 2026-10-09 | T-9.7 Código de fábrica opcional (PA-07) | `947a79a` | B 823 / 25 · F 158 / 0 | Se hace antes que T-9.4 porque T-9.5 lo necesita, como indica `tasks.md`. El mensaje de duplicado nombra el producto que ya tiene el código: solo lo ve el Administrador. **Defecto anterior corregido:** el envío multipart omitía las cadenas vacías. Las pruebas de migración pasan a usar los modelos **históricos**, porque los actuales tienen columnas que en los estados intermedios no existen. |
-| 2026-10-09 | T-9.4 Código de barras y etiqueta | siguiente commit | B 824 / 24 · F 168 / 0 | JsBarcode fijado en `3.11.6`, sin `^`. Un código de fábrica que no es EAN-13 se dibuja en Code128. Etiqueta impresa con `window.print()` y `@media print`, sin PDF (plan.md §7.9). La etiqueta está para los dos roles (CU-CAT-09). Filtro de código exacto como campo aparte de la búsqueda por nombre, para no confundir un nombre numérico con un código. |
+| 2026-10-09 | T-9.4 Código de barras y etiqueta | `091b8da` | B 824 / 24 · F 168 / 0 | JsBarcode fijado en `3.11.6`, sin `^`. Un código de fábrica que no es EAN-13 se dibuja en Code128. Etiqueta impresa con `window.print()` y `@media print`, sin PDF (plan.md §7.9). La etiqueta está para los dos roles (CU-CAT-09). Filtro de código exacto como campo aparte de la búsqueda por nombre, para no confundir un nombre numérico con un código. |
+| 2026-10-09 | T-9.5 Entrada por código en la venta | siguiente commit | B 826 / 22 · F 182 / 0 | Dos decisiones que el plan no recogía. **Cola de lecturas y campo vaciado en el mismo Intro:** un lector envía la segunda lectura antes de que responda la primera. **Tope por existencias:** una lectura que excedería el stock avisa en lugar de sumar, en vez de dejar que lo rechace el servidor al confirmar. El campo de código va encima del buscador por nombre y recibe el foco al abrir la pantalla. |
 
 ## Pendiente para revisión humana
 
@@ -59,6 +60,14 @@ bloque 13.
     devolver exactamente el código interno.
   - Comprobar también la columna «Código» y el filtro «Código exacto» de
     la lista.
+- **T-9.5, lector en la venta:**
+  - Abrir «Registrar venta»: el cursor debe estar en el campo «Código».
+  - Teclear un código interno y pulsar Intro: se agrega, el campo queda
+    vacío y con el foco.
+  - Repetir con un código de fábrica, con un código inexistente (aviso
+    en rojo y código seleccionado) y con un producto agotado.
+  - Si consigue un lector USB o una app de teléfono que funcione como
+    teclado, leer varias etiquetas seguidas.
 - **Dependencias:** `npm audit` informa de 1 vulnerabilidad alta en
   `source-map-js`, una herramienta de desarrollo que ya estaba instalada
   antes de esta versión; no viene de JsBarcode. No apliqué `npm audit

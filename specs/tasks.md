@@ -1062,7 +1062,7 @@ final del documento.
   - **Pendiente de verificación humana:** escanear la etiqueta impresa
     con la cámara del teléfono.
 
-### [ ] T-9.5 — Entrada por código en el registro de venta
+### [x] T-9.5 — Entrada por código en el registro de venta
 - **Cubre:** RF-74, **RN-VEN-17**, RNF-16, RNF-27
 - **Depende de:** T-9.7
 - **Trabajo:** Campo de código en la pantalla de venta que, al recibir
@@ -1073,6 +1073,19 @@ final del documento.
   → suma uno; un código de fábrica de 12 dígitos o alfanumérico también
   se consulta; código inexistente, retirado o sin stock → aviso y nada
   se agrega; tras cada lectura el foco sigue en el campo.
+- **Resultado (2026-10-09):** construido, con 14 pruebas de Vitest que
+  simulan un lector, es decir, teclear el código y pulsar Intro.
+  - El campo se vacía en el mismo Intro y las lecturas se procesan en
+    cola. Así ninguna se pierde ni se pega a la anterior, y la venta
+    queda en el orden en que se leyó.
+  - No suma más unidades que las existencias.
+  - Un código rechazado vuelve al campo seleccionado.
+  - Mutaciones detectadas:
+    - sin cola, se pierde el orden;
+    - si el campo se vacía al responder, la segunda lectura se pega a
+      la primera;
+    - sin el control de existencias, se agrega un producto agotado.
+  - **Verificación con lector o teléfono pendiente** (revisión humana).
 
 ### [ ] T-9.6 — Revisión del bloque 9
 - **Depende de:** T-9.1 a T-9.5, T-9.7
