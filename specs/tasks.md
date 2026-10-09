@@ -1267,7 +1267,9 @@ final del documento.
   imágenes del proyecto antiguo, y crea cada producto **a través del
   servicio de alta**: existencias 0, garantía 0, sin marca. Modo
   `--informe` por defecto, que no escribe nada; modo `--aplicar --huella`;
-  opción `--mapa-categorias` (`plan.md` §11.3).
+  opciones `--mapa-categorias` y `--diferencias`, esta última para marcar
+  en el informe las filas de `diferencias_con_seeder.csv` (`plan.md`
+  §11.3).
 - **Hecho cuando:** pruebas con CSV de muestra verifican que:
   - `--informe` no escribe nada en la base;
   - cada producto importado tiene código EAN-13, un único movimiento
@@ -1280,15 +1282,19 @@ final del documento.
     informe;
   - una huella distinta de la del plan no importa nada;
   - un fallo a mitad no deja ningún producto importado;
-  - ejecutarlo dos veces no duplica nada.
+  - ejecutarlo dos veces no duplica nada;
+  - las filas de `--diferencias` aparecen marcadas en el informe con los
+    dos valores y el que se importaría, sin cambiar qué se importa.
 
 ### [ ] T-OP.3 — Informe de importación y aprobación ⚠️
 - **Depende de:** T-OP.1, T-OP.2
 - **Trabajo:** Ejecutar `--informe` sobre los CSV reales y presentarlo:
   cuántos productos se importarían; **cuántos tienen nombre o categoría
-  problemáticos, y cuáles**; **cuáles tienen la imagen faltante**; qué
-  categorías se crearían, cuáles coinciden y cuáles son parecidas a una
-  existente; y la huella.
+  problemáticos, y cuáles**; **cuáles tienen la imagen faltante**; **los
+  4 productos que difieren entre la base antigua y el seeder**, con el
+  precio del Turtle Beach Stealth 600 señalado para confirmarlo con la
+  empresa; qué categorías se crearían, cuáles coinciden y cuáles son
+  parecidas a una existente; y la huella.
 - **Hecho cuando:** **el usuario aprueba el informe** y, si hace falta,
   el mapa de categorías. Sin aprobación explícita no se pasa a T-OP.4.
 

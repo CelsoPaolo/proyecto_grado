@@ -2058,6 +2058,36 @@ corregirlos a mano. La importación del resto es **todo o nada**: una
 sola transacción. Ejecutarla dos veces no duplica nada, porque la
 segunda vez todos los nombres ya existen.
 
+**Productos que difieren entre la base antigua y el seeder** *(añadido
+el 2026-10-09)*. La exportación se validó contra el seeder de Laravel:
+coinciden 149 de 153 productos; los otros **4** se editaron a mano en
+la aplicación Laravel, en agosto, después de sembrarlos. Están en
+`diferencias_con_seeder.csv`, junto a los otros dos CSV, y **el informe
+los marca**:
+
+| Id | Producto | Campo | Base antigua | Seeder | Se importaría |
+|---:|---|---|---:|---:|---:|
+| 28 | Adaptador Bluetooth 5.1 USB | stock | 0 | 25 | 0 |
+| 88 | Parlante Bluetooth JBL Go 4 | stock | 15 | 16 | 0 |
+| 98 | Audífonos Gamer Turtle Beach Stealth 600 | **precio** | **580,00** | **680,00** | **580,00** |
+| 98 | ″ | stock | 2 | 0 | 0 |
+| 138 | Consola Nintendo Switch Estándar | stock | 1 | 5 | 0 |
+
+**Por defecto se importa la versión de la base antigua**, porque es la
+última decisión tomada a mano: el seeder es el estado inicial y la base
+refleja lo que alguien cambió después. Pero solo importa en un caso:
+
+- **Las existencias dan igual.** Se importan siempre en 0 (PT-05), así
+  que cuatro de las cinco diferencias no llegan al sistema.
+- **El precio del Turtle Beach sí importa**: 580 frente a 680. Se usa
+  580, y el informe lo señala para **confirmarlo con la empresa**:
+  ambos son precios referenciales de un catálogo de demostración, así
+  que «la última edición» no garantiza que sea el precio real.
+
+El comando lee `diferencias_con_seeder.csv` con la opción
+`--diferencias` y solo lo usa para marcar filas en el informe: no
+cambia qué se importa.
+
 **Lectura de la base antigua: solo sobre una copia.** Al preparar este
 plan se leyó la base antigua y hubo un incidente: `my.ini` de XAMPP fija
 con ruta absoluta los archivos de sistema de InnoDB, y una instancia
