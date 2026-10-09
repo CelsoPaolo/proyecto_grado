@@ -218,6 +218,37 @@ def test_cambiar_el_nombre_despues_no_altera_la_venta_historica():
     assert venta.items.first().producto_nombre == "Teclado mecánico"
 
 
+def test_la_venta_copia_los_meses_de_garantia_de_cada_producto():
+    """T-10.2 (RF-75): cada linea guarda la garantia vigente al vender,
+    incluida la ausencia de garantia."""
+    vendedor = VendedorFactory()
+    con = ProductoFactory(stock=5, meses_garantia=12)
+    sin = ProductoFactory(stock=5, meses_garantia=0)
+
+    venta = _vender(
+        vendedor,
+        [{"producto_id": con.id, "cantidad": 1}, {"producto_id": sin.id, "cantidad": 1}],
+    )
+
+    meses = {l.producto_id: l.meses_garantia for l in venta.items.all()}
+    assert meses == {con.id: 12, sin.id: 0}
+
+
+@pytest.mark.parametrize("nuevos", [0, 6, 24])
+def test_cambiar_los_meses_de_garantia_despues_no_altera_la_venta(nuevos):
+    """T-10.2 (RN-VEN-12): ni quitarla, ni reducirla, ni ampliarla
+    cambia lo que se pacto al vender."""
+    vendedor = VendedorFactory()
+    producto = ProductoFactory(stock=10, meses_garantia=12)
+    venta = _vender(vendedor, [{"producto_id": producto.id, "cantidad": 1}])
+
+    producto.meses_garantia = nuevos
+    producto.save(update_fields=["meses_garantia"])
+
+    venta.refresh_from_db()
+    assert venta.items.first().meses_garantia == 12
+
+
 def test_retirar_el_producto_despues_no_afecta_la_venta_historica():
     """CU-CAT-04 + RN-VEN-04 juntos."""
     vendedor = VendedorFactory()

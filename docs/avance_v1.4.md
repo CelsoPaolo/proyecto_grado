@@ -30,7 +30,8 @@ bloque 13.
 | 2026-10-09 | T-9.5 Entrada por código en la venta | `aebe539` | B 826 / 22 · F 182 / 0 | Dos decisiones que el plan no recogía. **Cola de lecturas y campo vaciado en el mismo Intro:** un lector envía la segunda lectura antes de que responda la primera. **Tope por existencias:** una lectura que excedería el stock avisa en lugar de sumar, en vez de dejar que lo rechace el servidor al confirmar. El campo de código va encima del buscador por nombre y recibe el foco al abrir la pantalla. |
 | 2026-10-09 | T-9.6 Revisión del bloque 9 | `061de85` | B 827 / 22 · F 182 / 0 | Igual que en T-8.8: se automatiza el ciclo por la API y la parte visual queda para revisión humana. Todos los requisitos del bloque 9 están citados. |
 | 2026-10-09 | T-OP.2 a T-OP.4, cambio de orden | — | — | Las T-OP dependen del bloque 9, pero se harán al final: el bloque 10 añade `meses_garantia` al producto, y así el comando de importación nace con el modelo definitivo. |
-| 2026-10-09 | T-10.1 Meses de garantía en producto y detalle | siguiente commit | B 836 / 21 · F 184 / 0 | `IntegerField` con `CHECK (>= 0)` en lugar de `PositiveIntegerField`, para nombrar la restricción como las demás. El formulario no pone tope superior, porque la spec no lo fija. Se retiró una cita prematura a RF-75, que llega en T-10.2. |
+| 2026-10-09 | T-10.1 Meses de garantía en producto y detalle | `31c4966` | B 836 / 21 · F 184 / 0 | `IntegerField` con `CHECK (>= 0)` en lugar de `PositiveIntegerField`, para nombrar la restricción como las demás. El formulario no pone tope superior, porque la spec no lo fija. Se retiró una cita prematura a RF-75, que llega en T-10.2. |
+| 2026-10-09 | T-10.2 Congelado de la garantía en la venta | siguiente commit | B 840 / 20 · F 184 / 0 | Ninguna decisión nueva: sigue el patrón del precio y el nombre. |
 
 ## Pendiente para revisión humana
 

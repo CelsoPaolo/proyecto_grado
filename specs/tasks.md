@@ -1129,13 +1129,18 @@ final del documento.
     porque la spec no lo fija.
   - Aplicado a la base de desarrollo.
 
-### [ ] T-10.2 — Congelado de la garantía en la venta
+### [x] T-10.2 — Congelado de la garantía en la venta
 - **Cubre:** **RN-VEN-12**, RF-75
 - **Depende de:** T-10.1
 - **Trabajo:** `registrar_venta()` copia los meses de garantía junto con
   el nombre y el precio.
 - **Hecho cuando:** cambiar los meses del producto después de la venta
   no altera la línea guardada.
+- **Resultado (2026-10-09):** `registrar_venta()` copia `meses_garantia`
+  en cada línea.
+  - Si después se quitan, se reducen o se amplían los meses del
+    producto, la línea no cambia.
+  - Si la línea se graba siempre con cero, fallan las 4 pruebas nuevas.
 
 ### [ ] T-10.3 — Cálculo del vencimiento
 - **Cubre:** **RN-VEN-13**

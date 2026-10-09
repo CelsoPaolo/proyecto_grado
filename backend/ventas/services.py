@@ -121,10 +121,13 @@ def registrar_venta(*, usuario, cliente_nombre, cliente_telefono, items):
             DetalleVenta(
                 venta=venta,
                 producto=producto,
-                # Congelado (RN-VEN-04): estas tres columnas no se
+                # Congelado (RN-VEN-04): estas columnas no se
                 # recalculan nunca al leer.
                 producto_nombre=producto.nombre,
                 precio_unitario=precio,
+                # RF-75 y RN-VEN-12: la garantia pactada es la de hoy;
+                # cambiarla despues en el producto no la altera.
+                meses_garantia=producto.meses_garantia,
                 cantidad=cantidad,
                 subtotal=subtotal,
             )
