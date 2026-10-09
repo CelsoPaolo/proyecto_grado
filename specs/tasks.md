@@ -1248,7 +1248,7 @@ final del documento.
 
 ## Bloque 11 — Clientes
 
-### [ ] T-11.1 — App `clientes` y modelo `Cliente`
+### [x] T-11.1 — App `clientes` y modelo `Cliente`
 - **Cubre:** RN-CLI-01, **RN-CLI-02**, RN-CLI-03, RNF-07
 - **Depende de:** T-10.7
 - **Trabajo:** Modelo con `UNIQUE` parcial sobre el carnet, `CHECK` de
@@ -1257,6 +1257,15 @@ final del documento.
 - **Hecho cuando:** dos clientes con el mismo carnet los rechaza la base,
   aunque uno esté inactivo; dos sin carnet se aceptan; `1234567-1a` y
   `1234567-1A` se consideran el mismo carnet.
+- **Resultado (2026-10-09):** app `clientes` con el modelo `Cliente`.
+  - `UNIQUE` parcial sobre el carnet, y `CHECK` que exigen un carácter
+    que no sea espacio en el nombre y en el teléfono.
+  - Auditoría con `creado_por` y `actualizado_por` (`PROTECT`).
+  - El carnet se normaliza en `save()`: sin espacios y en mayúsculas.
+  - 16 pruebas, incluidas la unicidad con un cliente inactivo, las
+    restricciones en SQL crudo y la migración en los dos sentidos.
+  - Mutación detectada: sin normalizar, `1234567-1a` y `1234567-1A`
+    pasan como carnets distintos.
 
 ### [ ] T-11.2 — Servicio de clientes
 - **Cubre:** RF-84, RF-85, RF-87, RN-CLI-03, **RN-CLI-04**

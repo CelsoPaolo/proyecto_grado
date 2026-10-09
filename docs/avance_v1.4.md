@@ -36,7 +36,8 @@ bloque 13.
 | 2026-10-09 | T-10.4 Plantilla base de documentos PDF | `3b9b431` | B 854 / 20 · F 184 / 0 | Los «mismos colores en su flujo» se verifican comparando los operadores `rg`/`RG` del PDF con los registrados **antes** de la extracción. El pie admite una leyenda propia por documento (bloque `leyenda`), con la del informe por defecto. |
 | 2026-10-09 | T-10.5 Endpoint de la garantía | `3730ac7` | B 875 / 18 · F 184 / 0 | Dos códigos de error distintos para los dos 409, de modo que la interfaz pueda distinguirlos. El documento se titula «Certificado de garantía». Incluye una frase neutra («Conserve este certificado…»), pero **no condiciones de garantía, que la spec no define**. La fecha que se imprime es la de la venta en hora de Bolivia. |
 | 2026-10-09 | T-10.6 Garantía en la interfaz | `e519c21` | B 876 / 17 · F 190 / 0 | La oferta de RF-77 se hace en el detalle de la venta, al que ya se llegaba tras confirmar, marcado con `?recien=1`: no hace falta otra pantalla. Se actualizó la prueba de navegación de T-4.9 porque el comportamiento cambia por RF-77; no se silenció. |
-| 2026-10-09 | T-10.7 Revisión del bloque 10 | siguiente commit | B 878 / 17 · F 190 / 0 | Punto de extensión para las condiciones de la garantía, como pediste: la constante `CONDICIONES_DE_GARANTIA` en `ventas/garantia.py`, que se lee en cada petición y cuya sección solo aparece si tiene texto. |
+| 2026-10-09 | T-10.7 Revisión del bloque 10 | `7936c95` | B 878 / 17 · F 190 / 0 | Punto de extensión para las condiciones de la garantía, como pediste: la constante `CONDICIONES_DE_GARANTIA` en `ventas/garantia.py`, que se lee en cada petición y cuya sección solo aparece si tiene texto. |
+| 2026-10-09 | T-11.1 App `clientes` y modelo `Cliente` | siguiente commit | B 894 / 17 · F 190 / 0 | `actualizado_por` es obligatorio: al registrar un cliente coincide con `creado_por`. La dirección es un `CharField(255)` en blanco. Se retiraron tres citas prematuras (RF-84, RF-89 y RNF-26), que se implementan en la API (T-11.3). |
 
 ## Pendiente para revisión humana
 
@@ -97,4 +98,4 @@ bloque 13.
 
 ## Dónde se detuvo la sesión
 
-T-10.7 terminada. **Siguiente: T-11.1** (app `clientes`), luego el resto de los bloques 11 a 13 y T-OP.2 a T-OP.4.
+T-11.1 terminada. **Siguiente: T-11.2** (servicio de clientes).

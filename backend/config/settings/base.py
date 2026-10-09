@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'ventas',
     'servicios',
     'inventario',  # v1.4: depende de catalogo y ventas (plan.md 2.3)
+    'clientes',  # v1.4: registro de contacto, sin cuenta (RN-CLI-04)
     'panel',
 ]
 
