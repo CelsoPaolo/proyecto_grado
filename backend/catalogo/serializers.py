@@ -52,6 +52,7 @@ class ProductoSerializer(serializers.ModelSerializer):
             "stock",
             "categoria",
             "categoria_nombre",
+            "meses_garantia",
             "imagen",
             "activo",
             "stock_bajo",
@@ -148,6 +149,14 @@ class ProductoSerializer(serializers.ModelSerializer):
         if otro := consulta.first():
             raise serializers.ValidationError(
                 f"Ese código de fábrica ya está registrado en «{otro.nombre}»."
+            )
+        return valor
+
+    def validate_meses_garantia(self, valor):
+        """RN-CAT-09: entero no negativo; cero es sin garantia."""
+        if valor < 0:
+            raise serializers.ValidationError(
+                "Los meses de garantía no pueden ser negativos. Use 0 si no tiene garantía."
             )
         return valor
 

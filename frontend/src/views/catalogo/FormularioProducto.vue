@@ -42,6 +42,7 @@ const VACIO = {
   stock: 0,
   categoria: null,
   codigo_fabrica: '',
+  meses_garantia: 0,
   imagen: null,
 }
 
@@ -66,6 +67,7 @@ watch(
           stock: props.producto.stock,
           categoria: props.producto.categoria,
           codigo_fabrica: props.producto.codigo_fabrica ?? '',
+          meses_garantia: props.producto.meses_garantia ?? 0,
           imagen: null,
         }
       : { ...VACIO }
@@ -176,6 +178,26 @@ async function guardar() {
             exige un motivo.
           </small>
         </div>
+      </div>
+
+      <!-- RF-72. Cambiarlo solo afecta a las ventas futuras: cada venta
+           guarda su propia copia (RN-VEN-12). -->
+      <div class="campo">
+        <label for="meses_garantia">Garantía (meses)</label>
+        <InputNumber
+          input-id="meses_garantia"
+          v-model="formulario.meses_garantia"
+          :min="0"
+          show-buttons
+          :invalid="Boolean(errorDe('meses_garantia'))"
+        />
+        <small v-if="errorDe('meses_garantia')" class="error">
+          {{ errorDe('meses_garantia') }}
+        </small>
+        <small v-else class="ayuda">
+          0 = sin garantía. Si lo cambia, las ventas ya registradas conservan la
+          garantía con la que se vendieron.
+        </small>
       </div>
 
       <div class="campo">

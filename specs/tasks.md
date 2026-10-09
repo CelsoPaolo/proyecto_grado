@@ -1110,7 +1110,7 @@ final del documento.
 
 ## Bloque 10 — Garantía
 
-### [ ] T-10.1 — Meses de garantía en producto y en el detalle
+### [x] T-10.1 — Meses de garantía en producto y en el detalle
 - **Cubre:** RN-CAT-09, RN-VEN-12, RF-72, RF-75, RNF-29
 - **Depende de:** T-9.6
 - **Trabajo:** `Producto.meses_garantia` y `DetalleVenta.meses_garantia`
@@ -1119,6 +1119,15 @@ final del documento.
   producto.
 - **Hecho cuando:** un valor negativo lo rechaza la base; tras migrar,
   todas las líneas anteriores tienen cero meses.
+- **Resultado (2026-10-09):** `meses_garantia` en el producto y en la
+  línea de venta, con un `CHECK (>= 0)` en cada una, comprobado en SQL
+  crudo.
+  - Probado con modelos históricos: las líneas anteriores quedan en cero
+    aunque su producto tenga garantía.
+  - Las dos migraciones se revierten sin perder datos.
+  - El campo está en el serializer y en el formulario, sin tope superior
+    porque la spec no lo fija.
+  - Aplicado a la base de desarrollo.
 
 ### [ ] T-10.2 — Congelado de la garantía en la venta
 - **Cubre:** **RN-VEN-12**, RF-75

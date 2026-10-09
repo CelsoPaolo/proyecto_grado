@@ -146,6 +146,14 @@ class DetalleVenta(models.Model):
         help_text="Congelado al confirmar la venta.",
     )
     cantidad = models.PositiveIntegerField("cantidad")
+    # RN-VEN-12: congelados como el precio. Las lineas anteriores
+    # a la v1.4 quedan en cero: no se les atribuye una garantia que no
+    # se pacto (plan.md 3.5).
+    meses_garantia = models.IntegerField(
+        "meses de garantía",
+        default=0,
+        help_text="Congelado al confirmar la venta (RN-VEN-12).",
+    )
     subtotal = models.DecimalField(
         "subtotal",
         max_digits=12,
@@ -161,6 +169,12 @@ class DetalleVenta(models.Model):
         verbose_name_plural = "detalles de venta"
         ordering = ["id"]
         constraints = [
+            # RN-CAT-09, tambien en la copia congelada.
+            models.CheckConstraint(
+                condition=models.Q(meses_garantia__gte=0),
+                name="detalle_meses_garantia_no_negativos",
+                violation_error_message="Los meses de garantía no pueden ser negativos.",
+            ),
             # RN-VEN-01.
             models.CheckConstraint(
                 condition=models.Q(cantidad__gt=0),

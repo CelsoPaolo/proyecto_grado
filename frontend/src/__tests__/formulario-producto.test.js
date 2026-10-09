@@ -140,3 +140,25 @@ describe('código de fábrica (RF-97)', () => {
     expect(wrapper.text()).toContain('ya está registrado en «Teclado USB»')
   })
 })
+
+describe('meses de garantía (RF-72)', () => {
+  it('al crear se envían, con cero por defecto', async () => {
+    const wrapper = await abrir(null)
+    await wrapper.find('#nombre').setValue('Monitor 24')
+
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+
+    expect(productosApi.crear.mock.calls[0][0]).toHaveProperty('meses_garantia', 0)
+  })
+
+  it('al editar se cargan los del producto y se envían', async () => {
+    const wrapper = await abrir({ ...PRODUCTO, meses_garantia: 12 })
+    expect(wrapper.find('#meses_garantia').element.value).toBe('12')
+
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+
+    expect(productosApi.actualizar.mock.calls[0][1]).toHaveProperty('meses_garantia', 12)
+  })
+})

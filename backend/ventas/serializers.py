@@ -23,6 +23,7 @@ class DetalleVentaSerializer(serializers.ModelSerializer):
             "producto_nombre",
             "precio_unitario",
             "cantidad",
+            "meses_garantia",
             "subtotal",
         ]
         read_only_fields = fields

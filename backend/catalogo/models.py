@@ -92,6 +92,14 @@ class Producto(models.Model):
         default="",
         help_text="Opcional: el código que trae impreso el producto o su caja (RN-CAT-11).",
     )
+    # RN-CAT-09 y RF-72: cero significa sin garantia. Cambiarlo solo
+    # afecta a las ventas futuras, porque la venta congela su copia
+    # (RN-VEN-12).
+    meses_garantia = models.IntegerField(
+        "meses de garantía",
+        default=0,
+        help_text="0 = sin garantía (RN-CAT-09).",
+    )
     creado_en = models.DateTimeField(auto_now_add=True)
     actualizado_en = models.DateTimeField(auto_now=True)
 
@@ -120,6 +128,12 @@ class Producto(models.Model):
                 condition=models.Q(stock__gte=0),
                 name="producto_stock_no_negativo",
                 violation_error_message="Las existencias no pueden ser negativas.",
+            ),
+            # RN-CAT-09.
+            models.CheckConstraint(
+                condition=models.Q(meses_garantia__gte=0),
+                name="producto_meses_garantia_no_negativos",
+                violation_error_message="Los meses de garantía no pueden ser negativos.",
             ),
             # RN-CAT-11: unico si se informa, entre activos y retirados.
             models.UniqueConstraint(
