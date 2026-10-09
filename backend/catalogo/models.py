@@ -73,6 +73,16 @@ class Producto(models.Model):
         default=True,
         help_text="Un producto inactivo fue retirado del catálogo (CU-CAT-04).",
     )
+    # RN-CAT-08. Lo asigna save() al insertar y no lo cambia nadie
+    # despues: editable=False lo saca de los formularios y el serializer
+    # lo declara de solo lectura.
+    codigo = models.CharField(
+        "código",
+        max_length=13,
+        null=True,
+        editable=False,
+        help_text="EAN-13 interno asignado por el sistema (RN-CAT-08).",
+    )
     creado_en = models.DateTimeField(auto_now_add=True)
     actualizado_en = models.DateTimeField(auto_now=True)
 
@@ -111,6 +121,21 @@ class Producto(models.Model):
 
     def __str__(self):
         return self.nombre
+
+    def save(self, *args, **kwargs):
+        """RF-69 — el codigo se asigna al crear el producto, por cualquier
+        camino que pase por save(): el servicio de alta, las fabricas de
+        prueba y la importacion del catalogo anterior.
+
+        Solo al INSERTAR: un producto ya guardado conserva el suyo para
+        siempre, y uno que llegara sin el seria un error, no un hueco que
+        rellenar.
+        """
+        if self._state.adding and not self.codigo:
+            from catalogo.codigos import generar_codigo
+
+            self.codigo = generar_codigo()
+        super().save(*args, **kwargs)
 
     @property
     def disponible_para_venta(self):

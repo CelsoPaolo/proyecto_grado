@@ -43,6 +43,7 @@ class ProductoSerializer(serializers.ModelSerializer):
         model = Producto
         fields = [
             "id",
+            "codigo",
             "nombre",
             "descripcion",
             "precio",
@@ -53,7 +54,9 @@ class ProductoSerializer(serializers.ModelSerializer):
             "activo",
             "stock_bajo",
         ]
-        read_only_fields = ["activo"]
+        # RN-CAT-08: el codigo lo asigna el sistema; si la peticion lo
+        # trae, al crear o al editar, se ignora.
+        read_only_fields = ["activo", "codigo"]
 
     def get_fields(self):
         """RN-CAT-10: las existencias solo se fijan al crear.

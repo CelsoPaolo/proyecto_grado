@@ -949,7 +949,7 @@ final del documento.
 
 ## Bloque 9 — Código de producto
 
-### [ ] T-9.1 — Generación del código EAN-13
+### [x] T-9.1 — Generación del código EAN-13
 - **Cubre:** **RN-CAT-08**, RF-69
 - **Depende de:** T-8.8
 - **Trabajo:** Secuencia PostgreSQL `producto_codigo_seq`; función pura
@@ -960,6 +960,16 @@ final del documento.
   conocidos; un `POST` con `codigo` lo ignora; un `PATCH` con otro
   `codigo` no lo cambia; retirar un producto y crear otro da un código
   distinto.
+- **Resultado (2026-10-09):** `catalogo/codigos.py` contiene las
+  funciones puras y la secuencia `producto_codigo_seq`.
+  - El código se asigna en `Producto.save()` al insertar, así que lo
+    reciben también las fábricas de prueba y la importación.
+  - La migración `0002` es el paso 1 de 3 (secuencia y columna nula) y
+    se prueba en los dos sentidos.
+  - Mutaciones detectadas:
+    - si el código se regenera en cada guardado, fallan 2 pruebas;
+    - si se calcula como `COUNT + 1` en lugar de usar la secuencia, falla
+      la prueba de la transacción revertida.
 
 ### [ ] T-9.2 — Migración: código para todos los productos existentes
 - **Cubre:** RNF-29, RN-CAT-08
