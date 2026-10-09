@@ -1142,7 +1142,7 @@ final del documento.
     producto, la línea no cambia.
   - Si la línea se graba siempre con cero, fallan las 4 pruebas nuevas.
 
-### [ ] T-10.3 — Cálculo del vencimiento
+### [x] T-10.3 — Cálculo del vencimiento
 - **Cubre:** **RN-VEN-13**
 - **Depende de:** T-10.1
 - **Trabajo:** Función pura `sumar_meses(fecha, meses)` con la
@@ -1151,6 +1151,15 @@ final del documento.
   febrero; en año bisiesto → 29; 30 de noviembre + 3 → 28 de febrero;
   15 de marzo + 12 → 15 de marzo del año siguiente; cero meses → la
   misma fecha.
+- **Resultado (2026-10-09):** `ventas/garantia.py` contiene
+  `sumar_meses`, `fecha_local` y `vencimiento`, solo con `calendar` de
+  la biblioteca estándar.
+  - 10 casos parametrizados: los 5 de la tarea y 5 bordes más, entre
+    ellos 29/02 + 12 meses y cruces de año.
+  - Además, una venta de las 22:00 en La Paz cuenta como del día local,
+    no del día en UTC.
+  - Mutaciones detectadas: quitar el recorte al último día del mes, y
+    calcular la fecha en UTC.
 
 ### [ ] T-10.4 — Plantilla base de documentos PDF
 - **Cubre:** RF-76 (habilita), RF-67
