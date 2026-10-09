@@ -2088,6 +2088,60 @@ El comando lee `diferencias_con_seeder.csv` con la opción
 `--diferencias` y solo lo usa para marcar filas en el informe: no
 cambia qué se importa.
 
+#### Carga de las existencias contadas *(opcional, añadido el 2026-10-09)*
+
+Con 153 productos importados en 0, ajustarlos uno a uno desde el diálogo
+de «Ajustar existencias» (T-8.7) sería poco práctico. El comando acepta
+por eso, **opcionalmente**, un CSV con las existencias contadas, y las
+carga en la **misma ejecución** que la importación. Sigue siendo una
+operación de una sola vez: sin pantalla y sin caso de uso nuevo.
+
+**Pasa por el servicio de ajuste, no fija el stock al dar de alta.**
+Sería más corto que el alta naciera ya con lo contado —un movimiento por
+producto en vez de dos—, pero el libro perdería una distinción que vale
+la pena: un `ALTA` de 0 seguido de un `AJUSTE` con el motivo **«Carga
+inicial»** deja dos hechos separados —cuándo entró el producto en el
+catálogo, y cuándo y quién contó sus unidades—. Así cada producto
+importado queda con un libro `ALTA 0 → AJUSTE +N`, que cuadra, y la
+carga inicial es auditable igual que cualquier ajuste posterior
+(RN-MOV-05).
+
+**Una planilla que genera el propio comando.** Los productos todavía no
+tienen código cuando se cuentan, y escribir nombres a mano invita a
+errores. Con `--planilla-recuento <archivo>`, el comando escribe un CSV
+con `id_antiguo`, `nombre` y `categoria` ya rellenos y la columna
+`existencias_contadas` vacía, más una fila de cabecera con la fecha del
+recuento a completar. El personal la rellena al contar y se devuelve con
+`--existencias <archivo>`.
+
+| Situación de una fila | Qué hace el comando |
+|---|---|
+| Entero positivo | Ajuste «Carga inicial» por esa cantidad, con el autor de `--usuario`. |
+| Cero | Ningún ajuste —no hay diferencia con el 0 importado— y el informe la cuenta como «contado en cero». |
+| Vacía | Ningún ajuste; el producto queda en 0 y el informe la lista como **no contado**. |
+| Negativa, decimal o texto | Fila problemática: no se carga y el informe la lista. El producto se importa igual, en 0. |
+| `id_antiguo` que no existe, o producto excluido por problemático | Se lista y se ignora. |
+| `nombre` que no coincide con el de su `id_antiguo` | Fila problemática: indica una planilla equivocada o desordenada. |
+
+**Dentro de la misma huella y la misma transacción.** La huella del
+informe incluye el contenido del CSV de existencias, de modo que
+cambiar una sola cifra después de aprobar el informe invalida la
+ejecución. Importación y carga son **todo o nada**: si un ajuste falla,
+no queda ni el producto ni su ajuste.
+
+**El recuento tiene que hacerse el día del cambio.** Mientras no se pase
+al sistema nuevo, la tienda sigue vendiendo con el antiguo: si se cuenta
+el lunes y se importa el jueves, las existencias ya no serán las reales.
+El comando no puede impedirlo, pero el informe muestra la **fecha del
+recuento** de la planilla junto a la fecha de ejecución, para que la
+diferencia se vea antes de aprobar.
+
+**Si el recuento no está listo al importar**, la importación se hace sin
+`--existencias` y los productos quedan en 0. Cargar después las
+existencias de productos ya importados **no** forma parte de esta
+operación: el comando no repite importaciones, y añadirle un segundo
+modo solo para eso es una decisión que se tomaría entonces.
+
 **Lectura de la base antigua: solo sobre una copia.** Al preparar este
 plan se leyó la base antigua y hubo un incidente: `my.ini` de XAMPP fija
 con ruta absoluta los archivos de sistema de InnoDB, y una instancia

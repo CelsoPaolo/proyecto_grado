@@ -1268,8 +1268,11 @@ final del documento.
   servicio de alta**: existencias 0, garantía 0, sin marca. Modo
   `--informe` por defecto, que no escribe nada; modo `--aplicar --huella`;
   opciones `--mapa-categorias` y `--diferencias`, esta última para marcar
-  en el informe las filas de `diferencias_con_seeder.csv` (`plan.md`
-  §11.3).
+  en el informe las filas de `diferencias_con_seeder.csv`. Y,
+  **opcionalmente**, la carga de existencias contadas: `--planilla-recuento`
+  genera la planilla y `--existencias` la carga **a través del servicio de
+  ajuste**, con el motivo «Carga inicial», en la misma transacción y
+  dentro de la misma huella (`plan.md` §11.3).
 - **Hecho cuando:** pruebas con CSV de muestra verifican que:
   - `--informe` no escribe nada en la base;
   - cada producto importado tiene código EAN-13, un único movimiento
@@ -1284,7 +1287,18 @@ final del documento.
   - un fallo a mitad no deja ningún producto importado;
   - ejecutarlo dos veces no duplica nada;
   - las filas de `--diferencias` aparecen marcadas en el informe con los
-    dos valores y el que se importaría, sin cambiar qué se importa.
+    dos valores y el que se importaría, sin cambiar qué se importa;
+  - `--planilla-recuento` produce un CSV con un producto por fila, sin
+    los problemáticos, y la columna de existencias vacía;
+  - con `--existencias`, cada producto contado tiene un libro
+    `ALTA 0 → AJUSTE +N` con el motivo «Carga inicial» y el autor de
+    `--usuario`, y sus existencias son N; los contados en cero y los no
+    contados quedan en 0 sin ajuste; las filas inválidas o con un nombre
+    que no corresponde a su `id_antiguo` aparecen en el informe y no se
+    cargan;
+  - cambiar una cifra del CSV de existencias después del informe cambia
+    la huella, y `--aplicar` con la huella vieja no hace nada;
+  - un ajuste que falla revierte también la importación.
 
 ### [ ] T-OP.3 — Informe de importación y aprobación ⚠️
 - **Depende de:** T-OP.1, T-OP.2
@@ -1294,20 +1308,24 @@ final del documento.
   4 productos que difieren entre la base antigua y el seeder**, con el
   precio del Turtle Beach Stealth 600 señalado para confirmarlo con la
   empresa; qué categorías se crearían, cuáles coinciden y cuáles son
-  parecidas a una existente; y la huella.
+  parecidas a una existente; si se carga recuento, cuántos productos se
+  cargan, cuántos contados en cero, cuáles quedan sin contar y qué filas
+  son inválidas, junto con la **fecha del recuento**; y la huella.
 - **Hecho cuando:** **el usuario aprueba el informe** y, si hace falta,
   el mapa de categorías. Sin aprobación explícita no se pasa a T-OP.4.
 
 ### [ ] T-OP.4 — Aplicar la importación
 - **Depende de:** T-OP.3, con la aprobación del usuario
 - **Trabajo:** `--aplicar --huella <la aprobada>`.
-- **Hecho cuando:** el número de productos creados coincide con el del
-  informe; el libro de movimientos cuadra para todos (`SUM(cantidad) = 0`
-  para cada importado); una segunda ejecución no importa nada.
-- > **Después**, fuera del sistema: la empresa cuenta su inventario
-  > físico y carga las existencias con **«Ajustar existencias»**
-  > (CU-CAT-07), con un motivo del tipo «recuento inicial». Ese es el
-  > primer uso real del libro de movimientos.
+- **Hecho cuando:** el número de productos creados y de existencias
+  cargadas coincide con el del informe; el libro de movimientos cuadra
+  para todos los importados (`SUM(cantidad) = existencias`); una segunda
+  ejecución no importa nada.
+- > **El recuento**, fuera del sistema y **el día del cambio**: la
+  > empresa cuenta su inventario físico sobre la planilla que genera el
+  > comando y la entrega para cargarla en esta misma ejecución. Si no
+  > está lista, se importa sin ella y las existencias se cargan después
+  > con «Ajustar existencias» (CU-CAT-07), una a una.
 
 ---
 
