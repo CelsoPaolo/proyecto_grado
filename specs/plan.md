@@ -2,11 +2,12 @@
 
 - **Proyecto:** Sistema ERP interno para PC-Solution (Sucre, Bolivia)
 - **Documento:** Etapa 2 de Spec-Driven Development — Plan técnico
-- **Versión:** 1.2
-- **Fecha:** 2026-09-30
-- **Estado:** **Aprobado** — incorpora las decisiones PT-01 a PT-04
-  (ver sección 13)
-- **Deriva de:** `spec.md` v1.3
+- **Versión:** 1.3
+- **Fecha:** 2026-10-08
+- **Estado:** **Aprobado** el 2026-10-08 — la v1.2 está implementada; la
+  v1.3 diseña las cinco funcionalidades de `spec.md` v1.4 y está
+  pendiente de implementar. Siguen vigentes PT-01 a PT-04 (sección 13)
+- **Deriva de:** `spec.md` v1.4
 
 ### Historial de versiones
 
@@ -15,6 +16,7 @@
 | 1.0 | 2026-09-22 | Versión inicial para revisión. |
 | 1.1 | 2026-09-22 | Se resuelven los puntos pendientes PT-01 a PT-04. Alcance limitado a entorno de desarrollo (PT-01); **invalidación inmediata de sesiones** al bloquear una cuenta, con corrección de un error técnico de la v1.0 (PT-02); PrimeVue confirmado (PT-03); sin carga de datos de ejemplo, salvo el arranque del primer administrador (PT-04). |
 | 1.2 | 2026-09-30 | Se añaden §7.6 (paleta e identidad visual: cromo oscuro sobre área clara, morado como color de marca y los estados semánticos conservando sus colores) y §7.7 (pantalla de Inicio por rol, decorativa, que deja de duplicar la barra lateral). Decisiones de presentación posteriores a las primeras sesiones de uso; ninguna altera un comportamiento y por eso no generan RF nuevos. Se añade además §7.8 y el endpoint `GET /solicitudes/{id}/pdf` en §4.4, que implementan RF-67 y RF-68 de `spec.md` v1.3. |
+| 1.3 | 2026-10-08 | **Diseño de las cinco funcionalidades de `spec.md` v1.4.** Dos apps nuevas, `inventario` (movimientos de stock) y `clientes`; `panel` pasa a servir también los reportes por rango, y el panel diario se reescribe como el reporte de un día para que ambos no puedan divergir (RN-REP-08). Modelo de datos en §3.5; endpoints nuevos en §4.4; el libro de movimientos dentro del patrón de concurrencia en §6.5; lector de códigos, garantía y reportes en §7.9 a §7.11. Dependencias nuevas: `openpyxl` (backend) y `JsBarcode` (frontend), ambas sin componentes nativos. **Hallazgo que condiciona el diseño:** hoy las existencias se editan con el `PATCH` genérico del producto, **sin bloquear la fila**; con un libro de movimientos eso deja de ser aceptable y el ajuste pasa a un servicio propio con `select_for_update()` (§6.5). **De paso se corrigen cinco restos** de versiones anteriores: PostgreSQL 16 en §2.1, «asignación» en §2.3, una restricción de §3.3 que no existe en el modelo, y el ejemplo de `finalizar` y la nota sobre `iniciar` de §4.4, ambos anteriores a la v1.2. **Aprobado con las decisiones PA-06 a PA-08** de `spec.md` §12: se diseña el **código de fábrica** opcional (§3.5, §4.4, §7.9) y «servicios por estado» incluye las canceladas. |
 
 > Este documento traduce la especificación funcional a **decisiones
 > técnicas concretas**: arquitectura, modelo de datos, contrato de la API,
@@ -44,6 +46,9 @@
 | Cliente HTTP | Axios | 1.7 |
 | Componentes UI | PrimeVue (tema Aura) | 4 |
 | Gráficos del panel | Chart.js (vía `PrimeVue Chart`) | 4 |
+| Documentos PDF | `xhtml2pdf` (informe de servicio, garantía, reportes) | 0.2 |
+| Hojas de cálculo | `openpyxl` *(v1.3)* — exportación de reportes a `.xlsx` | 3.1 |
+| Códigos de barras | `JsBarcode` *(v1.3)* — EAN-13 en SVG, en el navegador | 3.11 |
 | Pruebas backend | pytest + pytest-django + factory-boy | — |
 | Pruebas frontend | Vitest + Vue Test Utils | — |
 | Control de versiones | Git (repositorio propio) | — |
@@ -302,7 +307,7 @@ nunca conoce la base de datos.
 └──────────────────────────────┘      └───────────────┬──────────────┘
                                                       │
                                               ┌───────▼────────┐
-                                              │  PostgreSQL 16 │
+                                              │  PostgreSQL 18 │
                                               │  + CHECK       │
                                               │  + FOR UPDATE  │
                                               └────────────────┘
@@ -335,9 +340,20 @@ escriben en las vistas**. Una vista de DRF recibe, delega y responde.
 | `usuarios` | Cuentas, roles, autenticación. | `Usuario` |
 | `catalogo` | Categorías, productos, existencias. | `Categoria`, `Producto` |
 | `ventas` | Registro y anulación de ventas. | `Venta`, `DetalleVenta` |
-| `servicios` | Solicitudes, estados, asignación, cierre. | `SolicitudServicio`, `EventoSolicitud` |
+| `servicios` | Solicitudes, estados, cotización, cierre. | `SolicitudServicio`, `EventoSolicitud` |
 | `configuracion` | Parámetros del sistema (umbral global). | `ConfiguracionSistema` |
-| `panel` | Indicadores agregados. Solo lectura, sin modelos propios. | — |
+| `inventario` *(v1.3)* | Libro de movimientos de stock y ajuste manual de existencias. | `MovimientoStock` |
+| `clientes` *(v1.3)* | Registro de datos de contacto de clientes. | `Cliente` |
+| `panel` | Indicadores del día **y reportes por rango** *(v1.3)*, con sus exportaciones. Solo lectura, sin modelos propios. | — |
+
+> **Por qué `inventario` es una app aparte y no parte de `catalogo`.**
+> `MovimientoStock` necesita una clave foránea a `Venta`, y `ventas` ya
+> depende de `catalogo` (`DetalleVenta.producto`). Poner el movimiento en
+> `catalogo` crearía una dependencia circular entre las dos apps, también
+> en sus migraciones. En `inventario`, que depende de las dos, el grafo
+> queda en una sola dirección: `catalogo` ← `ventas` ← `inventario`. Los
+> servicios de `catalogo` y `ventas` llaman a `inventario.services`; los
+> modelos de `inventario` no importan servicios de nadie.
 | `core` | Piezas compartidas: permisos, manejador de errores, paginación, mixins. | — |
 
 ---
@@ -538,8 +554,30 @@ deben cumplirse pase lo que pase (RNF-08, RNF-11):
 | `solicitud` | `CHECK (modalidad='DOMICILIO' → direccion <> '')` | RN-SER-04 |
 | `solicitud` | `CHECK (estado='FINALIZADA' → monto_cobrado IS NOT NULL AND observaciones <> '')` | RN-SER-03, RN-SER-13 |
 | `solicitud` | `CHECK (monto_cobrado IS NULL OR monto_cobrado >= 0)` | RN-SER-13 |
-| `solicitud` | `CHECK (estado='CANCELADA' → monto_cobrado IS NULL)` | RN-SER-14 |
+| `solicitud` | `CHECK (estado='CANCELADA' → motivo_cancelacion <> '' AND fecha_cierre IS NOT NULL)` | RN-SER-07 |
 | `configuracion` | `CHECK (id = 1 AND umbral_stock_bajo >= 0)` | RN-CAT-07 |
+| `producto` *(v1.3)* | `UNIQUE (codigo)`, `NOT NULL` | RN-CAT-08 |
+| `producto` *(v1.3)* | `UNIQUE (codigo_fabrica) WHERE codigo_fabrica <> ''` — único **parcial** | RN-CAT-11 |
+| `producto` *(v1.3)* | `CHECK (codigo_fabrica !~ '^20[0-9]{11}$')` — fuera del espacio interno | RN-CAT-11 |
+| `producto` *(v1.3)* | `CHECK (meses_garantia >= 0)` | RN-CAT-09 |
+| `detalle_venta` *(v1.3)* | `CHECK (meses_garantia >= 0)` | RN-VEN-12 |
+| `movimiento_stock` *(v1.3)* | `CHECK (stock_resultante >= 0)` | RN-CAT-02, RN-MOV-03 |
+| `movimiento_stock` *(v1.3)* | `CHECK (tipo IN ('VENTA','ANULACION') ⇔ venta IS NOT NULL)` | RN-MOV-02 |
+| `movimiento_stock` *(v1.3)* | `CHECK (tipo='VENTA' → cantidad < 0)`, `CHECK (tipo='ANULACION' → cantidad > 0)` | RN-MOV-02 |
+| `movimiento_stock` *(v1.3)* | `CHECK (tipo='AJUSTE' → cantidad <> 0 AND motivo <> '')` | RN-MOV-05 |
+| `movimiento_stock` *(v1.3)* | `CHECK (tipo IN ('SALDO_INICIAL','ALTA') → cantidad >= 0)` | RN-MOV-02 |
+| `movimiento_stock` *(v1.3)* | `CHECK (usuario IS NULL ⇔ tipo='SALDO_INICIAL')` | RN-MOV-02 |
+| `cliente` *(v1.3)* | `UNIQUE (carnet) WHERE carnet <> ''` — único **parcial** | RN-CLI-02 |
+| `cliente` *(v1.3)* | `CHECK (nombre <> '' AND telefono <> '')` | RN-CLI-01 |
+
+> **Corrección en la v1.3.** La v1.2 listaba aquí
+> `CHECK (estado='CANCELADA' → monto_cobrado IS NULL)` bajo RN-SER-14.
+> **Esa restricción nunca existió en el modelo, y no debía existir:**
+> RN-SER-14 dice que una solicitud cancelada no cuenta como ingreso
+> *aunque se hubiera cotizado antes*, lo que presupone que una cancelada
+> **puede** tener monto. La exclusión se resuelve en la consulta del
+> panel, no en la tabla. La fila se sustituye por la restricción que sí
+> existe, la del motivo de cancelación.
 
 > `CHECK (stock >= 0)` es deliberadamente redundante con la validación
 > del servicio de ventas. Es la garantía final de RNF-08: aunque un error
@@ -557,6 +595,175 @@ deben cumplirse pase lo que pase (RNF-08, RNF-11):
 | `solicitud` | `(estado, fecha_cierre)` | Ingresos por servicios del día (RN-IND-04). |
 | `producto` | `(categoria)`, `(activo)`, `(stock)` | Catálogo filtrado y existencias bajas (RF-13, RF-50). |
 | `evento_solicitud` | `(solicitud, fecha_hora)` | Historial ordenado de una solicitud. |
+| `producto` *(v1.3)* | `(codigo)` y `(codigo_fabrica)` — los crean sus `UNIQUE` | Búsqueda por código y lector (RF-70, RF-74). |
+| `movimiento_stock` *(v1.3)* | `(producto, fecha_hora DESC)`, `(tipo)`, `(fecha_hora DESC)` | Historial de un producto y filtros de RF-82. |
+| `movimiento_stock` *(v1.3)* | `(venta)` | Movimientos de una venta al anularla o auditarla. |
+| `cliente` *(v1.3)* | `(nombre)`, `(telefono)`, `(activo)` | Búsqueda de RF-86. El carnet ya tiene su índice único. |
+| `venta` *(v1.3)* | `(cliente)` | Ventas de un cliente registrado. |
+| `detalle_venta` *(v1.3)* | `(producto)` | Productos más vendidos del reporte (RN-REP-04). |
+
+### 3.5 Modelo de datos de la v1.4 *(v1.3 de este plan)*
+
+El diagrama de §3.1 describe el modelo hasta la v1.3 de la
+especificación. Este es el fragmento que cambia; las entidades que no
+aparecen quedan como estaban.
+
+```
+┌──────────────────────┐        ┌──────────────────────────────┐
+│ Producto             │        │ MovimientoStock   (inventario)│
+│──────────────────────│        │──────────────────────────────│
+│ …campos de §3.1…     │◄───────│ producto        FK PROTECT   │
+│ codigo   13 UQ  ★    │  1   N │ tipo  SALDO_INICIAL|ALTA|    │
+│ codigo_fabrica ''    │        │       VENTA|ANULACION|AJUSTE │
+│      UQ parcial      │        │                              │
+│ meses_garantia >=0   │        │                              │
+└──────────────────────┘        │ cantidad        con signo    │
+                                │ stock_resultante  >= 0       │
+┌──────────────────────┐        │ usuario   FK NULL ◆ PROTECT  │
+│ DetalleVenta         │        │ venta     FK NULL ◆ PROTECT ─┼──┐
+│──────────────────────│        │ fecha_hora                   │  │
+│ …campos de §3.1…     │        │ motivo          ''           │  │
+│ meses_garantia ❄     │        └──────────────────────────────┘  │
+└──────────────────────┘                                          │
+                                ┌──────────────────────────────┐  │
+┌──────────────────────┐        │ Venta                        │◄─┘
+│ Cliente   (clientes) │        │──────────────────────────────│
+│──────────────────────│ 1    N │ …campos de §3.1…             │
+│ nombre               │◄───────│ cliente  FK NULL  PROTECT    │
+│ telefono             │        │ cliente_nombre    ❄ (sigue)  │
+│ direccion      ''    │        │ cliente_telefono  ❄ (sigue)  │
+│ carnet ''  UQ parcial│        └──────────────────────────────┘
+│ activo               │
+│ creado_por      FK   │   ★ = asignado por el sistema, inmutable
+│ creado_en            │   ❄ = dato congelado al confirmar
+│ actualizado_por FK   │   ◆ = nulidad acotada por CHECK (§3.3)
+│ actualizado_en       │
+└──────────────────────┘
+```
+
+#### El código de producto: secuencia propia, prefijo interno y dígito de control
+
+```
+  2 0 │ 0 0 0 0 0 0 0 1 4 7 │ 0      ← producto n.º 147
+  ────┼─────────────────────┼───
+  GS1 │ secuencia, 10 dígitos│ control
+
+  control: 2·1 + 0·3 + … + 1·3 + 4·1 + 7·3 = 30  →  (10 − 30 mód 10) mód 10 = 0
+```
+
+- **Prefijo `20`.** GS1 reserva los prefijos 20 a 29 para **circulación
+  restringida**: códigos que un comercio asigna para uso interno. Ningún
+  fabricante puede tener un código que empiece por 20, así que el código
+  interno **nunca colisiona** con el de una caja real (RN-CAT-08). Es
+  también lo que permite tener los dos códigos a la vez (PA-07): el
+  interno vive en el espacio `20…`, y el de fábrica, por RN-CAT-11, no
+  puede entrar en él.
+- **Secuencia PostgreSQL dedicada** (`producto_codigo_seq`), no la clave
+  primaria. Así el código se conoce **antes** de insertar la fila —sin
+  el guardar-y-luego-actualizar que exigiría derivarlo de `pk`—, y su
+  generación queda desacoplada de la tabla. Una secuencia de PostgreSQL
+  **nunca devuelve dos veces el mismo número**, ni aunque la transacción
+  que lo pidió se revierta: eso es literalmente «no reutilizable».
+- **Dígito de control EAN-13**, calculado al generar: suma ponderada 1-3
+  de los 12 primeros dígitos, complemento a 10. Sin él, un lector
+  estándar rechaza el código impreso (RNF-27). Una función pura,
+  `calcular_digito_control()`, con pruebas contra códigos EAN-13 reales.
+- **Inmutable por tres vías.** El serializer lo declara `read_only`; el
+  servicio de edición no lo toca; y una prueba verifica que un `PATCH`
+  que lo incluye no lo cambia. No se añade un *trigger*: el mismo
+  criterio que con `EventoSolicitud`, protección en el código y prueba
+  que la vigila.
+
+**Migración en tres pasos**, porque `NOT NULL UNIQUE` no puede añadirse
+de golpe a una tabla con filas:
+
+1. Crear la secuencia y añadir `codigo` como **nulo**.
+2. **Asignar** un código a cada producto existente, recorriéndolos por
+   `id` ascendente para que el orden sea reproducible.
+3. Imponer `NOT NULL` y `UNIQUE`.
+
+Cada paso tiene su reverso (RNF-29): el paso 2 deja `codigo` en nulo y
+el 1 elimina la columna y la secuencia. Se prueba con más de 160
+productos sintéticos, aunque la base de desarrollo tiene hoy siete.
+
+#### El código de fábrica: opcional, editable y fuera del espacio interno *(PA-07)*
+
+- **`CharField` en blanco, no `NULL`**, con `UNIQUE` **parcial**
+  `WHERE codigo_fabrica <> ''`: la misma solución que el carnet del
+  cliente, por el mismo motivo —muchos productos sin código, y los que
+  lo tienen, distintos—.
+- **Sin validar el formato de fábrica.** Puede ser EAN-13, UPC-A de 12
+  dígitos, EAN-8 o un Code128 alfanumérico; validar uno solo dejaría
+  fuera mercadería real. Solo se normaliza —sin espacios, en
+  mayúsculas— y se limita a 50 caracteres.
+- **Lo único que se prohíbe es la forma del código interno:**
+  `CHECK (codigo_fabrica !~ '^20[0-9]{11}$')`, reforzado en el
+  serializer con un mensaje claro. Es lo que garantiza que una lectura
+  identifique a un solo producto: el filtro `?codigo=` busca en los dos
+  campos, y sin esta restricción el código de fábrica de un producto
+  podría coincidir con el interno de otro.
+- **No se congela en la venta**, igual que el interno: la garantía lista
+  el código **interno**, que es el que no cambia nunca.
+- **Migración trivial**: un campo nuevo con valor por defecto vacío, sin
+  datos que transformar. Reversible eliminando la columna.
+
+#### Los meses de garantía se congelan; el código no hace falta
+
+`DetalleVenta.meses_garantia` se copia del producto al confirmar, por
+el mismo motivo que el precio (RN-VEN-12). Las líneas anteriores a la
+v1.4 se rellenan con **cero**, no con los meses actuales del producto:
+asignarles una garantía hoy sería inventar un dato que no existía
+cuando se vendió.
+
+El **código** del producto, en cambio, **no** se congela en el detalle.
+Congelar sirve para que un dato que *puede* cambiar no altere el pasado;
+el código no cambia nunca (RN-CAT-08), así que leerlo a través de
+`DetalleVenta.producto` siempre da el mismo valor. Copiarlo sería una
+columna redundante que además podría desincronizarse.
+
+#### `MovimientoStock`: libro de solo inserción
+
+- **`cantidad` con signo** y **`stock_resultante`**, no solo uno de los
+  dos. Con la cantidad se reconstruye el saldo; con el resultante se
+  audita sin sumar todo el historial. Tener los dos permite verificar el
+  invariante de RN-MOV-03 en una prueba: `SUM(cantidad) = stock` y
+  `último.stock_resultante = stock`.
+- **`usuario` nulo solo para `SALDO_INICIAL`**, y un `CHECK` lo
+  garantiza en la base. El saldo inicial lo crea la migración, no una
+  persona; cualquier otro movimiento sin autor sería un agujero en
+  RNF-07.
+- **`venta` obligatoria exactamente para `VENTA` y `ANULACION`**, también
+  con `CHECK`. La relación usa `PROTECT`, que por RN-VEN-06 nunca llega a
+  activarse: las ventas no se borran.
+- **Inmutable** como `EventoSolicitud`: `save()` rechaza actualizar una
+  fila existente, `delete()` y el `delete()` del *queryset* lanzan
+  excepción, y no existe ningún endpoint de escritura. Una prueba lo
+  vigila (RNF-25).
+- **Saldo inicial por migración de datos**: una fila por producto con su
+  stock actual —también los que tienen cero, para que **todo** producto
+  tenga un movimiento de origen—. Reversible: el reverso borra solo las
+  filas `SALDO_INICIAL`, las únicas que creó.
+
+#### `Cliente`: carnet único parcial y normalizado
+
+- **`carnet` como cadena vacía, no `NULL`**, con un `UNIQUE` **parcial**
+  `WHERE carnet <> ''`. Así dos clientes sin carnet no chocan y dos con
+  el mismo sí (RN-CLI-02). Se sigue la convención de Django de no usar
+  `NULL` en campos de texto.
+- **Se normaliza antes de guardar**: sin espacios y en mayúsculas. Un
+  carnet boliviano puede llevar complemento o extensión
+  (`1234567-1A`, `1234567 LP`); sin normalizar, `1234567-1a` y
+  `1234567-1A` serían dos clientes distintos para la base.
+- **Auditoría**: `creado_por`, `actualizado_por` y sus fechas, con
+  `PROTECT` hacia `Usuario`. RNF-07 no nombraba a los clientes porque no
+  existían, pero su espíritu —toda modificación tiene autor— aplica.
+- **`Venta.cliente` con `PROTECT`**, que nunca se activa porque los
+  clientes no se borran (RN-CLI-03). Es la misma garantía física que
+  protege la autoría de las ventas.
+- **El carnet no sale de su app.** Ningún serializer fuera de
+  `clientes` lo declara: ni el de la venta, ni el de la garantía, ni el
+  de los reportes. La minimización de RNF-26 queda en la forma de los
+  datos, no en la disciplina de quien escriba la próxima vista.
 
 ---
 
@@ -627,7 +834,15 @@ Catálogo de códigos previsto: `CREDENCIALES_INVALIDAS`,
 `STOCK_INSUFICIENTE`, `VENTA_YA_ANULADA`, `TRANSICION_INVALIDA`,
 `TECNICO_REQUERIDO`, `OBSERVACIONES_REQUERIDAS`, `MONTO_REQUERIDO`,
 `SOLICITUD_CERRADA`, `ULTIMO_ADMINISTRADOR`, `AUTOMODIFICACION_PROHIBIDA`,
-`CATEGORIA_CON_PRODUCTOS`.
+`CATEGORIA_CON_PRODUCTOS`, `ERROR_AL_GENERAR_PDF`.
+
+Nuevos en la v1.3: `AJUSTE_SIN_DIFERENCIA` (409, la cantidad real ya es
+la registrada), `GARANTIA_NO_DISPONIBLE` (409, venta anulada o sin
+líneas con garantía), `CLIENTE_INACTIVO` (409), `CARNET_DUPLICADO` (409)
+y `RANGO_INVALIDO` (400, `desde` posterior a `hasta`). Un código de
+fábrica repetido o con forma de código interno es un error de
+validación de campo (400 `VALIDACION` sobre `codigo_fabrica`), para que
+el formulario lo muestre junto al campo (RNF-15).
 
 > **RNF-06:** los mensajes son deliberadamente genéricos donde deben
 > serlo. `CREDENCIALES_INVALIDAS` se devuelve tanto si el usuario no
@@ -684,15 +899,35 @@ Leyenda de roles: **A** = Administrador, **V** = Encargado de Ventas,
 | POST | `/categorias` | A | Crea una categoría. | RF-07 |
 | PATCH | `/categorias/{id}` | A | Edita una categoría. | RF-07 |
 | DELETE | `/categorias/{id}` | A | Elimina; 409 si tiene productos. | RF-07, RF-08 |
-| GET | `/productos` | A, V | Lista paginada. Filtros `?categoria=`, `?buscar=`, `?stock_bajo=true`, `?activo=`. | RF-12, RF-13, RF-53 |
-| POST | `/productos` | A | Crea (`multipart` si lleva imagen). | RF-09, RF-14 |
-| GET | `/productos/{id}` | A, V | Detalle. | RF-12 |
-| PATCH | `/productos/{id}` | A | Edita, incluido ajuste de existencias. | RF-10 |
+| GET | `/productos` | A, V | Lista paginada. Filtros `?categoria=`, `?buscar=`, `?stock_bajo=true`, `?activo=`, **`?codigo=`** *(v1.3, coincidencia exacta con `codigo` **o** `codigo_fabrica`)*. | RF-12, RF-13, RF-53, RF-70 |
+| POST | `/productos` | A | Crea (`multipart` si lleva imagen). Asigna el código y registra el movimiento de alta. **`codigo` en la petición se ignora**; `codigo_fabrica` es opcional. | RF-09, RF-14, RF-69, RF-72, RF-81, RF-97 |
+| GET | `/productos/{id}` | A, V | Detalle, con `codigo`, `codigo_fabrica` y `meses_garantia`. | RF-12, RF-71 |
+| PATCH | `/productos/{id}` | A | Edita los datos descriptivos, incluido `codigo_fabrica`. **Ya no acepta `stock` ni `codigo`**: ambos son `read_only` *(v1.3)*. | RF-10, RF-97 |
 | DELETE | `/productos/{id}` | A | Borrado suave (`activo = false`). | RF-11 |
+| POST | `/productos/{id}/ajustar-existencias` *(v1.3)* | **solo A** | `{ "cantidad_real": 12, "motivo": "Recuento físico" }`. Bloquea la fila, calcula la diferencia y registra el movimiento (§6.5). | RF-73, RF-81 |
+| GET | `/productos/{id}/movimientos` *(v1.3)* | **solo A** | Historial de movimientos del producto, paginado, del más reciente al más antiguo. | RF-83 |
 
 Cada producto listado incluye `stock_bajo: true|false`, calculado contra
 el umbral global vigente, para que el frontend no tenga que conocer la
 regla (RF-53).
+
+> **El cambio de `PATCH` rompe el formulario actual a propósito.** Hoy el
+> formulario de producto envía `stock` al editar. En la v1.3 el servidor
+> lo ignora —el campo pasa a `read_only`—, y el formulario deja de
+> ofrecerlo al editar y lo sustituye por la acción «Ajustar
+> existencias». Ignorar en lugar de rechazar con 400 es deliberado: un
+> cliente antiguo que siga enviando el campo no rompe, simplemente no
+> puede cambiar las existencias por la puerta equivocada.
+
+#### Inventario (`/api/v1/movimientos-stock`) *(v1.3)*
+
+| Método | Ruta | Roles | Descripción | Cubre |
+|---|---|---|---|---|
+| GET | `/movimientos-stock` | **solo A** | Lista paginada. Filtros `?producto=`, `?tipo=`, `?desde=`, `?hasta=`. | RF-82 |
+
+Sin `POST`, `PUT`, `PATCH` ni `DELETE`: los movimientos solo los crean
+los servicios de venta, anulación, alta y ajuste. La ausencia de verbos
+de escritura es, igual que en las ventas, la implementación de RNF-25.
 
 #### Configuración (`/api/v1/configuracion/`)
 
@@ -706,9 +941,25 @@ regla (RF-53).
 | Método | Ruta | Roles | Descripción | Cubre |
 |---|---|---|---|---|
 | GET | `/ventas` | A (todas), V (propias) | Lista paginada. Filtros `?desde=`, `?hasta=`, `?estado=`. | RF-21, RF-22 |
-| POST | `/ventas` | A, V | Registra y confirma la venta de forma atómica. | RF-15 a RF-20 |
-| GET | `/ventas/{id}` | A, V (propia) | Detalle con líneas congeladas. | RF-23 |
-| POST | `/ventas/{id}/anular` | A (cualquiera), V (propia) | Anula devolviendo existencias. | RF-24, RF-25, RF-27, RF-54 |
+| POST | `/ventas` | A, V | Registra y confirma la venta de forma atómica. Admite **`cliente_id`** opcional *(v1.3)*. | RF-15 a RF-20, RF-75, RF-79, RF-80, RF-81 |
+| GET | `/ventas/{id}` | A, V (propia) | Detalle con líneas congeladas, incluidos sus meses de garantía, y `tiene_garantia`. | RF-23 |
+| POST | `/ventas/{id}/anular` | A (cualquiera), V (propia) | Anula devolviendo existencias y registrando los movimientos. | RF-24, RF-25, RF-27, RF-54, RF-81 |
+| GET | `/ventas/{id}/garantia` *(v1.3)* | A (cualquiera), V (propia) | PDF de la garantía. 409 si está anulada o no tiene líneas con garantía. Sin permiso propio: hereda el del detalle. | RF-76, RF-78 |
+
+**`cliente_id` en `POST /ventas`.** Si llega, el servidor carga el
+cliente, comprueba que esté **activo** y **copia** su nombre y teléfono
+en la venta, ignorando los que viniera en `cliente_nombre` y
+`cliente_telefono`: es la misma razón por la que el cliente no envía
+precios (RN-VEN-10). Si no llega, la venta es de un cliente ocasional y
+se usan los dos campos de texto, como hasta ahora. Un cliente inactivo
+responde 409 `CLIENTE_INACTIVO`.
+
+**La garantía hereda la visibilidad de la venta** por el mismo mecanismo
+que el informe de servicio: `get_object()` pasa por `get_queryset()`, y
+una venta ajena da 404 sin una segunda regla de autorización que
+mantener (RN-VEN-16). Los dos rechazos de negocio —anulada, sin líneas
+con garantía— son 409 `GARANTIA_NO_DISPONIBLE` con el motivo en
+`detalle`.
 
 No existen `PUT`, `PATCH` ni `DELETE` sobre una venta: **la ausencia de
 esos verbos es la implementación de RN-VEN-06 y RF-26**. La anulación es
@@ -784,35 +1035,40 @@ permitiría alterarlo desde el navegador.
 
 Cada transición es un endpoint con nombre propio en lugar de un
 `PATCH {"estado": "..."}`. Así la máquina de estados de RN-SER-02 vive en
-el contrato de la API: `finalizar` puede exigir observaciones y monto, e
-`iniciar` puede exigir técnico, cosa que un `PATCH` genérico no expresa.
+el contrato de la API: `finalizar` exige observaciones y un monto **ya
+cotizado**, e `iniciar` no exige nada, cosa que un `PATCH` genérico no
+expresa. *(Corregido en la v1.3 de este plan: decía que `iniciar` podía
+exigir técnico, lo que dejó de ser cierto con la v1.2 de la
+especificación.)*
 
 <details>
 <summary><code>POST /solicitudes/{id}/finalizar</code> — petición y respuestas</summary>
 
+*(Corregido en la v1.3 de este plan. El ejemplo anterior enviaba el monto
+al finalizar, que era el comportamiento de la v1.1: desde la v1.2 el
+monto lo fija antes el Administrador con `cotizar`, y `finalizar` solo
+recibe las observaciones.)*
+
 ```jsonc
 // → petición
-{
-  "observaciones": "Se reemplazó la fuente de poder y se limpió el equipo.",
-  "monto_cobrado": "250.00"
-}
+{ "observaciones": "Se reemplazó la fuente de poder y se limpió el equipo." }
 
 // ← 200
 {
   "id": 91, "estado": "FINALIZADA",
   "fecha_cierre": "2026-09-22T17:10:03-04:00",
-  "monto_cobrado": "250.00",
+  "monto_cobrado": "250.00",          // el que fijó el Administrador al cotizar
   "cerrada_por": { "id": 6, "nombre_completo": "Ana Rojas" }
 }
 
-// ← 400   monto ausente (un servicio sin cargo se envía como "0.00")
+// ← 409   la solicitud aún no está cotizada (RN-SER-13)
 { "codigo": "MONTO_REQUERIDO",
-  "detalle": "Debe registrar el monto cobrado para finalizar el servicio.
-              Si el servicio no tuvo costo, registre 0." }
+  "detalle": "No se puede finalizar un servicio sin monto. El administrador
+              debe cotizarlo primero." }
 
 // ← 409   la solicitud no está En atención
 { "codigo": "TRANSICION_INVALIDA",
-  "detalle": "Solo puede finalizarse una solicitud en atención." }
+  "detalle": "La solicitud no puede pasar a ese estado." }
 ```
 </details>
 
@@ -866,6 +1122,91 @@ y la forma más segura de garantizarlo es que la API no ofrezca la cifra
 agregada por separado.
 </details>
 
+> **Desde la v1.3 este endpoint es un caso particular de `/reportes`.**
+> Por dentro, `panel/resumen` calcula sus cifras de ventas, servicios e
+> ingreso con la misma función que el reporte, para el rango
+> `[hoy, hoy]`. La respuesta conserva exactamente su forma —ninguna
+> prueba ni pantalla existente cambia—, pero ya no hay dos consultas que
+> puedan dar números distintos para el mismo día (RN-REP-08).
+
+#### Reportes (`/api/v1/reportes`) *(v1.3)*
+
+| Método | Ruta | Roles | Descripción | Cubre |
+|---|---|---|---|---|
+| GET | `/reportes?desde=&hasta=` | **solo A** | Reporte del rango en JSON. 400 si falta una fecha o si `desde > hasta`. | RF-90 a RF-94 |
+| GET | `/reportes/pdf?desde=&hasta=` | **solo A** | El mismo reporte, en PDF con membrete. | RF-95 |
+| GET | `/reportes/xlsx?desde=&hasta=` | **solo A** | El mismo reporte, en Excel. | RF-96 |
+
+Los atajos —hoy, esta semana, este mes— **los resuelve el frontend** en
+fechas concretas antes de llamar: el servidor solo conoce rangos. Así hay
+una única forma de pedir un reporte, y un atajo no es más que una forma
+cómoda de rellenar dos fechas.
+
+<details>
+<summary><code>GET /reportes?desde=2026-10-01&hasta=2026-10-07</code> — respuesta</summary>
+
+```jsonc
+{
+  "desde": "2026-10-01", "hasta": "2026-10-07",
+  "ventas":    { "cantidad": 41, "importe": "28450.00" },
+  "servicios": { "cantidad": 9,  "importe": "2150.00" },
+  "ingreso_total": { "importe": "30600.00",
+                     "de_ventas": "28450.00", "de_servicios": "2150.00" },
+  "productos_mas_vendidos": [
+    { "producto_id": 12, "codigo": "2000000000121", "nombre": "Teclado mecánico",
+      "unidades": 14, "importe": "4900.00" }
+  ],
+  "ventas_por_usuario": [
+    { "usuario_id": 4, "nombre_completo": "Juan Pérez",
+      "cantidad": 29, "importe": "19800.00" }
+  ],
+  "servicios_por_estado": { "REGISTRADA": 3, "EN_ATENCION": 2,
+                            "FINALIZADA": 9, "CANCELADA": 1 }
+}
+```
+
+**`servicios_por_estado` incluye las canceladas** (PA-08) y solo trae
+recuentos, nunca importes: las canceladas aparecen para que se vea
+cuántas se perdieron, sin riesgo de que alguien las sume a un ingreso.
+Los cuatro estados viajan **siempre**, aunque alguno valga cero, para que
+la pantalla, el PDF y el Excel muestren las mismas filas.
+
+**`productos_mas_vendidos` muestra el nombre actual del producto**, no el
+congelado. Es un agregado de muchas ventas en las que el nombre pudo
+cambiar; lo que identifica a la fila es el producto, y el código —que no
+cambia nunca— lo deja sin ambigüedad.
+</details>
+
+**Una sola función calcula el reporte, y las tres salidas la usan.** La
+vista JSON, el PDF y el Excel llaman a `panel.reportes.calcular(desde,
+hasta)` y solo difieren en cómo **presentan** el resultado. No hay
+consultas propias en los exportadores: es lo que hace que RN-REP-07 se
+cumpla por construcción y no por cuidado.
+
+#### Clientes (`/api/v1/clientes`) *(v1.3)*
+
+| Método | Ruta | Roles | Descripción | Cubre |
+|---|---|---|---|---|
+| GET | `/clientes` | A, V | Lista paginada **sin carnet**. `?buscar=` (nombre o teléfono que contienen el texto, o carnet exacto), `?activo=`. | RF-86, RF-89 |
+| POST | `/clientes` | A, V | Registra un cliente. 409 `CARNET_DUPLICADO` si el carnet ya existe. | RF-84, RF-88 |
+| GET | `/clientes/{id}` | A, V | Detalle **con carnet**. Es la única respuesta de toda la API que lo incluye. | RF-89 |
+| PATCH | `/clientes/{id}` | A, V | Edita sus datos. | RF-85 |
+| POST | `/clientes/{id}/desactivar` | **solo A** | Desactiva. | RF-87 |
+| POST | `/clientes/{id}/reactivar` | **solo A** | Reactiva. | RF-87 |
+
+No hay `DELETE`, por RN-CLI-03, igual que en usuarios.
+
+**Dos serializers, no uno con campos condicionales.**
+`ClienteResumenSerializer` —lista y selector de la venta— no declara el
+carnet; `ClienteDetalleSerializer` sí. Un único serializer que lo quitara
+«según la acción» dependería de que cada vista nueva recordara
+quitarlo; con dos, olvidarse es imposible (RNF-26).
+
+**La búsqueda por carnet es exacta, la de nombre y teléfono no.** Buscar
+por fragmentos de carnet permitiría enumerar los números registrados
+probando prefijos; con coincidencia exacta, solo encuentra a un cliente
+quien ya conoce su número.
+
 ---
 
 ## 5. Seguridad y autorización
@@ -883,7 +1224,15 @@ Clases en `core/permissions.py`:
 | `EsAdministrador` | Solo rol ADMINISTRADOR. | Catálogo (escritura), usuarios, configuración, panel. |
 | `PuedeVender` | ADMINISTRADOR o VENTAS. | Ventas, lectura del catálogo. |
 | `PuedeAtenderServicios` | ADMINISTRADOR o SERVICIOS. | Solicitudes. |
-| `EsDuenoDeLaVentaOAdmin` | Nivel de objeto: autor de la venta, o admin. | `GET/anular` de una venta (RF-27). |
+| `EsDuenoDeLaVentaOAdmin` | Nivel de objeto: autor de la venta, o admin. | `GET/anular` de una venta (RF-27), y su garantía *(v1.3)*. |
+| `PuedeGestionarClientes` *(v1.3)* | ADMINISTRADOR o VENTAS. | Clientes, salvo desactivar y reactivar, que usan `EsAdministrador`. |
+
+**Los clientes no se filtran por usuario.** A diferencia de
+`VentaViewSet`, `ClienteViewSet.get_queryset()` **no** restringe por
+quién registró al cliente: el directorio es común para el Administrador
+y el Encargado de Ventas (`spec.md` §4.4). Que el Encargado de Ventas vea
+a un cliente no le da acceso a las ventas que otros le hicieron, porque
+esas siguen pasando por el filtro de `VentaViewSet`.
 
 **Filtrado de consultas por rol.** No basta con permitir o denegar el
 endpoint: `VentaViewSet.get_queryset()` y
@@ -1009,6 +1358,108 @@ prueba en una transacción y enmascararía el bloqueo). Se verifica que:
 Este test es el **criterio de aceptación ejecutable de RNF-08** y una de
 las evidencias más defendibles del proyecto de grado.
 
+### 6.5 El libro de movimientos dentro del mismo patrón *(v1.3)*
+
+RNF-24 no pide un mecanismo nuevo: pide que el movimiento **viaje dentro**
+del que ya existe. Las tres capas de §6.3 se mantienen y el movimiento se
+escribe en el paso 3, con la fila todavía bloqueada:
+
+```python
+# ventas/services.py — paso 3 de registrar_venta(), ampliado
+for pid in ids:                                   # mismo orden ascendente de pk
+    producto = productos[pid]                     # fila bloqueada en el paso 1
+    cantidad = cantidades[pid]
+    Producto.objects.filter(pk=pid).update(stock=F("stock") - cantidad)
+    registrar_movimiento(                         # inventario/services.py
+        producto=producto,
+        tipo=TipoMovimiento.VENTA,
+        cantidad=-cantidad,
+        stock_resultante=producto.stock - cantidad,   # ← exacto: ver abajo
+        usuario=usuario,
+        venta=venta,
+    )
+```
+
+**Por qué `stock_resultante` puede calcularse en Python.** Normalmente
+leer el stock, restarle algo y escribirlo es exactamente la carrera de
+§6.1. Aquí no lo es, porque `producto.stock` se leyó **con la fila ya
+bloqueada** por `select_for_update()`: ninguna otra transacción puede
+modificarla hasta que esta termine. El valor leído es el vigente, y lo
+seguirá siendo hasta el `COMMIT`. El `F()` se conserva igualmente para la
+escritura —es la forma idiomática y no cuesta nada—, pero la cifra del
+movimiento es exacta sin necesidad de releer la fila.
+
+**Qué garantiza `transaction.atomic()` aquí.** Si `registrar_movimiento`
+falla —por ejemplo, por un `CHECK` de §3.3—, la excepción revierte
+también el descuento de stock y la venta. Y si el descuento falla, el
+movimiento nunca llega a escribirse. No existe un estado intermedio
+observable: es RN-MOV-01 implementada por la transacción, no por una
+comprobación posterior.
+
+#### El ajuste manual deja de ser un `PATCH`
+
+Hoy las existencias se cambian con el `PATCH` genérico del producto. Eso
+**escribe un valor absoluto leído antes, sin bloquear la fila**. Sin
+libro de movimientos era tolerable: el Administrador fija «quedan 15» y
+quedan 15. **Con libro de movimientos deja de serlo**, porque el
+movimiento necesita la diferencia, y la diferencia calculada contra un
+valor viejo omite cualquier venta ocurrida en medio:
+
+```
+  t0  Admin abre el formulario: stock = 10
+  t1  Se vende 1 unidad           stock = 9   movimiento −1
+  t2  Admin guarda «12» con PATCH stock = 12  movimiento +2  (12 − 10)
+                                  ─────────
+                                  suma de movimientos = 10 + (−1) + 2 = 11 ≠ 12
+```
+
+El libro queda descuadrado y nadie hizo nada mal. Por eso el ajuste pasa
+a `inventario.services.ajustar_existencias()`:
+
+```python
+@transaction.atomic
+def ajustar_existencias(*, producto_id, cantidad_real, motivo, usuario):
+    producto = Producto.objects.select_for_update().get(pk=producto_id)
+    diferencia = cantidad_real - producto.stock    # contra el valor bloqueado
+    if diferencia == 0:
+        raise AjusteSinDiferencia()                # RN-MOV-05
+    Producto.objects.filter(pk=producto_id).update(stock=cantidad_real)
+    registrar_movimiento(producto=producto, tipo=TipoMovimiento.AJUSTE,
+                         cantidad=diferencia, stock_resultante=cantidad_real,
+                         usuario=usuario, motivo=motivo)
+```
+
+Con la fila bloqueada, la venta de `t1` espera a que termine el ajuste o
+el ajuste espera a que termine la venta. En los dos órdenes el libro
+cuadra. La interfaz sigue mostrando la diferencia antes de confirmar
+(CU-CAT-07), pero es **orientativa**: la que se registra es la que
+calcula el servidor con la fila bloqueada.
+
+#### Cómo se demuestra
+
+La prueba de §6.4 se **amplía**, no se sustituye. Además de lo que ya
+verifica, comprueba que:
+
+- el número de movimientos `VENTA` es exactamente el número de ventas
+  confirmadas, y las peticiones rechazadas con 422 **no dejaron ningún
+  movimiento**;
+- `SUM(cantidad)` de los movimientos del producto es igual a su stock
+  final, y el `stock_resultante` del último movimiento también;
+- los `stock_resultante` de los movimientos `VENTA`, ordenados por
+  fecha, forman una secuencia **estrictamente decreciente sin huecos**:
+  si dos ventas hubieran leído el mismo stock, aparecería un valor
+  repetido.
+
+Y una prueba nueva lanza **ajustes y ventas concurrentes** sobre el mismo
+producto, verificando que el libro cuadra al final en cualquier
+intercalado.
+
+El invariante del libro —`SUM(cantidad) = stock` para **todo**
+producto— se convierte además en una **prueba guardián** que recorre la
+base de pruebas tras cada escenario, del mismo tipo que la matriz de
+permisos: si algún camino futuro cambia el stock sin pasar por
+`registrar_movimiento`, falla.
+
 ---
 
 ## 7. Diseño del frontend
@@ -1077,6 +1528,11 @@ permite navegar nunca puedan divergir**.
 | Usuarios | Lista con rol y estado; formulario de alta y edición; acciones de bloqueo y restablecimiento de contraseña. |
 | Panel | Tarjetas de indicadores, desglose de ingresos y tabla de productos con stock bajo, cada una enlazando a su módulo (RF-51). |
 | Configuración | Umbral global de existencias bajas. |
+| Catálogo *(v1.3)* | Columna de código en la lista y búsqueda por código. Detalle de producto con su código de barras, botón de imprimir etiqueta y —solo Administrador— historial de movimientos y diálogo «Ajustar existencias» (cantidad real, motivo, diferencia orientativa y confirmación). El formulario de edición deja de ofrecer las existencias e incorpora los meses de garantía. |
+| Inventario *(v1.3)* | Pantalla de movimientos de stock, solo Administrador: filtros por producto, tipo y rango de fechas, tabla paginada. |
+| Ventas *(v1.3)* | En el registro: selector de cliente (buscar, nuevo en un diálogo, u ocasional) y campo de código que acepta el lector. Tras confirmar, y en el detalle de la venta, botón «Garantía» si la venta tiene alguna línea con garantía. |
+| Clientes *(v1.3)* | Lista paginada con búsqueda y filtro de activos, sin carnet; formulario de alta y edición; detalle con carnet; desactivar y reactivar con confirmación, solo Administrador. |
+| Reportes *(v1.3)* | Selector de rango con atajos; tarjetas de ventas, servicios e ingreso desglosado; tablas de productos más vendidos, ventas por usuario y servicios por estado; botones de exportar a PDF y a Excel. |
 
 > **Nota sobre el «carrito» de la pantalla de ventas:** es una lista
 > temporal en el estado del componente mientras se arma la venta. No es
@@ -1236,6 +1692,82 @@ los errores. Sin desempaquetarlo, un 404 llegaría como blob,
 hacerlo dentro de `normalizarError()` obligaría a volver asíncrona una
 función que usan todas las vistas.
 
+### 7.9 Lector de código de barras y etiquetas *(v1.3)*
+
+**El lector no necesita código especial.** Un lector en modo teclado
+(SUP-07) escribe los trece dígitos y pulsa Intro, exactamente como lo
+haría una persona. Por eso la pantalla de venta tiene un **campo de
+código** normal que, al recibir Intro:
+
+1. si el campo no está vacío, consulta
+   `GET /productos?codigo=…&activo=true`, que busca en el código interno
+   y en el de fábrica. *No* se exige que sean 13 dígitos: un código de
+   fábrica puede ser un UPC de 12, un EAN-8 o un código alfanumérico
+   (PA-07);
+2. si hay coincidencia con existencias, agrega el producto —o suma una
+   unidad— y **vacía el campo, que conserva el foco**, listo para la
+   siguiente lectura;
+3. si no, muestra el aviso junto al campo y selecciona el texto, para
+   que la lectura siguiente lo sustituya.
+
+Se descartó escuchar las teclas en toda la página para «detectar» al
+lector por la velocidad de escritura: es frágil —depende del modelo de
+lector y de la carga del equipo— y captura teclas destinadas a otros
+campos. Un campo con foco es predecible y funciona igual con el teclado.
+
+**El código de barras se dibuja en el navegador** con `JsBarcode`, en
+formato EAN-13 y como **SVG**. Un SVG imprime nítido a cualquier tamaño,
+que es lo que un lector necesita para leer la etiqueta impresa. Se
+descartó generarlo en el servidor: `reportlab` sabe dibujarlo, pero
+exportarlo a imagen exige `renderPM`, que en Windows depende de
+bibliotecas nativas —el mismo motivo por el que se descartó WeasyPrint
+en §7.8—.
+
+**La etiqueta se imprime con la impresión del navegador** y una hoja de
+estilos `@media print` que oculta todo salvo la etiqueta: código de
+barras, cifras y nombre. No hace falta generar un PDF para algo que se
+imprime y se pega.
+
+### 7.10 Garantía en PDF: misma plantilla, mismo mecanismo *(v1.3)*
+
+La garantía **no** trae una segunda forma de generar documentos:
+
+- **Plantilla base común.** El membrete, la línea morada y el pie de
+  página del informe de servicio pasan a
+  `core/templates/pdf/base.html`. El informe de servicio, la garantía y
+  el reporte la extienden con `{% extends %}` y solo rellenan su cuerpo.
+  El informe de servicio queda **idéntico** —sus pruebas no cambian—,
+  pero ya no es dueño de un membrete que ahora comparten tres
+  documentos.
+- **Mismo generador.** `core/pdf.py` (`render_a_pdf`,
+  `imagen_incrustada`) se usa tal cual.
+- **Misma descarga.** En el frontend, `useDescarga.js` —con su cuadro de
+  guardado nativo y su manejo de la cancelación— sirve la garantía y los
+  reportes sin cambios. El comentario de §7.8 que lo anticipaba («
+  reutilizable el día que haya un comprobante de venta») se cumple aquí.
+
+**La fecha de vencimiento se calcula en el servidor**, con una función
+pura `sumar_meses(fecha, meses)` que aplica RN-VEN-13 —el día inexistente
+pasa al último del mes— usando solo `calendar` de la biblioteca estándar.
+No se añade `python-dateutil` para una operación de cinco líneas con sus
+pruebas propias.
+
+### 7.11 Exportación de reportes *(v1.3)*
+
+- **PDF**: la plantilla base de §7.10 con las mismas secciones que la
+  pantalla, en tablas.
+- **Excel**: `openpyxl`, Python puro como `xhtml2pdf`. Una **hoja por
+  sección** —resumen, productos, usuarios, servicios—, con los importes
+  como **números con formato monetario**, no como texto: así el
+  Administrador puede sumarlos o graficarlos en Excel sin convertir
+  nada.
+- **Nombre del archivo** con el rango:
+  `reporte-2026-10-01_2026-10-07.xlsx`, propuesto en el cuadro de
+  guardado.
+
+Las tres salidas consumen el mismo resultado de
+`panel.reportes.calcular()` (§4.4): no hay una consulta por formato.
+
 ---
 
 ## 8. Estructura del repositorio
@@ -1267,7 +1799,9 @@ proyecto_grado_definitivo/
 │   ├── ventas/
 │   ├── servicios/
 │   ├── configuracion/
-│   ├── panel/
+│   ├── inventario/              # movimientos de stock (v1.3)
+│   ├── clientes/                # registro de clientes (v1.3)
+│   ├── panel/                   # indicadores del día y reportes (v1.3)
 │   └── media/                   # imágenes de producto (no versionado)
 └── frontend/
     ├── package.json
@@ -1320,7 +1854,24 @@ incumplir la especificación):
 | RN-USU-02/03/04 | Autocambio de rol, autobloqueo y último administrador → rechazados. |
 | RN-IND-05 | El ingreso total nunca se devuelve sin su desglose por origen. |
 | RN-ACC-05 | Las tres pruebas de invalidación inmediata de §1.3. |
-| RNF-08 | Prueba de concurrencia de §6.4. |
+| RNF-08 | Prueba de concurrencia de §6.4, **ampliada en §6.5** con los movimientos. |
+| RN-CAT-08 *(v1.3)* | Un `PATCH` con otro `codigo` no lo cambia; el código generado es EAN-13 válido; tras retirar un producto, el siguiente creado recibe un código distinto. |
+| RN-CAT-10 *(v1.3)* | Un `PATCH` con otro `stock` no lo cambia ni crea movimiento. |
+| RN-CAT-11 *(v1.3)* | Código de fábrica repetido → 400; con forma de código interno → 400, también saltando la validación de Django; dos productos sin código de fábrica → aceptados; `?codigo=` encuentra un producto por cualquiera de sus dos códigos. |
+| RN-VEN-12 *(v1.3)* | Cambiar los meses de garantía del producto tras la venta → la línea y la garantía emitida no cambian. |
+| RN-VEN-13 *(v1.3)* | Venta del 31 de enero con 1 mes → vence el 28 de febrero; en año bisiesto, el 29. |
+| RN-VEN-14 *(v1.3)* | Garantía de venta anulada → 409; de venta sin líneas con garantía → 409; la garantía lista solo las líneas con meses > 0. |
+| RN-VEN-16 *(v1.3)* | Un Encargado de Ventas pide la garantía de la venta de otro → 404. |
+| RN-MOV-01 *(v1.3)* | Venta rechazada por stock → **ningún** movimiento; un fallo forzado al registrar el movimiento → el stock y la venta se revierten. |
+| RN-MOV-03 *(v1.3)* | Prueba guardián del invariante `SUM(cantidad) = stock` para todo producto. |
+| RN-MOV-04 *(v1.3)* | Actualizar o borrar un movimiento desde el ORM lanza excepción; la API no expone ningún verbo de escritura. |
+| RN-MOV-05 *(v1.3)* | Ajuste sin motivo → 400; sin diferencia → 409; ajuste y venta concurrentes → el libro cuadra. |
+| RN-CLI-04 *(v1.3)* | Registrar un cliente no crea ningún `Usuario`. |
+| RN-CLI-05 *(v1.3)* | Editar el nombre y el teléfono de un cliente, y desactivarlo → sus ventas anteriores conservan los datos originales. |
+| RN-CLI-06 *(v1.3)* | El carnet **no** aparece en la lista de clientes, el detalle de venta, la garantía, el reporte JSON, el PDF ni el Excel. |
+| RN-REP-07 *(v1.3)* | Para el mismo rango, las cifras del JSON, del PDF y del Excel son idénticas. |
+| RN-REP-08 *(v1.3)* | El reporte de hoy y `panel/resumen` devuelven las mismas cifras. |
+| RNF-29 *(v1.3)* | Las migraciones de datos —códigos y saldos iniciales— se aplican y se revierten sobre una base con productos sin perder datos. |
 
 ---
 
@@ -1339,6 +1890,15 @@ trazabilidad fina, requerimiento por requerimiento, se completa en
 | RF-28 a RF-38, RF-55 a RF-64 | `servicios/services.py` | `views/servicios/` |
 | RF-39 a RF-47 | `usuarios/services.py` | `views/usuarios/` |
 | RF-48 a RF-51, RF-65, RF-66 | `panel/views.py` | `views/panel/` |
+| RF-69 a RF-72, RF-97 *(v1.3)* | `catalogo` (códigos, secuencia, garantía) | `views/catalogo/` + `JsBarcode` |
+| RF-73, RF-81 a RF-83 *(v1.3)* | `inventario/services.py` | `views/catalogo/`, `views/inventario/` |
+| RF-74 a RF-80 *(v1.3)* | `ventas/services.py`, plantilla de garantía | `views/ventas/` |
+| RF-84 a RF-89 *(v1.3)* | `clientes` | `views/clientes/`, selector en `views/ventas/` |
+| RF-90 a RF-96 *(v1.3)* | `panel/reportes.py`, exportadores | `views/reportes/` |
+| RNF-24, RNF-25 *(v1.3)* | `inventario`, §6.5 | — |
+| RNF-26 *(v1.3)* | serializers de `clientes` | — |
+| RNF-27 *(v1.3)* | — | campo de código de la venta, `JsBarcode` |
+| RNF-28, RNF-29 *(v1.3)* | índices, migraciones reversibles | — |
 | RNF-01 a RNF-07 | `core/permissions.py`, `core/exceptions.py`, settings | interceptores Axios |
 | RNF-08 a RNF-11 | `services.py` + constraints | — |
 | RNF-12 a RNF-16 | — | PrimeVue, `useErroresApi` |
@@ -1361,6 +1921,24 @@ Derivado de las dependencias reales entre módulos. Se detalla en
 | 4 | Ventas | El módulo con la lógica más delicada; se aborda con los cimientos ya probados. |
 | 5 | Servicios técnicos | Independiente de ventas; depende solo de usuarios. |
 | 6 | Panel de indicadores | Agrega datos de todos los anteriores: va último por necesidad. |
+
+### 11.2 Orden de la v1.4 *(v1.3 de este plan)*
+
+| # | Bloque | Por qué en esta posición |
+|---|---|---|
+| 8 | **Movimientos de stock** | Va **primero** porque reescribe todos los caminos que cambian existencias: venta, anulación, alta y ajuste. Si se dejara para después, cada bloque posterior que tocara `registrar_venta()` —garantía y clientes lo tocan— habría que revisarlo de nuevo. Y es el de mayor riesgo técnico: conviene abordarlo con el resto del sistema quieto. |
+| 9 | **Código de producto** | Independiente del resto, pero la garantía y los reportes **muestran** el código: tiene que existir antes. |
+| 10 | **Garantía** | Necesita el código (lo lista) y toca `registrar_venta()`, que ya incluye los movimientos. |
+| 11 | **Clientes** | Vuelve a tocar `registrar_venta()`. Se hace después de la garantía para que cada bloque añada **un solo** cambio a ese servicio, probado antes del siguiente. |
+| 12 | **Reportes** | Agrega datos de todos los anteriores —usa el código en los más vendidos—, igual que el panel en la v1.0: va último por necesidad. |
+| 13 | **Cierre de la v1.4** | Matriz de permisos, guardianes, usabilidad y coherencia final. |
+
+**El guardián de trazabilidad marca el avance.** Desde que se aprueba
+`spec.md` v1.4, `test_trazabilidad.py` falla para los 35 requerimientos
+nuevos que el código todavía no cita. **No se silencia**: cada bloque
+apaga los suyos al implementarlos, y el bloque 13 termina con el
+guardián en verde. Es la forma más directa de ver, en cualquier momento,
+cuánto de la v1.4 falta.
 
 ### 11.1 El arranque del primer administrador
 
@@ -1407,6 +1985,11 @@ conforme a PT-04.
 | Lógica de negocio filtrándose a las vistas | Reglas no probables ni reutilizables | Capa `services.py` obligatoria; las vistas no abren transacciones. |
 | Token válido tras bloquear la cuenta | Acceso indebido tras el bloqueo | Cerradas las cuatro vías de §1.3; verificado con tres pruebas automatizadas. |
 | Suponer que SimpleJWT se comporta como JWT apátrida | Decisiones de diseño sobre premisas falsas (le ocurrió a la v1.0 de este plan) | Lo verificado se cita con el código real del framework; lo no verificado se marca como supuesto. |
+| Un camino que cambia el stock sin dejar movimiento *(v1.3)* | El libro deja de cuadrar y pierde su valor de auditoría | Toda escritura de `stock` pasa por `inventario.services`; prueba guardián del invariante `SUM(cantidad) = stock` (§6.5). |
+| Migración de datos que falla a mitad *(v1.3)* | Productos sin código o sin saldo inicial | Migraciones en pasos atómicos y reversibles; probadas en ambos sentidos sobre una base con productos (RNF-29). |
+| Lector configurado distinto de lo supuesto *(v1.3)* | La venta no reconoce los códigos leídos | El campo de código funciona igual a mano; se verifica con un lector real antes de cerrar el bloque 9. Si el lector no envía Intro, se configura —es un ajuste de fábrica estándar—. |
+| El carnet se filtra por una vista nueva *(v1.3)* | Exposición de un dato personal | Dos serializers distintos; prueba que busca el carnet en cada salida de la API, en el PDF y en el Excel (RN-CLI-06). |
+| Etiquetas que el lector no lee *(v1.3)* | El flujo por código no sirve en la práctica | Dígito de control probado contra EAN-13 reales; etiqueta en SVG; verificación con lector real (RNF-27). |
 
 ---
 

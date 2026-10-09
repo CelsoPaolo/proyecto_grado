@@ -2,10 +2,18 @@
 
 - **Proyecto:** Sistema ERP interno para PC-Solution (Sucre, Bolivia)
 - **Documento:** Etapa 3 de Spec-Driven Development — Desglose de tareas
-- **Versión:** 1.0 (borrador para revisión)
-- **Fecha:** 2026-09-22
-- **Estado:** Pendiente de aprobación
-- **Deriva de:** `spec.md` v1.1 y `plan.md` v1.1
+- **Versión:** 1.1
+- **Fecha:** 2026-10-08
+- **Estado:** Bloques 0 a 7 **aprobados y completados** (v1.0). Bloques 8
+  a 13 **aprobados el 2026-10-08**, pendientes de implementar (v1.1).
+- **Deriva de:** `spec.md` v1.4 y `plan.md` v1.3
+
+### Historial de versiones
+
+| Versión | Fecha | Cambios |
+|---|---|---|
+| 1.0 | 2026-09-22 | Bloques 0 a 7, 73 tareas, derivadas de `spec.md` v1.1 y `plan.md` v1.1. El bloque 5 se reformuló el 2026-09-29 tras la v1.2 de la especificación. Todas completadas. |
+| 1.1 | 2026-10-08 | **Bloques 8 a 13, 40 tareas**, para las cinco funcionalidades de `spec.md` v1.4 y sus decisiones PA-06 a PA-08 (T-9.7 es la del código de fábrica). Se corrige además la cabecera, que seguía diciendo «borrador pendiente de aprobación», y un resto de la v1.1 en T-6.1 («sin asignar» por «sin cotizar»). |
 
 > Cada tarea es **atómica** (una unidad de trabajo con un resultado
 > verificable), está **ordenada por dependencia** (nunca depende de una
@@ -42,10 +50,23 @@
 | 5 | Servicios técnicos | T-5.1 a T-5.14 ✅ | Bloque 1 |
 | 6 | Panel de indicadores | T-6.1 a T-6.5 ✅ | Bloques 4, 5 |
 | 7 | Cierre y documentación | T-7.1 a T-7.5 ✅ | Todos |
+| **8** | **Movimientos de stock** *(v1.4)* | T-8.1 a T-8.8 | Bloque 7 |
+| **9** | **Código de producto** *(v1.4)* | T-9.1 a T-9.7 | Bloque 8 |
+| **10** | **Garantía** *(v1.4)* | T-10.1 a T-10.7 | Bloque 9 |
+| **11** | **Clientes** *(v1.4)* | T-11.1 a T-11.7 | Bloque 10 |
+| **12** | **Reportes** *(v1.4)* | T-12.1 a T-12.8 | Bloque 11 |
+| **13** | **Cierre de la v1.4** | T-13.1 a T-13.3 | Todos |
 
-**Total: 73 tareas — todas completadas.** Los bloques 4 y 5 son independientes entre sí y
+**Total: 113 tareas — 73 completadas (bloques 0 a 7), 40 pendientes
+(bloques 8 a 13).** Los bloques 4 y 5 son independientes entre sí y
 podrían abordarse en cualquier orden; se propone ventas primero por ser
 el de lógica más delicada.
+
+> **Los bloques 8 a 12 no son independientes**, aunque las cinco
+> funcionalidades lo parezcan: cuatro de ellas tocan `registrar_venta()`.
+> El orden (`plan.md` §11.2) hace que cada bloque añada **un solo**
+> cambio a ese servicio, con su prueba, antes de que llegue el
+> siguiente.
 
 ---
 
@@ -659,8 +680,9 @@ el de lógica más delicada.
 - **Depende de:** T-4.7, T-5.8, T-3.2
 - **Trabajo:** Agregados del día: ventas confirmadas (excluyendo
   anuladas), servicios **finalizados en la fecha de cierre** —no de
-  registro—, pendientes con desglose de «sin asignar», y productos bajo
-  el umbral global.
+  registro—, pendientes con desglose de «sin cotizar», y productos bajo
+  el umbral global. *(Corregido en v1.1: decía «sin asignar», resto de
+  la v1.1 de la especificación.)*
 - **Hecho cuando:** pruebas con datos límite verifican que una venta
   anulada no suma, que un servicio cancelado no suma, y que un servicio
   registrado ayer y cerrado hoy cuenta **hoy**.
@@ -744,6 +766,459 @@ el de lógica más delicada.
 
 ---
 
+# Versión 1.4 — cinco funcionalidades nuevas
+
+> Los bloques 8 a 13 derivan de `spec.md` v1.4 y `plan.md` v1.3. Las
+> reglas del método no cambian: un *commit* por tarea citando su
+> identificador; la especificación manda; una tarea no está hecha hasta
+> que su criterio se comprueba.
+>
+> **Al cerrar cada bloque se ejecuta la suite completa** —backend y
+> frontend— y se muestra el resultado antes de abrir el siguiente.
+>
+> **Estado de partida: el guardián de trazabilidad en rojo.** Desde que
+> se aprueba `spec.md` v1.4, `test_trazabilidad.py` falla para los 35
+> requerimientos nuevos (RF-69 a RF-97, RNF-24 a RNF-29), porque ningún
+> código los cita todavía. **No se silencia.** Cada bloque apaga los
+> suyos, y el bloque 13 termina con el guardián en verde.
+
+---
+
+## Bloque 8 — Movimientos de stock
+
+> **Va primero** porque reescribe todos los caminos que cambian
+> existencias (`plan.md` §11.2). Es el bloque de mayor riesgo técnico de
+> la v1.4: igual que en el bloque 4, **el servicio y su prueba de
+> concurrencia van antes que la API**.
+
+### [ ] T-8.1 — App `inventario` y modelo `MovimientoStock` ⚠️
+- **Cubre:** RN-MOV-02, RN-MOV-03, RN-MOV-04, RNF-25
+- **Depende de:** T-7.5
+- **Trabajo:** App `inventario`; modelo con `tipo` (`SALDO_INICIAL`,
+  `ALTA`, `VENTA`, `ANULACION`, `AJUSTE`), `cantidad` con signo,
+  `stock_resultante`, `usuario` y `venta` con nulidad acotada, `motivo`
+  y `fecha_hora`; todos los `CHECK` y los índices de `plan.md` §3.3 y
+  §3.4. `save()` rechaza actualizar una fila existente; `delete()` y el
+  `delete()` del *queryset* lanzan excepción. Se actualiza además la
+  cifra de control de `test_trazabilidad.py` a 97 RF y 29 RNF: la
+  especificación aprobada ya los declara.
+- **Hecho cuando:** pruebas que **saltan la validación de Django**
+  verifican que la base rechaza: un movimiento `VENTA` sin venta, un
+  `AJUSTE` sin motivo o con cantidad cero, un `stock_resultante`
+  negativo y un movimiento sin autor que no sea `SALDO_INICIAL`. Otra
+  prueba verifica que actualizar o borrar un movimiento lanza excepción.
+
+### [ ] T-8.2 — `registrar_movimiento()` dentro de la venta y la anulación ⚠️
+- **Cubre:** **RN-MOV-01**, RNF-09, RNF-10, RNF-24, RF-81
+- **Depende de:** T-8.1
+- **Trabajo:** `inventario/services.py` con `registrar_movimiento()`.
+  `registrar_venta()` y `anular_venta()` lo llaman **dentro** de su
+  transacción, con la fila todavía bloqueada, calculando
+  `stock_resultante` a partir del valor leído bajo bloqueo (`plan.md`
+  §6.5). Un movimiento por producto, no por línea.
+- **Hecho cuando:**
+  - una venta de dos productos deja dos movimientos `VENTA` con la venta
+    de referencia y el resultante correcto;
+  - una venta rechazada por stock **no deja ningún movimiento**;
+  - un fallo **forzado** en `registrar_movimiento()` revierte también el
+    descuento de stock y la venta;
+  - una anulación deja un movimiento `ANULACION` por producto.
+
+### [ ] T-8.3 — Alta con movimiento y ajuste con bloqueo
+- **Cubre:** RN-CAT-10, RN-MOV-05, RF-73, RF-81, CU-CAT-02, CU-CAT-07
+- **Depende de:** T-8.2
+- **Trabajo:** Crear un producto registra su movimiento `ALTA`, aunque
+  sea con cero existencias. `inventario.services.ajustar_existencias()`
+  con `select_for_update()`, motivo obligatorio y diferencia calculada
+  contra el valor bloqueado. En el serializer de producto, `stock` pasa a
+  `read_only` en la edición: solo se fija al crear.
+- **Hecho cuando:** ajuste sin motivo → 400; ajuste sin diferencia →
+  409 `AJUSTE_SIN_DIFERENCIA`; un `PATCH` con otro `stock` no lo cambia
+  ni crea movimiento; un ajuste registra la diferencia con signo y el
+  resultante.
+
+### [ ] T-8.4 — Migración de saldos iniciales
+- **Cubre:** RNF-29, RN-MOV-02
+- **Depende de:** T-8.1
+- **Trabajo:** Migración de datos que crea un movimiento
+  `SALDO_INICIAL`, sin autor, por **cada** producto existente con su stock
+  actual —también los de cero—. Reverso que borra solo las filas
+  `SALDO_INICIAL`.
+- **Hecho cuando:** una prueba de migración, sobre una base con más de
+  160 productos con stock variado, verifica que tras aplicar cada
+  producto tiene exactamente un saldo inicial igual a su stock, y que al
+  revertir no queda ninguno y los productos no cambiaron.
+
+### [ ] T-8.5 — Concurrencia ampliada y guardián del libro ⚠️
+- **Cubre:** **RNF-08**, **RNF-24**, RN-MOV-03
+- **Depende de:** T-8.2, T-8.3
+- **Trabajo:** Ampliar la prueba de T-4.4 con las comprobaciones del
+  libro de `plan.md` §6.5. Prueba nueva de **ajustes y ventas
+  concurrentes** sobre el mismo producto. Prueba guardián que verifica
+  `SUM(cantidad) = stock` para todo producto tocado por cada prueba.
+- **Hecho cuando:** con N hilos vendiendo el mismo producto, los
+  movimientos `VENTA` son exactamente las ventas confirmadas, sus
+  resultantes forman una secuencia decreciente sin repeticiones, y el
+  libro cuadra; con ajustes y ventas intercalados, el libro cuadra en
+  cualquier orden. **Estable en cinco ejecuciones seguidas.**
+- > ⚠️ Igual que T-4.4: **no se continúa al resto del bloque** hasta que
+  > esta prueba pase de forma estable. Además se verifica que **falla**
+  > si se quita el `select_for_update()` del ajuste.
+
+### [ ] T-8.6 — API de movimientos y de ajuste
+- **Cubre:** RF-73, RF-82, RF-83, RN-MOV-06, RNF-18
+- **Depende de:** T-8.5
+- **Trabajo:** `GET /movimientos-stock` con filtros, `GET
+  /productos/{id}/movimientos` y `POST /productos/{id}/ajustar-existencias`,
+  todos solo Administrador. Sin verbos de escritura sobre los
+  movimientos. Ampliar la matriz de T-1.8.
+- **Hecho cuando:** el Encargado de Ventas recibe 403 en los tres;
+  `POST`, `PATCH` y `DELETE` sobre `/movimientos-stock` responden 405;
+  los filtros funcionan combinados y la respuesta viene paginada.
+
+### [ ] T-8.7 — Pantallas de movimientos y ajuste
+- **Cubre:** RF-73, RF-82, RF-83, RNF-14, RNF-15
+- **Depende de:** T-8.6
+- **Trabajo:** Pantalla de movimientos con filtros; historial en el
+  detalle del producto; diálogo «Ajustar existencias» con cantidad real,
+  motivo, diferencia orientativa y confirmación. El formulario de
+  edición de producto deja de ofrecer las existencias.
+- **Hecho cuando:** un ajuste desde la interfaz aparece en el historial
+  del producto con su motivo; el Encargado de Ventas no ve ni el menú ni
+  las acciones.
+
+### [ ] T-8.8 — Revisión del bloque 8
+- **Depende de:** T-8.1 a T-8.7
+- **Hecho cuando:** ciclo comprobado en el navegador —crear producto →
+  vender → anular → ajustar— y el historial muestra los cuatro
+  movimientos con el libro cuadrado. **Suite completa en verde** salvo el
+  guardián de trazabilidad para los requerimientos de bloques
+  posteriores; resultado mostrado.
+
+---
+
+## Bloque 9 — Código de producto
+
+### [ ] T-9.1 — Generación del código EAN-13
+- **Cubre:** **RN-CAT-08**, RF-69
+- **Depende de:** T-8.8
+- **Trabajo:** Secuencia PostgreSQL `producto_codigo_seq`; función pura
+  `calcular_digito_control()`; `generar_codigo()` con prefijo `20`,
+  secuencia de 10 dígitos y control (`plan.md` §3.5). El producto nuevo
+  recibe su código al crearse; el serializer lo declara `read_only`.
+- **Hecho cuando:** el dígito de control coincide con EAN-13 reales
+  conocidos; un `POST` con `codigo` lo ignora; un `PATCH` con otro
+  `codigo` no lo cambia; retirar un producto y crear otro da un código
+  distinto.
+
+### [ ] T-9.2 — Migración: código para todos los productos existentes
+- **Cubre:** RNF-29, RN-CAT-08
+- **Depende de:** T-9.1
+- **Trabajo:** Las tres migraciones de `plan.md` §3.5: columna nula →
+  asignación por `id` ascendente → `NOT NULL` y `UNIQUE`. Cada una con su
+  reverso.
+- **Hecho cuando:** sobre una base con más de 160 productos, todos
+  quedan con un código EAN-13 válido y distinto, y revertir las tres
+  migraciones devuelve la tabla a su estado anterior sin pérdida.
+
+### [ ] T-9.3 — Búsqueda por código
+- **Cubre:** RF-70
+- **Depende de:** T-9.2
+- **Trabajo:** Filtro `?codigo=` de coincidencia exacta en
+  `GET /productos`; el código en las respuestas de lista y detalle.
+- **Hecho cuando:** un código exacto devuelve un único producto; uno
+  incompleto o inexistente devuelve una lista vacía sin error.
+
+### [ ] T-9.7 — Código de fábrica opcional *(PA-07)*
+> Insertada al aprobar la v1.4. Conserva el número siguiente al último
+> del bloque porque los identificadores no se renumeran; se ejecuta en
+> esta posición, antes de T-9.4, porque T-9.5 la necesita.
+- **Cubre:** **RN-CAT-11**, RF-97, RF-70, RF-74
+- **Depende de:** T-9.3
+- **Trabajo:** `Producto.codigo_fabrica` con `UNIQUE` parcial y el
+  `CHECK` que lo saca del espacio interno (`plan.md` §3.5);
+  normalización; el campo en el serializer y el formulario de producto;
+  `?codigo=` busca también en él.
+- **Hecho cuando:** código de fábrica repetido → 400 junto al campo; con
+  forma de código interno → 400, y la base lo rechaza también saltando
+  la validación de Django; dos productos sin código de fábrica →
+  aceptados; `?codigo=` encuentra el producto por cualquiera de sus dos
+  códigos; la migración se aplica y se revierte.
+
+### [ ] T-9.4 — Código de barras y etiqueta
+- **Cubre:** RF-71, RNF-27, CU-CAT-09
+- **Depende de:** T-9.3
+- **Trabajo:** `JsBarcode` en EAN-13 y SVG en el detalle del producto;
+  columna de código en la lista; botón de imprimir etiqueta con
+  `@media print` (`plan.md` §7.9).
+- **Hecho cuando:** la etiqueta impresa, escaneada con la **cámara de un
+  teléfono con una aplicación lectora**, devuelve exactamente el código
+  del producto. *(Decidido al aprobar la v1.4: no se dispone de un
+  lector físico. La aplicación lee el EAN-13 con las mismas reglas que
+  un lector, incluido el dígito de control, así que valida lo que esta
+  tarea necesita validar.)*
+
+### [ ] T-9.5 — Entrada por código en el registro de venta
+- **Cubre:** RF-74, **RN-VEN-17**, RNF-16, RNF-27
+- **Depende de:** T-9.7
+- **Trabajo:** Campo de código en la pantalla de venta que, al recibir
+  Intro, agrega el producto o suma una unidad, vacía el campo y conserva
+  el foco (`plan.md` §7.9).
+- **Hecho cuando:** pruebas de Vitest verifican: código interno exacto →
+  se agrega; código de fábrica exacto → se agrega; mismo código otra vez
+  → suma uno; un código de fábrica de 12 dígitos o alfanumérico también
+  se consulta; código inexistente, retirado o sin stock → aviso y nada
+  se agrega; tras cada lectura el foco sigue en el campo.
+
+### [ ] T-9.6 — Revisión del bloque 9
+- **Depende de:** T-9.1 a T-9.5, T-9.7
+- **Hecho cuando:** una venta completa se arma solo con lecturas de
+  código —internos y de fábrica—, comprobado en el navegador. Suite
+  completa ejecutada y resultado mostrado.
+
+---
+
+## Bloque 10 — Garantía
+
+### [ ] T-10.1 — Meses de garantía en producto y en el detalle
+- **Cubre:** RN-CAT-09, RN-VEN-12, RF-72, RF-75, RNF-29
+- **Depende de:** T-9.6
+- **Trabajo:** `Producto.meses_garantia` y `DetalleVenta.meses_garantia`
+  con `CHECK (>= 0)`; migración que deja las líneas existentes en **cero**
+  (`plan.md` §3.5); el campo en el serializer y el formulario de
+  producto.
+- **Hecho cuando:** un valor negativo lo rechaza la base; tras migrar,
+  todas las líneas anteriores tienen cero meses.
+
+### [ ] T-10.2 — Congelado de la garantía en la venta
+- **Cubre:** **RN-VEN-12**, RF-75
+- **Depende de:** T-10.1
+- **Trabajo:** `registrar_venta()` copia los meses de garantía junto con
+  el nombre y el precio.
+- **Hecho cuando:** cambiar los meses del producto después de la venta
+  no altera la línea guardada.
+
+### [ ] T-10.3 — Cálculo del vencimiento
+- **Cubre:** **RN-VEN-13**
+- **Depende de:** T-10.1
+- **Trabajo:** Función pura `sumar_meses(fecha, meses)` con la
+  biblioteca estándar (`plan.md` §7.10).
+- **Hecho cuando:** prueba parametrizada: 31 de enero + 1 → 28 de
+  febrero; en año bisiesto → 29; 30 de noviembre + 3 → 28 de febrero;
+  15 de marzo + 12 → 15 de marzo del año siguiente; cero meses → la
+  misma fecha.
+
+### [ ] T-10.4 — Plantilla base de documentos PDF
+- **Cubre:** RF-76 (habilita), RF-67
+- **Depende de:** T-10.1
+- **Trabajo:** Extraer el membrete, la línea morada y el pie del informe
+  de servicio a `core/templates/pdf/base.html`; el informe de servicio
+  pasa a extenderla.
+- **Hecho cuando:** **todas** las pruebas del informe de servicio pasan
+  sin cambios —incluida la que rechaza restos de sintaxis de plantilla—
+  y el PDF resultante tiene los mismos colores en su flujo.
+
+### [ ] T-10.5 — Endpoint de la garantía
+- **Cubre:** RF-76, RF-78, **RN-VEN-14, RN-VEN-15, RN-VEN-16**
+- **Depende de:** T-10.2, T-10.3, T-10.4
+- **Trabajo:** `GET /ventas/{id}/garantia` con `get_object()`; plantilla
+  que extiende la base y lista solo las líneas con garantía; leyenda de
+  no fiscal; sin carnet.
+- **Hecho cuando:** el texto extraído del PDF contiene el cliente, el
+  código y el vencimiento de cada línea con garantía y la leyenda; **no**
+  contiene las líneas sin garantía ni restos de plantilla; venta anulada
+  → 409; sin líneas con garantía → 409; venta ajena para un Encargado de
+  Ventas → 404.
+
+### [ ] T-10.6 — Garantía en la interfaz
+- **Cubre:** RF-77
+- **Depende de:** T-10.5
+- **Trabajo:** Campo de meses de garantía en el formulario de producto;
+  tras confirmar una venta con garantía, oferta de emitirla; botón en el
+  detalle de la venta; descarga con `useDescarga.js`.
+- **Hecho cuando:** el botón solo aparece en ventas confirmadas con
+  alguna línea con garantía, y el PDF se descarga con el cuadro de
+  guardado.
+
+### [ ] T-10.7 — Revisión del bloque 10
+- **Depende de:** T-10.1 a T-10.6
+- **Hecho cuando:** vender un producto con garantía, emitir la garantía,
+  cambiar los meses del producto y volver a emitirla da el mismo
+  vencimiento; abrir el PDF lo confirma visualmente. Suite completa
+  ejecutada y resultado mostrado.
+
+---
+
+## Bloque 11 — Clientes
+
+### [ ] T-11.1 — App `clientes` y modelo `Cliente`
+- **Cubre:** RN-CLI-01, **RN-CLI-02**, RN-CLI-03, RNF-07
+- **Depende de:** T-10.7
+- **Trabajo:** Modelo con `UNIQUE` parcial sobre el carnet, `CHECK` de
+  nombre y teléfono, `activo` y auditoría (`plan.md` §3.5). Normalización
+  del carnet antes de guardar.
+- **Hecho cuando:** dos clientes con el mismo carnet los rechaza la base,
+  aunque uno esté inactivo; dos sin carnet se aceptan; `1234567-1a` y
+  `1234567-1A` se consideran el mismo carnet.
+
+### [ ] T-11.2 — Servicio de clientes
+- **Cubre:** RF-84, RF-85, RF-87, RN-CLI-03, **RN-CLI-04**
+- **Depende de:** T-11.1
+- **Trabajo:** Crear, editar, desactivar y reactivar, registrando autor y
+  fecha.
+- **Hecho cuando:** registrar un cliente no crea ningún `Usuario`; un
+  cliente desactivado no se elimina y puede reactivarse.
+
+### [ ] T-11.3 — API de clientes
+- **Cubre:** RF-84 a RF-89, **RN-CLI-06**, RN-CLI-07, RNF-26
+- **Depende de:** T-11.2
+- **Trabajo:** Endpoints de `plan.md` §4.4; `ClienteResumenSerializer`
+  sin carnet y `ClienteDetalleSerializer` con carnet; búsqueda exacta
+  por carnet y parcial por nombre y teléfono; permisos; matriz de T-1.8.
+- **Hecho cuando:** la lista no contiene la clave `carnet` en ninguna
+  fila; el Encargado de Ventas recibe 403 al desactivar; el Encargado de
+  Servicios recibe 403 en todos; `DELETE` responde 405.
+
+### [ ] T-11.4 — Cliente en la venta ⚠️
+- **Cubre:** **RN-VEN-10**, **RN-CLI-05**, RF-79, RF-80
+- **Depende de:** T-11.3
+- **Trabajo:** `Venta.cliente` nulo con `PROTECT`; `registrar_venta()`
+  acepta `cliente_id`, comprueba que esté activo y **copia** su nombre y
+  teléfono. Sin `cliente_id`, cliente ocasional como hasta ahora.
+- **Hecho cuando:**
+  - con `cliente_id`, la venta guarda los datos del cliente aunque la
+    petición traiga otros;
+  - **editar el nombre y el teléfono del cliente, y desactivarlo, no
+    altera las ventas anteriores**;
+  - cliente inactivo → 409 `CLIENTE_INACTIVO` y ningún stock descontado;
+  - el detalle de la venta **no** contiene el carnet.
+
+### [ ] T-11.5 — Pantallas de clientes
+- **Cubre:** RF-84 a RF-89, RNF-14
+- **Depende de:** T-11.3
+- **Hecho cuando:** el carnet solo aparece en el detalle; desactivar y
+  reactivar piden confirmación y solo los ve el Administrador.
+
+### [ ] T-11.6 — Selector de cliente en el registro de venta
+- **Cubre:** RF-79, RNF-16
+- **Depende de:** T-11.4, T-11.5
+- **Trabajo:** Tres opciones: buscar y elegir, registrar uno nuevo en un
+  diálogo, o escribir un cliente ocasional.
+- **Hecho cuando:** elegir un cliente rellena sus datos; registrar uno
+  nuevo desde la venta lo deja elegido; el modo ocasional funciona como
+  en la v1.3; los clientes inactivos no se ofrecen.
+
+### [ ] T-11.7 — Revisión del bloque 11
+- **Depende de:** T-11.1 a T-11.6
+- **Hecho cuando:** venta a un cliente registrado → editar el cliente →
+  la venta conserva los datos originales, comprobado en el navegador.
+  Suite completa ejecutada y resultado mostrado.
+
+---
+
+## Bloque 12 — Reportes
+
+### [ ] T-12.1 — Cálculo del reporte por rango
+- **Cubre:** RN-REP-01, **RN-REP-02**, RN-REP-03, RF-91
+- **Depende de:** T-11.7
+- **Trabajo:** `panel/reportes.py` con `calcular(desde, hasta)`: ventas,
+  servicios e ingreso desglosado, en hora de Bolivia y con los mismos
+  criterios que el panel.
+- **Hecho cuando:** pruebas con datos límite: una venta anulada no suma;
+  un servicio cancelado no suma; un servicio registrado antes del rango y
+  cerrado dentro **sí** suma; una venta a las 23:59 del último día cuenta
+  y una a las 00:00 del día siguiente no.
+
+### [ ] T-12.2 — El panel diario como reporte de un día
+- **Cubre:** **RN-REP-08**
+- **Depende de:** T-12.1
+- **Trabajo:** `panel/resumen` calcula sus cifras de ventas, servicios e
+  ingreso con `calcular(hoy, hoy)`, conservando la forma de su respuesta
+  (`plan.md` §4.4).
+- **Hecho cuando:** **todas** las pruebas del panel pasan sin cambios, y
+  una prueba nueva verifica que el panel y el reporte de hoy coinciden.
+
+### [ ] T-12.3 — Detalles del reporte
+- **Cubre:** RN-REP-04, RN-REP-05, RN-REP-06, RF-92, RF-93, RF-94
+- **Depende de:** T-12.1
+- **Hecho cuando:** los productos más vendidos son diez como máximo, con
+  el desempate por importe; las ventas por usuario suman el total de
+  ventas; los servicios por estado **incluyen las canceladas** como fila
+  propia, los cuatro estados aparecen aunque valgan cero, y ninguna
+  cancelada suma a un importe (PA-08).
+
+### [ ] T-12.4 — API del reporte
+- **Cubre:** RF-90, RN-REP-10
+- **Depende de:** T-12.3
+- **Hecho cuando:** `desde > hasta` → 400 `RANGO_INVALIDO`; falta una
+  fecha → 400; los otros dos roles reciben 403; matriz de T-1.8
+  ampliada.
+
+### [ ] T-12.5 — Exportación a PDF
+- **Cubre:** RF-95
+- **Depende de:** T-12.4, T-10.4
+- **Hecho cuando:** el PDF extiende la plantilla base y su texto contiene
+  todas las secciones del reporte, sin restos de plantilla.
+
+### [ ] T-12.6 — Exportación a Excel
+- **Cubre:** RF-96
+- **Depende de:** T-12.4
+- **Trabajo:** `openpyxl` como dependencia nueva; una hoja por sección;
+  importes como números con formato monetario (`plan.md` §7.11).
+- **Hecho cuando:** el archivo se abre con `openpyxl` en la prueba y los
+  importes son celdas numéricas, no texto.
+
+### [ ] T-12.7 — Coherencia de las tres salidas ⚠️
+- **Cubre:** **RN-REP-07**, **RN-REP-09**, RNF-26, RNF-28
+- **Depende de:** T-12.5, T-12.6
+- **Trabajo:** Prueba que genera el JSON, el PDF y el Excel del mismo
+  rango y compara sus cifras; prueba que busca el carnet de un cliente en
+  las tres salidas; medición con un año de datos sintéticos.
+- **Hecho cuando:** las cifras son idénticas en las tres; el carnet no
+  aparece en ninguna; el reporte de un año y su exportación tardan menos
+  de 5 segundos.
+
+### [ ] T-12.8 — Pantalla de reportes
+- **Cubre:** RF-90 a RF-96
+- **Depende de:** T-12.7
+- **Trabajo:** Selector de rango con atajos resueltos en el frontend;
+  secciones del reporte; exportar con `useDescarga.js`.
+- **Hecho cuando:** pruebas de Vitest verifican que «esta semana»
+  empieza el lunes y «este mes» el día 1; las exportaciones se descargan;
+  un rango sin actividad muestra ceros con aviso. Suite completa
+  ejecutada y resultado mostrado.
+
+---
+
+## Bloque 13 — Cierre de la v1.4
+
+### [ ] T-13.1 — Matriz de permisos y guardianes
+- **Cubre:** RNF-02, RNF-22, RNF-23
+- **Depende de:** bloques 8 a 12
+- **Trabajo:** Comprobar que la matriz de T-1.8 coincide celda por celda
+  con `spec.md` §4.4 v1.4; añadir a `test_cobertura_reglas.py` las
+  reglas nuevas de `plan.md` §9.
+- **Hecho cuando:** los tres guardianes —matriz, cobertura de reglas y
+  trazabilidad— están en verde. **Es la primera vez desde la aprobación
+  de la v1.4 que el de trazabilidad lo está.**
+
+### [ ] T-13.2 — Usabilidad de lo nuevo
+- **Cubre:** RNF-12 a RNF-16
+- **Depende de:** T-13.1
+- **Hecho cuando:** recorrido manual en los tres anchos de pantalla;
+  toda acción nueva que modifica datos —ajustar, desactivar, reactivar—
+  pide confirmación; toda la interfaz nueva está en español.
+
+### [ ] T-13.3 — Coherencia y documentación
+- **Cubre:** RNF-22
+- **Depende de:** T-13.2
+- **Trabajo:** Recorrer los 97 RF y 29 RNF contra lo construido;
+  actualizar README, guion de la demostración y documentación de la API.
+- **Hecho cuando:** `spec.md` describe el sistema tal como quedó, y toda
+  diferencia encontrada se resolvió editando primero `specs/`.
+
+---
+
 ## Trazabilidad inversa: requerimiento → tarea
 
 Comprobación de que ningún requerimiento de `spec.md` quedó sin tarea.
@@ -805,6 +1280,42 @@ Comprobación de que ningún requerimiento de `spec.md` quedó sin tarea.
 | RN-SER-02 | T-5.3 |
 | RN-SER-15 | T-5.7 |
 | RN-IND-01 a RN-IND-05 | T-6.1 |
+| **v1.4** | |
+| RF-69 | T-9.1, T-9.2 |
+| RF-70 | T-9.3, T-9.7 |
+| RF-97 | T-9.7 |
+| RF-71 | T-9.4 |
+| RF-72 | T-10.1, T-10.6 |
+| RF-73 | T-8.3, T-8.6, T-8.7 |
+| RF-74 | T-9.5 |
+| RF-75 | T-10.1, T-10.2 |
+| RF-76 | T-10.4, T-10.5 |
+| RF-77 | T-10.6 |
+| RF-78 | T-10.5 |
+| RF-79, RF-80 | T-11.4, T-11.6 |
+| RF-81 | T-8.2, T-8.3 |
+| RF-82, RF-83 | T-8.6, T-8.7 |
+| RF-84 a RF-89 | T-11.2, T-11.3, T-11.5 |
+| RF-90 | T-12.4, T-12.8 |
+| RF-91 | T-12.1 |
+| RF-92 a RF-94 | T-12.3 |
+| RF-95 | T-12.5 |
+| RF-96 | T-12.6 |
+| RNF-24 | **T-8.2, T-8.5** |
+| RNF-25 | T-8.1, T-8.6 |
+| RNF-26 | T-11.3, T-12.7 |
+| RNF-27 | T-9.4, T-9.5 |
+| RNF-28 | T-12.7 |
+| RNF-29 | T-8.4, T-9.2, T-10.1 |
+| RN-CAT-08 | T-9.1, T-9.2 |
+| RN-CAT-09, RN-CAT-10 | T-10.1, T-8.3 |
+| RN-CAT-11 | T-9.7 |
+| RN-VEN-10 | **T-11.4** |
+| RN-VEN-12 a RN-VEN-16 | T-10.2, T-10.3, T-10.5 |
+| RN-VEN-17 | T-9.5 |
+| RN-MOV-01 a RN-MOV-06 | T-8.1 a T-8.6 |
+| RN-CLI-01 a RN-CLI-07 | T-11.1 a T-11.4 |
+| RN-REP-01 a RN-REP-10 | T-12.1 a T-12.7 |
 
 ---
 
@@ -819,6 +1330,16 @@ Si algo se tuerce en el proyecto, casi con seguridad será una de estas:
 | **T-1.6** | Un fallo aquí puede dejar el sistema **sin ningún administrador**, sin forma de repararlo desde la interfaz. |
 | **T-4.3** | Concentra las reglas de negocio más delicadas: todo-o-nada, congelado de precios y descuento atómico. |
 | **T-4.4** | Es la única evidencia de que RNF-08 se cumple de verdad. Sin ella, la garantía de concurrencia es una afirmación sin respaldo. |
+
+### Las críticas de la v1.4
+
+| Tarea | Por qué es crítica |
+|---|---|
+| **T-8.2** | Mete un segundo escrito dentro de la transacción más delicada del sistema. Un error aquí rompe la venta, no solo el libro. |
+| **T-8.5** | Es la evidencia de RNF-24, igual que T-4.4 lo es de RNF-08. Sin ella, «el libro siempre cuadra» es una afirmación. |
+| **T-9.2** | Migración de datos sobre la tabla de productos, que todas las ventas referencian. Tiene que poder deshacerse. |
+| **T-11.4** | Es donde un cliente registrado podría alterar ventas pasadas si la copia de datos se hiciera mal. RN-CLI-05 se juega aquí. |
+| **T-12.7** | Sin ella, la pantalla, el PDF y el Excel podrían dar cifras distintas para el mismo período sin que nadie lo note. |
 
 ---
 
