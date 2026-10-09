@@ -1453,11 +1453,19 @@ final del documento.
   - Ruta añadida a la matriz de permisos.
   - Mutación detectada: aceptar un rango invertido.
 
-### [ ] T-12.5 — Exportación a PDF
+### [x] T-12.5 — Exportación a PDF
 - **Cubre:** RF-95
 - **Depende de:** T-12.4, T-10.4
 - **Hecho cuando:** el PDF extiende la plantilla base y su texto contiene
   todas las secciones del reporte, sin restos de plantilla.
+- **Resultado (2026-10-09):** `GET /reportes/pdf`.
+  - La plantilla `panel/reporte.html` extiende `pdf/base.html` y tiene
+    cuatro secciones: resumen con el ingreso desglosado, productos más
+    vendidos, ventas por usuario y servicios por estado con etiquetas en
+    español.
+  - Nombre del archivo: `reporte-<desde>_<hasta>.pdf`.
+  - Las pruebas leen el texto real del PDF. Mutación detectada: quitar
+    una sección.
 
 ### [ ] T-12.6 — Exportación a Excel
 - **Cubre:** RF-96

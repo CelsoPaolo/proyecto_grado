@@ -1,0 +1,113 @@
+{% extends "pdf/base.html" %}
+{% comment %}
+Reporte por rango en PDF (RF-95, plan.md 7.11).
+
+Presenta EL MISMO diccionario que produce panel.reportes.calcular(); no
+hace consultas ni calcula nada (RN-REP-07). Reporte de operacion, no de
+personas: no hay ningun dato personal de clientes (RN-REP-09).
+{% endcomment %}
+
+{% block estilos %}
+      .tabla {
+        border-collapse: collapse;
+      }
+
+      .tabla th {
+        text-align: left;
+        font-size: 8.5pt;
+        color: #52525b;
+        border-bottom: 0.5pt solid #d4d4d8;
+        padding: 3pt 4pt;
+      }
+
+      .tabla td {
+        padding: 3pt 4pt;
+        border-bottom: 0.5pt solid #e4e4e7;
+      }
+
+      .num {
+        text-align: right;
+      }
+
+      .total td {
+        font-weight: bold;
+      }
+
+      .vacio {
+        color: #71717a;
+        font-style: italic;
+      }
+{% endblock %}
+
+{% block titulo %}Reporte de operación{% endblock %}
+
+{% block numero %}{{ reporte.desde|date:"d/m/Y" }} – {{ reporte.hasta|date:"d/m/Y" }}{% endblock %}
+
+{% block contenido %}
+    <h2>Resumen del período</h2>
+    <table class="tabla" width="100%">
+      <tr><th width="50%">Concepto</th><th class="num">Cantidad</th><th class="num">Importe (Bs)</th></tr>
+      <tr>
+        <td>Ventas confirmadas</td>
+        <td class="num">{{ reporte.ventas.cantidad }}</td>
+        <td class="num">{{ reporte.ventas.importe|floatformat:2 }}</td>
+      </tr>
+      <tr>
+        <td>Servicios finalizados</td>
+        <td class="num">{{ reporte.servicios.cantidad }}</td>
+        <td class="num">{{ reporte.servicios.importe|floatformat:2 }}</td>
+      </tr>
+      <tr class="total">
+        <td>Ingreso total</td>
+        <td></td>
+        <td class="num">{{ reporte.ingreso_total.importe|floatformat:2 }}</td>
+      </tr>
+    </table>
+
+    <h2>Productos más vendidos</h2>
+    {% if reporte.productos_mas_vendidos %}
+      <table class="tabla" width="100%">
+        <tr><th width="22%">Código</th><th>Producto</th><th class="num">Unidades</th><th class="num">Importe (Bs)</th></tr>
+        {% for p in reporte.productos_mas_vendidos %}
+          <tr>
+            <td>{{ p.codigo }}</td>
+            <td>{{ p.nombre }}</td>
+            <td class="num">{{ p.unidades }}</td>
+            <td class="num">{{ p.importe|floatformat:2 }}</td>
+          </tr>
+        {% endfor %}
+      </table>
+    {% else %}
+      <p class="vacio">Sin ventas en el período.</p>
+    {% endif %}
+
+    <h2>Ventas por usuario</h2>
+    {% if reporte.ventas_por_usuario %}
+      <table class="tabla" width="100%">
+        <tr><th>Usuario</th><th class="num">Ventas</th><th class="num">Importe (Bs)</th></tr>
+        {% for u in reporte.ventas_por_usuario %}
+          <tr>
+            <td>{{ u.nombre_completo }}</td>
+            <td class="num">{{ u.cantidad }}</td>
+            <td class="num">{{ u.importe|floatformat:2 }}</td>
+          </tr>
+        {% endfor %}
+      </table>
+    {% else %}
+      <p class="vacio">Sin ventas en el período.</p>
+    {% endif %}
+
+    <h2>Servicios registrados por estado</h2>
+    <table class="tabla" width="100%">
+      <tr><th>Estado</th><th class="num">Solicitudes</th></tr>
+      {% for etiqueta, cantidad in estados %}
+        <tr><td>{{ etiqueta }}</td><td class="num">{{ cantidad }}</td></tr>
+      {% endfor %}
+    </table>
+    <p class="vacio">
+      Recuento de solicitudes registradas en el período, según su estado
+      actual. Las canceladas no suman a ningún ingreso.
+    </p>
+{% endblock %}
+
+{% block leyenda %}Reporte interno de operación, no válido como documento fiscal.{% endblock %}
