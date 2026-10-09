@@ -39,7 +39,8 @@ bloque 13.
 | 2026-10-09 | T-10.7 Revisión del bloque 10 | `7936c95` | B 878 / 17 · F 190 / 0 | Punto de extensión para las condiciones de la garantía, como pediste: la constante `CONDICIONES_DE_GARANTIA` en `ventas/garantia.py`, que se lee en cada petición y cuya sección solo aparece si tiene texto. |
 | 2026-10-09 | T-11.1 App `clientes` y modelo `Cliente` | `7a74c37` | B 894 / 17 · F 190 / 0 | `actualizado_por` es obligatorio: al registrar un cliente coincide con `creado_por`. La dirección es un `CharField(255)` en blanco. Se retiraron tres citas prematuras (RF-84, RF-89 y RNF-26), que se implementan en la API (T-11.3). |
 | 2026-10-09 | T-11.2 Servicio de clientes | `4ebc392` | B 908 / 13 · F 190 / 0 | Desactivar un cliente ya inactivo no es un error, solo no cambia nada. El mensaje de carnet duplicado **no dice a qué cliente pertenece**, para no revelar un dato personal (RN-CLI-06). Hay dos defensas ante el duplicado; la mutación de una sola sobrevive, y es lo esperado. |
-| 2026-10-09 | T-11.3 API de clientes | siguiente commit | B 952 / 10 · F 190 / 0 | Sin `?activo=`, la lista incluye a los inactivos, porque el Administrador los necesita para reactivarlos; el selector de la venta pedirá `activo=true`. El carnet se busca **solo por coincidencia exacta**, para que no se pueda adivinar cifra a cifra. La edición es solo `PATCH`, sin `PUT`. |
+| 2026-10-09 | T-11.3 API de clientes | `db558b2` | B 952 / 10 · F 190 / 0 | Sin `?activo=`, la lista incluye a los inactivos, porque el Administrador los necesita para reactivarlos; el selector de la venta pedirá `activo=true`. El carnet se busca **solo por coincidencia exacta**, para que no se pueda adivinar cifra a cifra. La edición es solo `PATCH`, sin `PUT`. |
+| 2026-10-09 | T-11.4 Cliente en la venta ⚠️ | siguiente commit | B 964 / 8 · F 190 / 0 | La fila del cliente se bloquea con `select_for_update` para que una desactivación simultánea no se cuele. Un `cliente_id` inexistente responde 400 junto al campo. **Incidente corregido:** al insertar la función auxiliar quedó bajo el `@transaction.atomic` de `registrar_venta`, y la venta dejó de ser atómica. Lo detectaron las pruebas de concurrencia de T-8.5 (6 fallos) y se corrigió antes del commit. Se actualizó la prueba de firma de T-4.2 para incluir `cliente_id`; sigue garantizando que no entra precio. |
 
 ## Pendiente para revisión humana
 
@@ -100,4 +101,4 @@ bloque 13.
 
 ## Dónde se detuvo la sesión
 
-T-11.3 terminada. **Siguiente: T-11.4** (cliente en la venta).
+T-11.4 terminada. **Siguiente: T-11.5** (pantallas de clientes).

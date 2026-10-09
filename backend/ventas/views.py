@@ -98,8 +98,9 @@ class VentaViewSet(
 
         venta = registrar_venta(
             usuario=request.user,
-            cliente_nombre=entrada.validated_data["cliente_nombre"],
-            cliente_telefono=entrada.validated_data["cliente_telefono"],
+            cliente_id=entrada.validated_data.get("cliente_id"),
+            cliente_nombre=entrada.validated_data.get("cliente_nombre", ""),
+            cliente_telefono=entrada.validated_data.get("cliente_telefono", ""),
             items=entrada.validated_data["items"],
         )
 

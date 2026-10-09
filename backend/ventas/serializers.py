@@ -42,6 +42,7 @@ class VentaSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "fecha_hora",
+            "cliente",
             "cliente_nombre",
             "cliente_telefono",
             "estado",
@@ -94,9 +95,24 @@ class ItemVentaEntradaSerializer(serializers.Serializer):
 class RegistrarVentaSerializer(serializers.Serializer):
     """CU-VEN-01 (RF-15)."""
 
-    cliente_nombre = serializers.CharField(max_length=150)
-    cliente_telefono = serializers.CharField(max_length=30)
+    # RF-79: o un cliente registrado (cliente_id), o un cliente
+    # ocasional con nombre y telefono. Con cliente_id, el nombre y el
+    # telefono que lleguen se ignoran: los copia el servidor (RN-VEN-10).
+    cliente_id = serializers.IntegerField(required=False, allow_null=True)
+    cliente_nombre = serializers.CharField(max_length=150, required=False, allow_blank=True)
+    cliente_telefono = serializers.CharField(max_length=30, required=False, allow_blank=True)
     items = ItemVentaEntradaSerializer(many=True, allow_empty=False)
+
+    def validate(self, datos):
+        if datos.get("cliente_id") is None:
+            errores = {}
+            if not datos.get("cliente_nombre", "").strip():
+                errores["cliente_nombre"] = ["Indique el nombre del cliente o elija uno registrado."]
+            if not datos.get("cliente_telefono", "").strip():
+                errores["cliente_telefono"] = ["Indique el teléfono del cliente."]
+            if errores:
+                raise serializers.ValidationError(errores)
+        return datos
 
     def validate_items(self, valor):
         """RN-VEN-01."""

@@ -16,6 +16,9 @@ from django.db.models import F
 from django.utils import timezone
 
 from catalogo.models import Producto
+from clientes.exceptions import ClienteInactivo
+from clientes.models import Cliente
+from core.exceptions import ErrorDeNegocio
 from inventario.models import TipoMovimiento
 from inventario.services import registrar_movimiento
 from ventas.exceptions import (
@@ -45,8 +48,40 @@ def _bloquear_productos(ids):
     return {p.id: p for p in productos.order_by("id")}
 
 
+def _cliente_de_la_venta(cliente_id, cliente_nombre, cliente_telefono):
+    """RF-79, RF-80 y RN-VEN-10 — de donde salen el nombre y el telefono.
+
+    Con `cliente_id`, del cliente registrado, aunque la peticion traiga
+    otros: la copia de la venta debe coincidir con el registro en el
+    instante de confirmar. Sin el, cliente ocasional, como hasta la v1.3.
+
+    La fila del cliente se bloquea: si el Administrador lo desactiva a
+    la vez, o la venta ve el cliente activo y confirma antes, o espera y
+    ve el cambio (RN-CLI-03).
+    """
+    if cliente_id is None:
+        errores = {}
+        if not (cliente_nombre or "").strip():
+            errores["cliente_nombre"] = ["Indique el nombre del cliente."]
+        if not (cliente_telefono or "").strip():
+            errores["cliente_telefono"] = ["Indique el teléfono del cliente."]
+        if errores:
+            raise ErrorDeNegocio(detalle="Faltan los datos del cliente.", errores=errores)
+        return None, cliente_nombre.strip(), cliente_telefono.strip()
+
+    cliente = Cliente.objects.select_for_update().filter(pk=cliente_id).first()
+    if cliente is None:
+        raise ErrorDeNegocio(
+            detalle="El cliente indicado no existe.",
+            errores={"cliente_id": ["El cliente indicado no existe."]},
+        )
+    if not cliente.activo:
+        raise ClienteInactivo()
+    return cliente, cliente.nombre, cliente.telefono
+
+
 @transaction.atomic
-def registrar_venta(*, usuario, cliente_nombre, cliente_telefono, items):
+def registrar_venta(*, usuario, items, cliente_nombre="", cliente_telefono="", cliente_id=None):
     """CU-VEN-01 — Registrar y confirmar una venta.
 
     Implementa las tres capas de plan.md 6.3:
@@ -67,6 +102,12 @@ def registrar_venta(*, usuario, cliente_nombre, cliente_telefono, items):
     """
     if not items:
         raise VentaSinItems()
+
+    # Antes de tocar ningun producto: un cliente inactivo rechaza la
+    # venta sin que se haya bloqueado ni descontado nada.
+    cliente, cliente_nombre, cliente_telefono = _cliente_de_la_venta(
+        cliente_id, cliente_nombre, cliente_telefono
+    )
 
     # ── 1. Bloqueo de filas, en orden determinista ───────────────────
     cantidades = {}
@@ -101,8 +142,9 @@ def registrar_venta(*, usuario, cliente_nombre, cliente_telefono, items):
 
     # ── 3. Descuento, congelado y guardado ───────────────────────────
     venta = Venta.objects.create(
-        cliente_nombre=cliente_nombre.strip(),
-        cliente_telefono=cliente_telefono.strip(),
+        cliente=cliente,
+        cliente_nombre=cliente_nombre,
+        cliente_telefono=cliente_telefono,
         usuario=usuario,
         estado=EstadoVenta.CONFIRMADA,
         total=Decimal("0.00"),

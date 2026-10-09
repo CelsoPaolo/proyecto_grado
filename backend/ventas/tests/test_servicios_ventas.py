@@ -280,6 +280,9 @@ def test_el_precio_lo_toma_el_servidor_y_no_el_cliente():
         "usuario",
         "cliente_nombre",
         "cliente_telefono",
+        # T-11.4 (RF-79): el cliente registrado, opcional. Tampoco
+        # lleva precio.
+        "cliente_id",
         "items",
     }
 

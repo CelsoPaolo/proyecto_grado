@@ -1301,7 +1301,7 @@ final del documento.
   - 17 pruebas. Mutaciones detectadas: si la lista usa el serializer del
     detalle, o si el carnet se busca por coincidencia parcial.
 
-### [ ] T-11.4 — Cliente en la venta ⚠️
+### [x] T-11.4 — Cliente en la venta ⚠️
 - **Cubre:** **RN-VEN-10**, **RN-CLI-05**, RF-79, RF-80
 - **Depende de:** T-11.3
 - **Trabajo:** `Venta.cliente` nulo con `PROTECT`; `registrar_venta()`
@@ -1314,6 +1314,15 @@ final del documento.
     altera las ventas anteriores**;
   - cliente inactivo → 409 `CLIENTE_INACTIVO` y ningún stock descontado;
   - el detalle de la venta **no** contiene el carnet.
+- **Resultado (2026-10-09):** `Venta.cliente` es nulo con `PROTECT`
+  (migración `0003`, probada en los dos sentidos).
+  - Con `cliente_id`, `registrar_venta()` bloquea la fila del cliente,
+    comprueba que esté activo **antes de tocar ningún producto** y copia
+    su nombre y teléfono.
+  - Un cliente inactivo da 409 `CLIENTE_INACTIVO` sin descontar stock.
+  - El detalle de la venta expone el id del cliente, nunca el carnet.
+  - 10 pruebas. Mutaciones detectadas: usar los datos de la petición, y
+    no comprobar si el cliente está activo.
 
 ### [ ] T-11.5 — Pantallas de clientes
 - **Cubre:** RF-84 a RF-89, RNF-14

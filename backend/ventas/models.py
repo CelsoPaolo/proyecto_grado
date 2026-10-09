@@ -29,6 +29,19 @@ class Venta(models.Model):
     # clientes ni relacion alguna.
     cliente_nombre = models.CharField("nombre del cliente", max_length=150)
     cliente_telefono = models.CharField("teléfono del cliente", max_length=30)
+    # RF-80 y RN-VEN-10: referencia OPCIONAL al cliente registrado. El
+    # nombre y el telefono de arriba siguen siendo la copia propia de la
+    # venta: editar o desactivar el cliente no los altera (RN-CLI-05).
+    # PROTECT nunca se activa, porque los clientes no se borran
+    # (RN-CLI-03); es la misma garantia que protege la autoria.
+    cliente = models.ForeignKey(
+        "clientes.Cliente",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="ventas",
+        verbose_name="cliente registrado",
+    )
 
     usuario = models.ForeignKey(
         settings.AUTH_USER_MODEL,
