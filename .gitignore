@@ -51,3 +51,9 @@ pnpm-debug.log*
 Thumbs.db
 Desktop.ini
 $RECYCLE.BIN/
+
+# ─── Importación del catálogo anterior (plan.md §11.3) ──────────────
+# Servidor temporal de solo lectura para exportar la base antigua; se
+# borra al terminar. Y los CSV exportados, que son datos, no código.
+/.tmp_mariadb/
+/datos_importacion/
