@@ -18,7 +18,9 @@ from inventario.models import MovimientoInmutable, MovimientoStock, TipoMovimien
 from usuarios.tests.factories import AdministradorFactory
 from ventas.tests.factories import VentaFactory
 
-pytestmark = pytest.mark.django_db
+# Estas pruebas escriben movimientos sueltos, sin el resto del libro, para
+# comprobar las restricciones de la base: el guardian del libro no las juzga.
+pytestmark = [pytest.mark.django_db, pytest.mark.libro_libre]
 
 
 @pytest.fixture

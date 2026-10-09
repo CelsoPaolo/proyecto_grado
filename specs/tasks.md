@@ -866,7 +866,7 @@ final del documento.
   cuadra; que al revertir no queda ninguno y los productos no cambiaron;
   y que aplicarla dos veces deja exactamente los mismos movimientos.
 
-### [ ] T-8.5 — Concurrencia ampliada y guardián del libro ⚠️
+### [x] T-8.5 — Concurrencia ampliada y guardián del libro ⚠️
 - **Cubre:** **RNF-08**, **RNF-24**, RN-MOV-03
 - **Depende de:** T-8.2, T-8.3
 - **Trabajo:** Ampliar la prueba de T-4.4 con las comprobaciones del
@@ -881,6 +881,13 @@ final del documento.
 - > ⚠️ Igual que T-4.4: **no se continúa al resto del bloque** hasta que
   > esta prueba pase de forma estable. Además se verifica que **falla**
   > si se quita el `select_for_update()` del ajuste.
+- **Resultado (2026-10-09):** estable en cinco ejecuciones seguidas. Sin el
+  `select_for_update()` del ajuste falla 5/5. Hallazgo: en parte de esos
+  fallos la suma SÍ cuadraba y solo fallaba el último resultante, así que
+  `inventario/verificacion.py` comprueba también la cadena de resultantes,
+  no solo la suma. El guardián vive en `conftest.py` como *fixture*
+  automática; las pruebas que descuadran el libro a propósito llevan la
+  marca `libro_libre`.
 
 ### [ ] T-8.6 — API de movimientos y de ajuste
 - **Cubre:** RF-73, RF-82, RF-83, RN-MOV-06, RNF-18
