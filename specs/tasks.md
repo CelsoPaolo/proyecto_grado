@@ -1282,7 +1282,7 @@ final del documento.
   - Registrar un cliente no crea ningún `Usuario`.
   - Pedir el estado que ya tiene no registra un cambio.
 
-### [ ] T-11.3 — API de clientes
+### [x] T-11.3 — API de clientes
 - **Cubre:** RF-84 a RF-89, **RN-CLI-06**, RN-CLI-07, RNF-26
 - **Depende de:** T-11.2
 - **Trabajo:** Endpoints de `plan.md` §4.4; `ClienteResumenSerializer`
@@ -1291,6 +1291,15 @@ final del documento.
 - **Hecho cuando:** la lista no contiene la clave `carnet` en ninguna
   fila; el Encargado de Ventas recibe 403 al desactivar; el Encargado de
   Servicios recibe 403 en todos; `DELETE` responde 405.
+- **Resultado (2026-10-09):** `/clientes` con lista, alta, detalle,
+  `PATCH`, `desactivar` y `reactivar`.
+  - Dos serializers: el de la lista no declara el carnet.
+  - `?buscar=` busca por coincidencia parcial en el nombre y el teléfono,
+    y por carnet exacto normalizado.
+  - `DELETE` y `PUT` responden 405. La matriz de permisos se amplía con
+    las 6 rutas.
+  - 17 pruebas. Mutaciones detectadas: si la lista usa el serializer del
+    detalle, o si el carnet se busca por coincidencia parcial.
 
 ### [ ] T-11.4 — Cliente en la venta ⚠️
 - **Cubre:** **RN-VEN-10**, **RN-CLI-05**, RF-79, RF-80

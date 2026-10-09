@@ -59,6 +59,14 @@ MATRIZ = {
     ("POST", "/api/v1/productos/{id}/ajustar-existencias"): (Rol.ADMINISTRADOR,),
     ("GET", "/api/v1/productos/{id}/movimientos"): (Rol.ADMINISTRADOR,),
     ("GET", "/api/v1/movimientos-stock"): (Rol.ADMINISTRADOR,),
+    # ── Clientes: Administrador y Ventas; Servicios no entra (PA-06) ──
+    ("GET", "/api/v1/clientes"): (Rol.ADMINISTRADOR, Rol.VENTAS),
+    ("POST", "/api/v1/clientes"): (Rol.ADMINISTRADOR, Rol.VENTAS),
+    ("GET", "/api/v1/clientes/{id}"): (Rol.ADMINISTRADOR, Rol.VENTAS),
+    ("PATCH", "/api/v1/clientes/{id}"): (Rol.ADMINISTRADOR, Rol.VENTAS),
+    # RN-CLI-07: desactivar y reactivar, solo el Administrador.
+    ("POST", "/api/v1/clientes/{id}/desactivar"): (Rol.ADMINISTRADOR,),
+    ("POST", "/api/v1/clientes/{id}/reactivar"): (Rol.ADMINISTRADOR,),
     # ── Ventas: Administrador y Ventas ───────────────────────────────
     # El alcance dentro del rol (propias frente a todas) lo controla
     # get_queryset, no el permiso de entrada: se verifica en

@@ -24,6 +24,7 @@ urlpatterns = [
     path("api/v1/", include("servicios.urls")),
     path("api/v1/", include("panel.urls")),
     path("api/v1/", include("inventario.urls")),
+    path("api/v1/", include("clientes.urls")),
     # Documentacion de la API (T-7.4).
     path("api/schema", SpectacularAPIView.as_view(), name="schema"),
     path(
