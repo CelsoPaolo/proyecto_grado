@@ -1439,12 +1439,19 @@ final del documento.
   - Mutaciones detectadas: sin desempate por importe, sin rellenar los
     estados que valen cero, y contar también las ventas anuladas.
 
-### [ ] T-12.4 — API del reporte
+### [x] T-12.4 — API del reporte
 - **Cubre:** RF-90, RN-REP-10
 - **Depende de:** T-12.3
 - **Hecho cuando:** `desde > hasta` → 400 `RANGO_INVALIDO`; falta una
   fecha → 400; los otros dos roles reciben 403; matriz de T-1.8
   ampliada.
+- **Resultado (2026-10-09):** `GET /reportes?desde=&hasta=`, solo para
+  el Administrador, con `ReporteSerializer` (importes como cadena).
+  - `rango_de_la_peticion()` es común a las tres salidas: una fecha que
+    falta, con mal formato o imposible da 400 junto al campo, y
+    `desde > hasta` da 400 `RANGO_INVALIDO`.
+  - Ruta añadida a la matriz de permisos.
+  - Mutación detectada: aceptar un rango invertido.
 
 ### [ ] T-12.5 — Exportación a PDF
 - **Cubre:** RF-95

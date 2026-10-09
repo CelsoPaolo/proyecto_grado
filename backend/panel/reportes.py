@@ -18,6 +18,9 @@ otro dato personal de un cliente (RN-REP-09).
 from decimal import Decimal
 
 from django.db.models import Count, F, Sum
+from django.utils.dateparse import parse_date
+
+from core.exceptions import Codigo, ErrorDeNegocio
 
 from servicios.models import EstadoSolicitud, SolicitudServicio
 from ventas.models import DetalleVenta, EstadoVenta, Venta
@@ -138,3 +141,44 @@ def calcular(desde, hasta, con_detalles=True):
         reporte["ventas_por_usuario"] = ventas_por_usuario(desde, hasta)
         reporte["servicios_por_estado"] = servicios_por_estado(desde, hasta)
     return reporte
+
+
+class RangoInvalido(ErrorDeNegocio):
+    """RN-REP-01: «desde» posterior a «hasta». 400 con codigo propio, para
+    que la pantalla pueda senalar las dos fechas a la vez."""
+
+    codigo = Codigo.RANGO_INVALIDO
+    default_detail = "La fecha «desde» no puede ser posterior a «hasta»."
+
+    def __init__(self):
+        super().__init__(
+            self.default_detail,
+            errores={"desde": [self.default_detail], "hasta": [self.default_detail]},
+        )
+
+
+def rango_de_la_peticion(parametros):
+    """RF-90 — lee y valida `?desde=` y `?hasta=` (AAAA-MM-DD).
+
+    Las dos son obligatorias: el servidor solo conoce rangos; los atajos
+    «hoy», «esta semana» y «este mes» los resuelve el frontend en fechas
+    concretas (plan.md 4.4). La usan la vista JSON y las dos
+    exportaciones, de modo que las tres rechazan lo mismo.
+    """
+    fechas, errores = {}, {}
+    for campo in ("desde", "hasta"):
+        texto = (parametros.get(campo) or "").strip()
+        try:
+            fecha = parse_date(texto) if texto else None
+        except ValueError:  # formato correcto, fecha imposible: 2026-02-30
+            fecha = None
+        if fecha is None:
+            errores[campo] = [
+                "Indique la fecha en formato AAAA-MM-DD." if texto else "Indique la fecha."
+            ]
+        fechas[campo] = fecha
+    if errores:
+        raise ErrorDeNegocio(detalle="Indique un rango de fechas válido.", errores=errores)
+    if fechas["desde"] > fechas["hasta"]:
+        raise RangoInvalido()
+    return fechas["desde"], fechas["hasta"]

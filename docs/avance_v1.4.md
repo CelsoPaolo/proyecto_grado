@@ -46,7 +46,8 @@ bloque 13.
 | 2026-10-09 | T-11.7 Revisión del bloque 11 | `2462a59` | B 965 / 8 · F 205 / 0 | El ciclo comprueba también que la garantía no lleva el carnet **de un cliente real**: la prueba de T-10.5 solo podía buscar la palabra. |
 | 2026-10-09 | T-12.1 Cálculo del reporte por rango | `ac88414` | B 973 / 7 · F 205 / 0 | `calcular()` devuelve también `desde` y `hasta`, para que las tres salidas rotulen el rango igual. Los detalles (más vendidos, por usuario, por estado) se añaden en T-12.3 a esta misma función. |
 | 2026-10-09 | T-12.2 El panel diario como reporte de un día | `fa41efe` | B 975 / 7 · F 205 / 0 | **Precisión en `tasks.md` (RNF-22):** la prueba estructural del panel, que buscaba `Sum(` en `panel/services.py`, pasa a leer también `panel/reportes.py`, adonde se movió la suma. Su intención no cambia. No dejé un `Sum(` artificial en `services.py` para que pasara sin tocarla. Se quitaron imports que quedaron sin uso. |
-| 2026-10-09 | T-12.3 Detalles del reporte | siguiente commit | B 980 / 4 · F 205 / 0 | `calcular(..., con_detalles=False)` para el panel, que no usa las tablas. Ventas por usuario ordenadas por importe descendente. Desempate final por id en las dos tablas, para que el orden sea estable entre la pantalla, el PDF y el Excel. |
+| 2026-10-09 | T-12.3 Detalles del reporte | `2b5c934` | B 983 / 4 · F 205 / 0 | `calcular(..., con_detalles=False)` para el panel, que no usa las tablas. Ventas por usuario ordenadas por importe descendente. Desempate final por id en las dos tablas, para que el orden sea estable entre la pantalla, el PDF y el Excel. |
+| 2026-10-09 | T-12.4 API del reporte | siguiente commit | B 998 / 3 · F 205 / 0 | La validación del rango vive en `panel/reportes.py` y la usarán también el PDF y el Excel, así que las tres salidas rechazan lo mismo. No se pone un tope al rango (RNF-28 habla de rendimiento con hasta un año, no de un límite). |
 
 ## Pendiente para revisión humana
 
@@ -124,4 +125,4 @@ bloque 13.
 
 ## Dónde se detuvo la sesión
 
-T-12.3 terminada. **Siguiente: T-12.4** (API del reporte).
+T-12.4 terminada. **Siguiente: T-12.5** (exportación a PDF).

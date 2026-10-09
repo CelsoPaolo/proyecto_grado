@@ -49,3 +49,36 @@ class ResumenPanelSerializer(serializers.Serializer):
     ingreso_total = IngresoTotalSerializer()
     servicios_pendientes = ServiciosPendientesSerializer()
     stock_bajo = StockBajoSerializer()
+
+
+# ─────────────────────────────────────────────────────────────────────
+# Reporte por rango (plan.md 4.4, v1.3)
+# ─────────────────────────────────────────────────────────────────────
+class ProductoVendidoSerializer(serializers.Serializer):
+    producto_id = serializers.IntegerField()
+    codigo = serializers.CharField()
+    nombre = serializers.CharField()
+    unidades = serializers.IntegerField()
+    importe = serializers.DecimalField(max_digits=14, decimal_places=2)
+
+
+class VentasDeUsuarioSerializer(serializers.Serializer):
+    usuario_id = serializers.IntegerField()
+    nombre_completo = serializers.CharField()
+    cantidad = serializers.IntegerField()
+    importe = serializers.DecimalField(max_digits=14, decimal_places=2)
+
+
+class ReporteSerializer(serializers.Serializer):
+    """La forma del reporte en JSON. El PDF y el Excel presentan EL MISMO
+    diccionario que produce panel.reportes.calcular() (RN-REP-07)."""
+
+    desde = serializers.DateField()
+    hasta = serializers.DateField()
+    ventas = ImporteYCantidadSerializer()
+    servicios = ImporteYCantidadSerializer()
+    ingreso_total = IngresoTotalSerializer()
+    productos_mas_vendidos = ProductoVendidoSerializer(many=True)
+    ventas_por_usuario = VentasDeUsuarioSerializer(many=True)
+    servicios_por_estado = serializers.DictField(child=serializers.IntegerField())
+

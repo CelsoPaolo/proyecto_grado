@@ -104,6 +104,8 @@ MATRIZ = {
     ("PATCH", "/api/v1/configuracion"): (Rol.ADMINISTRADOR,),
     # ── Panel de indicadores: solo Administrador ─────────────────────
     ("GET", "/api/v1/panel/resumen"): (Rol.ADMINISTRADOR,),
+    # ── Reportes: solo Administrador (RN-REP-10) ──────────────────────
+    ("GET", "/api/v1/reportes"): (Rol.ADMINISTRADOR,),
     # ── Gestion de usuarios: solo Administrador ──────────────────────
     ("GET", "/api/v1/usuarios"): (Rol.ADMINISTRADOR,),
     ("POST", "/api/v1/usuarios"): (Rol.ADMINISTRADOR,),
