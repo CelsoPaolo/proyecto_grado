@@ -32,6 +32,7 @@ const total = ref(0)
 const cargando = ref(false)
 const filtros = ref({
   search: '',
+  codigo: '',
   categoria: null,
   stock_bajo: false,
   page: 1,
@@ -52,6 +53,8 @@ async function cargar() {
   try {
     const params = { page: filtros.value.page, page_size: filtros.value.page_size }
     if (filtros.value.search) params.search = filtros.value.search
+    // RF-70: coincidencia exacta con el código interno o el de fábrica.
+    if (filtros.value.codigo.trim()) params.codigo = filtros.value.codigo.trim()
     if (filtros.value.categoria) params.categoria = filtros.value.categoria
     if (filtros.value.stock_bajo) params.stock_bajo = 'true'
 
@@ -158,6 +161,16 @@ onMounted(() => {
           @keyup.enter="buscar"
         />
       </IconField>
+      <IconField>
+        <InputIcon class="pi pi-barcode" />
+        <InputText
+          v-model="filtros.codigo"
+          placeholder="Código exacto"
+          aria-label="Buscar por código exacto"
+          data-prueba="filtro-codigo"
+          @keyup.enter="buscar"
+        />
+      </IconField>
       <Select
         v-model="filtros.categoria"
         :options="categorias"
@@ -188,6 +201,11 @@ onMounted(() => {
       data-key="id"
       @page="alPaginar"
     >
+      <Column field="codigo" header="Código">
+        <template #body="{ data }">
+          <span class="codigo">{{ data.codigo }}</span>
+        </template>
+      </Column>
       <Column header="Producto">
         <template #body="{ data }">
           <div class="producto">
@@ -302,6 +320,11 @@ h1 {
 .nota {
   display: block;
   color: var(--p-text-muted-color, #71717a);
+}
+
+.codigo {
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-size: 0.85rem;
 }
 
 .acciones {

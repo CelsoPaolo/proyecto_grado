@@ -25,7 +25,8 @@ bloque 13.
 | 2026-10-09 | T-9.1 Generación del código EAN-13 | `e6e28b0` | B 783 / 27 · F 153 / 0 | El código se asigna en `Producto.save()` al insertar, y no en el servicio de alta, para que lo reciba todo producto, incluidos los de las fábricas de prueba y la importación. El campo nace nulo en esta tarea porque la migración en tres pasos del plan empieza aquí. `catalogo/codigos.py` no importa modelos, para que la migración de T-9.2 use las mismas funciones. Se retiró una cita prematura a RNF-27, que llega en T-9.5. |
 | 2026-10-09 | T-9.2 Migración del código para los productos existentes | `dfbc04b` | B 787 / 27 · F 153 / 0 | **Cambio en `plan.md` §3.5 (RNF-22):** el reverso del paso 2 ya no deja los códigos en nulo, porque reaplicarlo daría códigos distintos a productos ya etiquetados (RN-CAT-08). Revertir los tres pasos sigue dejando la tabla idéntica. Aplicado a la base de desarrollo (7 productos). |
 | 2026-10-09 | T-9.3 Búsqueda por código | `923fae7` | B 798 / 26 · F 153 / 0 | `?codigo=` vacío da una lista vacía en lugar de ignorarse: un Intro con el campo vacío no debe traer el catálogo entero. Se mantiene el filtro de activos por defecto del listado; los retirados se buscan con `activo=false`. |
-| 2026-10-09 | T-9.7 Código de fábrica opcional (PA-07) | siguiente commit | B 823 / 25 · F 158 / 0 | Se hace antes que T-9.4 porque T-9.5 lo necesita, como indica `tasks.md`. El mensaje de duplicado nombra el producto que ya tiene el código: solo lo ve el Administrador. **Defecto anterior corregido:** el envío multipart omitía las cadenas vacías. Las pruebas de migración pasan a usar los modelos **históricos**, porque los actuales tienen columnas que en los estados intermedios no existen. |
+| 2026-10-09 | T-9.7 Código de fábrica opcional (PA-07) | `947a79a` | B 823 / 25 · F 158 / 0 | Se hace antes que T-9.4 porque T-9.5 lo necesita, como indica `tasks.md`. El mensaje de duplicado nombra el producto que ya tiene el código: solo lo ve el Administrador. **Defecto anterior corregido:** el envío multipart omitía las cadenas vacías. Las pruebas de migración pasan a usar los modelos **históricos**, porque los actuales tienen columnas que en los estados intermedios no existen. |
+| 2026-10-09 | T-9.4 Código de barras y etiqueta | siguiente commit | B 824 / 24 · F 168 / 0 | JsBarcode fijado en `3.11.6`, sin `^`. Un código de fábrica que no es EAN-13 se dibuja en Code128. Etiqueta impresa con `window.print()` y `@media print`, sin PDF (plan.md §7.9). La etiqueta está para los dos roles (CU-CAT-09). Filtro de código exacto como campo aparte de la búsqueda por nombre, para no confundir un nombre numérico con un código. |
 
 ## Pendiente para revisión humana
 
@@ -51,3 +52,14 @@ bloque 13.
   - registrarlo, corregirlo y vaciarlo;
   - con uno repetido, el error debe aparecer junto al campo;
   - repetir la prueba de vaciarlo **subiendo a la vez una imagen nueva**.
+- **T-9.4, criterio de aceptación de la tarea:**
+  - En el detalle de un producto, «Imprimir etiqueta». La vista previa
+    debe mostrar **solo** la etiqueta: barras, cifras y nombre.
+  - Imprimirla y escanearla con la app lectora del teléfono: debe
+    devolver exactamente el código interno.
+  - Comprobar también la columna «Código» y el filtro «Código exacto» de
+    la lista.
+- **Dependencias:** `npm audit` informa de 1 vulnerabilidad alta en
+  `source-map-js`, una herramienta de desarrollo que ya estaba instalada
+  antes de esta versión; no viene de JsBarcode. No apliqué `npm audit
+  fix` porque cambiaría otras dependencias sin aprobación.

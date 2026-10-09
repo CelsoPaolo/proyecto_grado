@@ -4,7 +4,12 @@
    Lo ven el Administrador y el Encargado de Ventas. Solo el
    Administrador ve el historial de movimientos y la accion «Ajustar
    existencias» (RN-MOV-06): para Ventas el servidor responderia 403, y
-   aqui se evita mostrar una puerta que no se abre. */
+   aqui se evita mostrar una puerta que no se abre.
+
+   El codigo de barras y la etiqueta (CU-CAT-09) son para los dos: quien
+   vende tambien etiqueta el estante. La etiqueta se imprime con la
+   impresion del navegador; la hoja de estilos de impresion de abajo
+   oculta todo salvo ella (plan.md 7.9). */
 import Button from 'primevue/button'
 import Message from 'primevue/message'
 import Tag from 'primevue/tag'
@@ -14,6 +19,7 @@ import { RouterLink, useRoute } from 'vue-router'
 
 import { productosApi } from '@/api/catalogo'
 import { inventarioApi } from '@/api/inventario'
+import CodigoBarras from '@/components/CodigoBarras.vue'
 import TablaMovimientos from '@/components/TablaMovimientos.vue'
 import { usePermisos } from '@/composables/usePermisos'
 import AjustarExistencias from './AjustarExistencias.vue'
@@ -72,6 +78,11 @@ async function alAjustar() {
   await Promise.all([cargarProducto(), cargarHistorial()])
 }
 
+/** Imprime solo la etiqueta: codigo de barras, cifras y nombre. */
+function imprimirEtiqueta() {
+  window.print()
+}
+
 onMounted(() => {
   cargarProducto()
   cargarHistorial()
@@ -106,6 +117,31 @@ onMounted(() => {
           @click="dialogoAjuste = true"
         />
       </header>
+
+      <div class="codigos">
+        <div class="etiqueta-imprimible" data-prueba="etiqueta">
+          <CodigoBarras :valor="producto.codigo" />
+          <p class="etiqueta-nombre">{{ producto.nombre }}</p>
+        </div>
+        <dl class="datos-codigo">
+          <div>
+            <dt>Código interno</dt>
+            <dd data-prueba="codigo">{{ producto.codigo }}</dd>
+          </div>
+          <div>
+            <dt>Código de fábrica</dt>
+            <dd data-prueba="codigo-fabrica">{{ producto.codigo_fabrica || 'No registrado' }}</dd>
+          </div>
+          <Button
+            label="Imprimir etiqueta"
+            icon="pi pi-print"
+            severity="secondary"
+            outlined
+            data-prueba="imprimir"
+            @click="imprimirEtiqueta"
+          />
+        </dl>
+      </div>
 
       <dl class="datos">
         <div>
@@ -214,5 +250,60 @@ dt {
 
 dd {
   margin: 0.25rem 0 0;
+}
+
+.codigos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.etiqueta-imprimible {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  background: #ffffff;
+  border: 1px solid var(--p-surface-200, #e4e4e7);
+  border-radius: 6px;
+}
+
+.etiqueta-nombre {
+  margin: 0;
+  max-width: 16rem;
+  font-size: 0.85rem;
+  text-align: center;
+  color: #000000;
+}
+
+.datos-codigo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 0;
+}
+</style>
+
+<!-- Sin scoped: la impresión afecta a toda la página. Se oculta todo y
+     se deja visible solo la etiqueta, arriba a la izquierda, sin borde. -->
+<style>
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .etiqueta-imprimible,
+  .etiqueta-imprimible * {
+    visibility: visible;
+  }
+
+  .etiqueta-imprimible {
+    position: fixed;
+    top: 0;
+    left: 0;
+    border: none;
+  }
 }
 </style>

@@ -1037,7 +1037,7 @@ final del documento.
   - Se desactiva el validador de unicidad que DRF genera para el campo,
     porque compara el valor sin normalizar.
 
-### [ ] T-9.4 — Código de barras y etiqueta
+### [x] T-9.4 — Código de barras y etiqueta
 - **Cubre:** RF-71, RNF-27, CU-CAT-09
 - **Depende de:** T-9.3
 - **Trabajo:** `JsBarcode` en EAN-13 y SVG en el detalle del producto;
@@ -1049,6 +1049,18 @@ final del documento.
   lector físico. La aplicación lee el EAN-13 con las mismas reglas que
   un lector, incluido el dígito de control, así que valida lo que esta
   tarea necesita validar.)*
+- **Resultado (2026-10-09):** construido. `CodigoBarras.vue` usa
+  JsBarcode 3.11.6 (versión fija) para dibujar un SVG.
+  - Dibuja en EAN-13 si el código lo es (el interno siempre) y en
+    Code128 si no.
+  - En el detalle se ven los dos códigos y la etiqueta con barras,
+    cifras y nombre. «Imprimir etiqueta» usa `window.print()` con una
+    hoja `@media print` que oculta todo lo demás.
+  - En la lista hay columna de código y un filtro de código exacto.
+  - En las pruebas se simula solo la medición de texto del `<canvas>`,
+    que jsdom no tiene.
+  - **Pendiente de verificación humana:** escanear la etiqueta impresa
+    con la cámara del teléfono.
 
 ### [ ] T-9.5 — Entrada por código en el registro de venta
 - **Cubre:** RF-74, **RN-VEN-17**, RNF-16, RNF-27
