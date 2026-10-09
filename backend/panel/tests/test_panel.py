@@ -442,9 +442,11 @@ def test_los_indicadores_no_recorren_filas_en_python():
     """
     import inspect
 
-    from panel import services
+    from panel import reportes, services
 
-    codigo = inspect.getsource(services)
+    # T-12.2: las sumas de ventas y servicios viven ahora en
+    # panel/reportes.py, que el panel usa para el rango [hoy, hoy].
+    codigo = inspect.getsource(services) + inspect.getsource(reportes)
 
     assert "aggregate" in codigo
     assert "Sum(" in codigo

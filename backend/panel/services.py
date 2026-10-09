@@ -14,17 +14,13 @@ cinco reglas quedan visibles en el codigo:
 El panel no tiene modelos propios: solo agrega lo que ya existe.
 """
 
-from decimal import Decimal
-
-from django.db.models import Count, Q, Sum
+from django.db.models import Count, Q
 from django.utils import timezone
 
 from catalogo.models import Producto
 from catalogo.services import umbral_stock_bajo
+from panel import reportes
 from servicios.models import ESTADOS_PENDIENTES, EstadoSolicitud, SolicitudServicio
-from ventas.models import EstadoVenta, Venta
-
-CERO = Decimal("0.00")
 
 
 def _hoy():
@@ -39,58 +35,28 @@ def _hoy():
 def ventas_del_dia(fecha=None):
     """RN-IND-01 — solo las CONFIRMADAS; las anuladas quedan fuera.
 
-    Una venta anulada devolvio sus existencias y no represento ingreso:
-    contarla inflaria la caja del dia.
+    Desde la v1.4 es el reporte de UN dia (RN-REP-08): el criterio vive
+    en panel.reportes y aqui solo se elige el rango. Asi el panel y el
+    reporte de hoy no pueden dar numeros distintos.
     """
     fecha = fecha or _hoy()
-
-    agregado = Venta.objects.filter(
-        fecha_hora__date=fecha, estado=EstadoVenta.CONFIRMADA
-    ).aggregate(cantidad=Count("id"), importe=Sum("total"))
-
-    return {
-        "cantidad": agregado["cantidad"] or 0,
-        "importe": agregado["importe"] or CERO,
-    }
+    return reportes.calcular(fecha, fecha)["ventas"]
 
 
 def servicios_del_dia(fecha=None):
     """RN-IND-04 — FINALIZADAS hoy, por su fecha de CIERRE.
 
-    Que cuente por la fecha de cierre y no por la de registro es lo que
-    hace correcto el indicador: un servicio que entro hace una semana y
-    se cobra hoy es ingreso de HOY.
-
-    Las canceladas quedan fuera aunque se hubieran cotizado
-    (RN-SER-14).
+    Un servicio que entro hace una semana y se cobra hoy es ingreso de
+    HOY. Las canceladas quedan fuera (RN-SER-14). El criterio vive en
+    panel.reportes (RN-REP-08).
     """
     fecha = fecha or _hoy()
-
-    agregado = SolicitudServicio.objects.filter(
-        fecha_cierre__date=fecha, estado=EstadoSolicitud.FINALIZADA
-    ).aggregate(cantidad=Count("id"), importe=Sum("monto_cobrado"))
-
-    return {
-        "cantidad": agregado["cantidad"] or 0,
-        "importe": agregado["importe"] or CERO,
-    }
+    return reportes.calcular(fecha, fecha)["servicios"]
 
 
 def ingreso_total(ventas, servicios):
-    """RN-IND-05 — siempre desglosado por origen.
-
-    La funcion devuelve las tres cifras juntas a proposito: no existe
-    forma de obtener el total sin su desglose, que es exactamente lo
-    que la regla pide garantizar.
-    """
-    de_ventas = ventas["importe"]
-    de_servicios = servicios["importe"]
-
-    return {
-        "importe": de_ventas + de_servicios,
-        "de_ventas": de_ventas,
-        "de_servicios": de_servicios,
-    }
+    """RN-IND-05 — siempre desglosado por origen (panel.reportes)."""
+    return reportes.ingreso_desglosado(ventas, servicios)
 
 
 def servicios_pendientes():
@@ -143,14 +109,15 @@ def resumen_del_panel(fecha=None):
     muestra cifras que aparecen a destiempo.
     """
     fecha = fecha or _hoy()
-    ventas = ventas_del_dia(fecha)
-    servicios = servicios_del_dia(fecha)
+    # RN-REP-08: las cifras del dia SON el reporte del rango [hoy, hoy].
+    # Una sola llamada a la misma funcion que usa /reportes.
+    reporte = reportes.calcular(fecha, fecha)
 
     return {
         "fecha": fecha,
-        "ventas_dia": ventas,
-        "servicios_dia": servicios,
-        "ingreso_total": ingreso_total(ventas, servicios),
+        "ventas_dia": reporte["ventas"],
+        "servicios_dia": reporte["servicios"],
+        "ingreso_total": reporte["ingreso_total"],
         "servicios_pendientes": servicios_pendientes(),
         "stock_bajo": productos_con_stock_bajo(),
     }

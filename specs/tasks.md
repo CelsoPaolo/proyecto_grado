@@ -1398,7 +1398,7 @@ final del documento.
   - Mutaciones detectadas: sin filtro de estado, servicios por fecha de
     registro, y rango sin `__date`.
 
-### [ ] T-12.2 — El panel diario como reporte de un día
+### [x] T-12.2 — El panel diario como reporte de un día
 - **Cubre:** **RN-REP-08**
 - **Depende de:** T-12.1
 - **Trabajo:** `panel/resumen` calcula sus cifras de ventas, servicios e
@@ -1406,6 +1406,20 @@ final del documento.
   (`plan.md` §4.4).
 - **Hecho cuando:** **todas** las pruebas del panel pasan sin cambios, y
   una prueba nueva verifica que el panel y el reporte de hoy coinciden.
+  *(Precisado el 2026-10-09 al implementarla: la única excepción es la
+  prueba **estructural** `test_los_indicadores_no_recorren_filas_en_python`,
+  que lee el código fuente de `panel/services.py` buscando `Sum(`. La
+  suma se movió a `panel/reportes.py`, justo lo que pide esta tarea, así
+  que la prueba pasa a leer los dos archivos. Su intención no cambia:
+  la suma la hace la base, no un bucle en Python.)*
+- **Resultado (2026-10-09):** `resumen_del_panel()` toma sus cifras de
+  ventas, servicios e ingreso de `reportes.calcular(hoy, hoy)`.
+  `ventas_del_dia`, `servicios_del_dia` e `ingreso_total` delegan en
+  `reportes`. La forma de la respuesta no cambia.
+  - Pasan las 37 pruebas del panel. La prueba estructural se amplió
+    para leer también `reportes.py`; ver la precisión en el criterio.
+  - Prueba nueva: el panel y el reporte de hoy coinciden, con una venta
+    anulada de por medio. Si el panel usa otro criterio, falla.
 
 ### [ ] T-12.3 — Detalles del reporte
 - **Cubre:** RN-REP-04, RN-REP-05, RN-REP-06, RF-92, RF-93, RF-94

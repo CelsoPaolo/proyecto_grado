@@ -125,3 +125,31 @@ def test_un_rango_de_un_dia():
     vender("200.00", _en(2026, 10, 3))
 
     assert calcular(date(2026, 10, 2), date(2026, 10, 2))["ventas"]["importe"] == Decimal("100.00")
+
+
+# ─────────────────────────────────────────────────────────────────────
+# T-12.2 — el panel diario es el reporte de un dia (RN-REP-08)
+# ─────────────────────────────────────────────────────────────────────
+def test_el_panel_y_el_reporte_de_hoy_dan_las_mismas_cifras():
+    """Con datos de hoy que el criterio debe descartar (una venta anulada)
+    y otros que debe sumar, el panel y el reporte de [hoy, hoy] coinciden
+    en las tres cifras."""
+    from contextlib import nullcontext
+
+    from django.utils import timezone
+
+    from panel.services import resumen_del_panel
+
+    vender("120.00", nullcontext())
+    anulada = vender("999.00", nullcontext())
+    anular_venta(venta=anulada, usuario=anulada.usuario, motivo="Devolución")
+    servicio(EstadoSolicitud.FINALIZADA, nullcontext(), timezone.now(), "80.00")
+
+    hoy = timezone.localdate()
+    panel = resumen_del_panel()
+    reporte = calcular(hoy, hoy)
+
+    assert panel["ventas_dia"] == reporte["ventas"]
+    assert panel["servicios_dia"] == reporte["servicios"]
+    assert panel["ingreso_total"] == reporte["ingreso_total"]
+    assert reporte["ingreso_total"]["importe"] == Decimal("200.00")
