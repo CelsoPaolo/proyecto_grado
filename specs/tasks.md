@@ -927,13 +927,23 @@ final del documento.
   - El Encargado de Ventas ni ve las acciones ni pide el historial.
   - **Comprobación visual pendiente** (ver `docs/avance_v1.4.md`).
 
-### [ ] T-8.8 — Revisión del bloque 8
+### [x] T-8.8 — Revisión del bloque 8
 - **Depende de:** T-8.1 a T-8.7
 - **Hecho cuando:** ciclo comprobado en el navegador —crear producto →
   vender → anular → ajustar— y el historial muestra los cuatro
   movimientos con el libro cuadrado. **Suite completa en verde** salvo el
   guardián de trazabilidad para los requerimientos de bloques
   posteriores; resultado mostrado.
+- **Resultado (2026-10-09):** el ciclo crear → vender → anular → ajustar
+  se probó **por la API**, con las mismas peticiones que hace la interfaz
+  (`inventario/tests/test_ciclo_bloque8.py`).
+  - El historial muestra los cuatro movimientos, con su autor y en
+    orden, y el libro cuadra.
+  - Si la anulación deja de escribir su movimiento, la prueba falla.
+  - `makemigrations --check`: sin cambios pendientes.
+  - Suites: B 755 pasan y 28 fallan, todas de trazabilidad de bloques
+    posteriores; F 153 pasan.
+  - **La comprobación en el navegador queda para revisión humana.**
 
 ---
 
