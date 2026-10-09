@@ -37,7 +37,8 @@ bloque 13.
 | 2026-10-09 | T-10.5 Endpoint de la garantía | `3730ac7` | B 875 / 18 · F 184 / 0 | Dos códigos de error distintos para los dos 409, de modo que la interfaz pueda distinguirlos. El documento se titula «Certificado de garantía». Incluye una frase neutra («Conserve este certificado…»), pero **no condiciones de garantía, que la spec no define**. La fecha que se imprime es la de la venta en hora de Bolivia. |
 | 2026-10-09 | T-10.6 Garantía en la interfaz | `e519c21` | B 876 / 17 · F 190 / 0 | La oferta de RF-77 se hace en el detalle de la venta, al que ya se llegaba tras confirmar, marcado con `?recien=1`: no hace falta otra pantalla. Se actualizó la prueba de navegación de T-4.9 porque el comportamiento cambia por RF-77; no se silenció. |
 | 2026-10-09 | T-10.7 Revisión del bloque 10 | `7936c95` | B 878 / 17 · F 190 / 0 | Punto de extensión para las condiciones de la garantía, como pediste: la constante `CONDICIONES_DE_GARANTIA` en `ventas/garantia.py`, que se lee en cada petición y cuya sección solo aparece si tiene texto. |
-| 2026-10-09 | T-11.1 App `clientes` y modelo `Cliente` | siguiente commit | B 894 / 17 · F 190 / 0 | `actualizado_por` es obligatorio: al registrar un cliente coincide con `creado_por`. La dirección es un `CharField(255)` en blanco. Se retiraron tres citas prematuras (RF-84, RF-89 y RNF-26), que se implementan en la API (T-11.3). |
+| 2026-10-09 | T-11.1 App `clientes` y modelo `Cliente` | `7a74c37` | B 894 / 17 · F 190 / 0 | `actualizado_por` es obligatorio: al registrar un cliente coincide con `creado_por`. La dirección es un `CharField(255)` en blanco. Se retiraron tres citas prematuras (RF-84, RF-89 y RNF-26), que se implementan en la API (T-11.3). |
+| 2026-10-09 | T-11.2 Servicio de clientes | siguiente commit | B 908 / 13 · F 190 / 0 | Desactivar un cliente ya inactivo no es un error, solo no cambia nada. El mensaje de carnet duplicado **no dice a qué cliente pertenece**, para no revelar un dato personal (RN-CLI-06). Hay dos defensas ante el duplicado; la mutación de una sola sobrevive, y es lo esperado. |
 
 ## Pendiente para revisión humana
 
@@ -98,4 +99,4 @@ bloque 13.
 
 ## Dónde se detuvo la sesión
 
-T-11.1 terminada. **Siguiente: T-11.2** (servicio de clientes).
+T-11.2 terminada. **Siguiente: T-11.3** (API de clientes).

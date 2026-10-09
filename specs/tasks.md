@@ -1267,13 +1267,20 @@ final del documento.
   - Mutación detectada: sin normalizar, `1234567-1a` y `1234567-1A`
     pasan como carnets distintos.
 
-### [ ] T-11.2 — Servicio de clientes
+### [x] T-11.2 — Servicio de clientes
 - **Cubre:** RF-84, RF-85, RF-87, RN-CLI-03, **RN-CLI-04**
 - **Depende de:** T-11.1
 - **Trabajo:** Crear, editar, desactivar y reactivar, registrando autor y
   fecha.
 - **Hecho cuando:** registrar un cliente no crea ningún `Usuario`; un
   cliente desactivado no se elimina y puede reactivarse.
+- **Resultado (2026-10-09):** `clientes/services.py` con
+  `registrar_cliente`, `editar_cliente` y `cambiar_estado_cliente`,
+  todos con autor.
+  - Un carnet repetido da 409 `CARNET_DUPLICADO`, en dos líneas: una
+    comprobación previa y la traducción del `IntegrityError` de la base.
+  - Registrar un cliente no crea ningún `Usuario`.
+  - Pedir el estado que ya tiene no registra un cambio.
 
 ### [ ] T-11.3 — API de clientes
 - **Cubre:** RF-84 a RF-89, **RN-CLI-06**, RN-CLI-07, RNF-26
