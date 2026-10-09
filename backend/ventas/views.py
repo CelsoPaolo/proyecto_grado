@@ -7,10 +7,15 @@ anulacion, que es una accion con nombre propio y no un borrado.
 """
 
 from django.db.models import Count
+from django.http import HttpResponse
+from django.utils import timezone
 from django.utils.dateparse import parse_date
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
+from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework.response import Response
+
+from core.pdf import imagen_incrustada, render_a_pdf
 
 from core.permissions import EsDuenoDeLaVentaOAdmin, PuedeVender
 from ventas.models import Venta
@@ -20,6 +25,7 @@ from ventas.serializers import (
     VentaResumenSerializer,
     VentaSerializer,
 )
+from ventas.garantia import fecha_local, lineas_con_garantia
 from ventas.services import anular_venta, registrar_venta
 
 
@@ -121,3 +127,44 @@ class VentaViewSet(
 
         venta = self.get_queryset().prefetch_related("items").get(pk=venta.pk)
         return Response(VentaSerializer(venta).data)
+
+    @extend_schema(
+        summary="Garantía de la venta en PDF",
+        responses={
+            (200, "application/pdf"): OpenApiResponse(
+                description="El certificado de garantía, listo para entregar."
+            )
+        },
+    )
+    @action(detail=True, methods=["get"])
+    def garantia(self, request, pk=None):
+        """GET /ventas/{id}/garantia - CU-VEN-04 (RF-76, RF-78).
+
+        Sin permiso propio, igual que el informe de servicio: usa
+        get_object(), que pasa por get_queryset() y por
+        EsDuenoDeLaVentaOAdmin. La garantia la emite exactamente quien
+        puede ver la venta, y la venta ajena responde 404 (RN-VEN-16).
+
+        409 si la venta esta anulada o no tiene ninguna linea con
+        garantia (RN-VEN-14). El contenido sale de la venta guardada:
+        emitirla dos veces da lo mismo salvo la fecha de generacion.
+        """
+        venta = self.get_object()
+        lineas = lineas_con_garantia(venta)
+
+        contenido = render_a_pdf(
+            "ventas/garantia.html",
+            {
+                "venta": venta,
+                "lineas": lineas,
+                "fecha_venta": fecha_local(venta.fecha_hora),
+                # Fecha y autor los pone el SERVIDOR (RN-VEN-15).
+                "generado_en": timezone.localtime(),
+                "generado_por": request.user.nombre_completo,
+                "logo": imagen_incrustada("img/logo-pcsolution.png"),
+            },
+        )
+
+        respuesta = HttpResponse(contenido, content_type="application/pdf")
+        respuesta["Content-Disposition"] = f'inline; filename="garantia-venta-{venta.pk}.pdf"'
+        return respuesta

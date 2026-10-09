@@ -58,3 +58,26 @@ class ProductoNoDisponible(ErrorDeNegocio):
             + "."
         )
         super().__init__(detalle, errores={"items": list(nombres)})
+
+
+class GarantiaDeVentaAnulada(ErrorDeNegocio):
+    """RN-VEN-14 y RF-78 — una venta anulada no emite garantia.
+
+    409: la venta existe y la peticion es correcta, pero su estado lo
+    impide. La mercaderia volvio al inventario; un papel que la
+    garantice seria falso.
+    """
+
+    status_code = status.HTTP_409_CONFLICT
+    codigo = Codigo.GARANTIA_DE_VENTA_ANULADA
+    default_detail = "Esta venta fue anulada: no puede emitirse su garantía."
+
+
+class VentaSinGarantia(ErrorDeNegocio):
+    """RN-VEN-14 y RF-78 — sin ninguna linea con garantia no hay nada
+    que garantizar. Tambien es el caso de toda venta anterior a la v1.4,
+    cuyas lineas quedaron en cero meses (RN-VEN-12)."""
+
+    status_code = status.HTTP_409_CONFLICT
+    codigo = Codigo.VENTA_SIN_GARANTIA
+    default_detail = "Ningún producto de esta venta tiene garantía."

@@ -10,6 +10,9 @@ from datetime import date
 
 from django.utils import timezone
 
+from ventas.exceptions import GarantiaDeVentaAnulada, VentaSinGarantia
+from ventas.models import EstadoVenta
+
 
 def sumar_meses(fecha, meses):
     """RN-VEN-13 — suma meses de calendario a una fecha.
@@ -37,3 +40,35 @@ def fecha_local(momento):
 def vencimiento(momento_de_la_venta, meses):
     """RN-VEN-13 — fecha de la venta en hora de Bolivia mas sus meses."""
     return sumar_meses(fecha_local(momento_de_la_venta), meses)
+
+
+def lineas_con_garantia(venta):
+    """RN-VEN-14 — las lineas que la garantia lista, con su vencimiento.
+
+    Todo sale de la venta GUARDADA: los meses son los congelados en la
+    linea (RN-VEN-12) y la fecha es la de la venta. Por eso emitirla
+    varias veces da siempre el mismo contenido, aunque el producto haya
+    cambiado despues (CU-VEN-04).
+
+    Lanza los dos rechazos de RF-78: venta anulada, o ninguna linea con
+    garantia.
+    """
+    if venta.estado == EstadoVenta.ANULADA:
+        raise GarantiaDeVentaAnulada()
+
+    lineas = [
+        {
+            "producto": linea.producto_nombre,
+            # El codigo no se congela: no cambia nunca (RN-CAT-08), asi
+            # que leerlo del producto da siempre el mismo (plan.md 3.5).
+            "codigo": linea.producto.codigo,
+            "cantidad": linea.cantidad,
+            "meses": linea.meses_garantia,
+            "vence": vencimiento(venta.fecha_hora, linea.meses_garantia),
+        }
+        for linea in venta.items.select_related("producto").order_by("id")
+        if linea.meses_garantia > 0
+    ]
+    if not lineas:
+        raise VentaSinGarantia()
+    return lineas

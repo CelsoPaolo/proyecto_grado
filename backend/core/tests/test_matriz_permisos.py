@@ -67,6 +67,8 @@ MATRIZ = {
     ("POST", "/api/v1/ventas"): (Rol.ADMINISTRADOR, Rol.VENTAS),
     ("GET", "/api/v1/ventas/{id}"): (Rol.ADMINISTRADOR, Rol.VENTAS),
     ("POST", "/api/v1/ventas/{id}/anular"): (Rol.ADMINISTRADOR, Rol.VENTAS),
+    # RN-VEN-16: hereda el permiso del detalle; la venta ajena da 404.
+    ("GET", "/api/v1/ventas/{id}/garantia"): (Rol.ADMINISTRADOR, Rol.VENTAS),
     # ── Servicios: Administrador y Servicios ─────────────────────────
     # Salvo COTIZAR, que es solo del Administrador (RF-56, RF-57): es
     # la unica accion del modulo con permiso mas estrecho que el resto.

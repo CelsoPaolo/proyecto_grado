@@ -33,7 +33,8 @@ bloque 13.
 | 2026-10-09 | T-10.1 Meses de garantía en producto y detalle | `31c4966` | B 836 / 21 · F 184 / 0 | `IntegerField` con `CHECK (>= 0)` en lugar de `PositiveIntegerField`, para nombrar la restricción como las demás. El formulario no pone tope superior, porque la spec no lo fija. Se retiró una cita prematura a RF-75, que llega en T-10.2. |
 | 2026-10-09 | T-10.2 Congelado de la garantía en la venta | `10f4397` | B 840 / 20 · F 184 / 0 | Ninguna decisión nueva: sigue el patrón del precio y el nombre. |
 | 2026-10-09 | T-10.3 Cálculo del vencimiento | `7a23f75` | B 852 / 20 · F 184 / 0 | Módulo nuevo `ventas/garantia.py`. Además de `sumar_meses`, incluye `vencimiento()`, que parte de la fecha de la venta en hora de Bolivia, como exige RN-VEN-13. |
-| 2026-10-09 | T-10.4 Plantilla base de documentos PDF | siguiente commit | B 854 / 20 · F 184 / 0 | Los «mismos colores en su flujo» se verifican comparando los operadores `rg`/`RG` del PDF con los registrados **antes** de la extracción. El pie admite una leyenda propia por documento (bloque `leyenda`), con la del informe por defecto. |
+| 2026-10-09 | T-10.4 Plantilla base de documentos PDF | `3b9b431` | B 854 / 20 · F 184 / 0 | Los «mismos colores en su flujo» se verifican comparando los operadores `rg`/`RG` del PDF con los registrados **antes** de la extracción. El pie admite una leyenda propia por documento (bloque `leyenda`), con la del informe por defecto. |
+| 2026-10-09 | T-10.5 Endpoint de la garantía | siguiente commit | B 875 / 18 · F 184 / 0 | Dos códigos de error distintos para los dos 409, de modo que la interfaz pueda distinguirlos. El documento se titula «Certificado de garantía». Incluye una frase neutra («Conserve este certificado…»), pero **no condiciones de garantía, que la spec no define**. La fecha que se imprime es la de la venta en hora de Bolivia. |
 
 ## Pendiente para revisión humana
 
@@ -74,6 +75,11 @@ bloque 13.
     en rojo y código seleccionado) y con un producto agotado.
   - Si consigue un lector USB o una app de teléfono que funcione como
     teclado, leer varias etiquetas seguidas.
+- **T-10.5, texto de la garantía:** revisar la frase «Conserve este
+  certificado: lo necesitará para hacer valer la garantía…». Si
+  PC-Solution tiene condiciones de garantía propias (qué cubre, dónde
+  presentarla), habría que decidir si van en el documento: hoy la spec
+  no las define y no las inventé.
 - **Dependencias:** `npm audit` informa de 1 vulnerabilidad alta en
   `source-map-js`, una herramienta de desarrollo que ya estaba instalada
   antes de esta versión; no viene de JsBarcode. No apliqué `npm audit

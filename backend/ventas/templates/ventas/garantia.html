@@ -1,0 +1,96 @@
+{% extends "pdf/base.html" %}
+{% comment %}
+Garantia de una venta en PDF (RF-76, CU-VEN-04).
+
+Lista SOLO las lineas con garantia (RN-VEN-14), con el vencimiento ya
+calculado en el servidor (RN-VEN-13). Lleva el nombre y el telefono del
+cliente tal como quedaron en la venta, y nunca el carnet (RN-VEN-15).
+No es un documento fiscal, y lo dice dos veces: en el cuerpo y en el
+pie.
+{% endcomment %}
+
+{% block estilos %}
+      .lineas {
+        border-collapse: collapse;
+      }
+
+      .lineas th {
+        text-align: left;
+        font-size: 8.5pt;
+        color: #52525b;
+        border-bottom: 0.5pt solid #d4d4d8;
+        padding: 3pt 4pt;
+      }
+
+      .lineas td {
+        padding: 4pt;
+        border-bottom: 0.5pt solid #e4e4e7;
+      }
+
+      .codigo {
+        font-family: Courier, monospace;
+        font-size: 9pt;
+      }
+
+      .vence {
+        font-weight: bold;
+      }
+
+      .aviso {
+        margin-top: 14pt;
+        padding: 6pt 8pt;
+        border: 0.5pt solid #d4d4d8;
+        font-size: 9pt;
+        color: #52525b;
+      }
+{% endblock %}
+
+{% block titulo %}Certificado de garantía{% endblock %}
+
+{% block numero %}Venta N.º {{ venta.id }}{% endblock %}
+
+{% block contenido %}
+    <h2>Datos de la venta</h2>
+    <table class="datos" width="100%">
+      <tr>
+        <td class="etiqueta">Cliente</td>
+        <td>{{ venta.cliente_nombre }}</td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Teléfono</td>
+        <td>{{ venta.cliente_telefono }}</td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Fecha de la venta</td>
+        <td>{{ fecha_venta|date:"d/m/Y" }}</td>
+      </tr>
+    </table>
+
+    <h2>Productos con garantía</h2>
+    <table class="lineas" width="100%">
+      <tr>
+        <th width="38%">Producto</th>
+        <th width="22%">Código</th>
+        <th width="10%">Cantidad</th>
+        <th width="12%">Meses</th>
+        <th width="18%">Vence el</th>
+      </tr>
+      {% for linea in lineas %}
+        <tr>
+          <td>{{ linea.producto }}</td>
+          <td class="codigo">{{ linea.codigo }}</td>
+          <td>{{ linea.cantidad }}</td>
+          <td>{{ linea.meses }}</td>
+          <td class="vence">{{ linea.vence|date:"d/m/Y" }}</td>
+        </tr>
+      {% endfor %}
+    </table>
+
+    <p class="aviso">
+      Conserve este certificado: lo necesitará para hacer valer la garantía
+      de los productos listados hasta su fecha de vencimiento. Este documento
+      no es una factura ni un comprobante fiscal.
+    </p>
+{% endblock %}
+
+{% block leyenda %}Documento no fiscal, no válido como factura.{% endblock %}

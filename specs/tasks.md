@@ -1182,7 +1182,7 @@ final del documento.
   - Comprobado una vez: el texto del PDF es idéntico con la plantilla
     antigua y con la nueva, en 3 casos.
 
-### [ ] T-10.5 — Endpoint de la garantía
+### [x] T-10.5 — Endpoint de la garantía
 - **Cubre:** RF-76, RF-78, **RN-VEN-14, RN-VEN-15, RN-VEN-16**
 - **Depende de:** T-10.2, T-10.3, T-10.4
 - **Trabajo:** `GET /ventas/{id}/garantia` con `get_object()`; plantilla
@@ -1193,6 +1193,18 @@ final del documento.
   contiene las líneas sin garantía ni restos de plantilla; venta anulada
   → 409; sin líneas con garantía → 409; venta ajena para un Encargado de
   Ventas → 404.
+- **Resultado (2026-10-09):** `GET /ventas/{id}/garantia` con
+  `get_object()`.
+  - La plantilla `ventas/garantia.html` extiende la base y lista solo
+    las líneas con meses mayores que cero, con el código y el
+    vencimiento calculado en hora de Bolivia.
+  - Lleva la leyenda de no fiscal en el cuerpo y en el pie.
+  - Errores 409 con código propio (`GARANTIA_DE_VENTA_ANULADA`,
+    `VENTA_SIN_GARANTIA`); una venta ajena da 404. La ruta está en la
+    matriz de permisos.
+  - 15 pruebas sobre el texto real del PDF.
+  - Mutaciones detectadas: listar también las líneas sin garantía, y
+    usar los meses actuales del producto en lugar de los congelados.
 
 ### [ ] T-10.6 — Garantía en la interfaz
 - **Cubre:** RF-77
