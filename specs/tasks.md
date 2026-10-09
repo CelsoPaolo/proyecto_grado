@@ -1359,11 +1359,22 @@ final del documento.
   - 5 pruebas nuevas. Mutaciones detectadas: buscar sin el filtro de
     activos, y no dejar elegido el cliente nuevo.
 
-### [ ] T-11.7 — Revisión del bloque 11
+### [x] T-11.7 — Revisión del bloque 11
 - **Depende de:** T-11.1 a T-11.6
 - **Hecho cuando:** venta a un cliente registrado → editar el cliente →
   la venta conserva los datos originales, comprobado en el navegador.
   Suite completa ejecutada y resultado mostrado.
+- **Resultado (2026-10-09):** ciclo por la API: alta del cliente →
+  venta → editar y desactivar el cliente.
+  - La venta conserva los datos originales.
+  - El carnet real no aparece en el detalle de la venta, en su lista ni
+    en el texto de la garantía.
+  - El cliente desactivado ya no puede elegirse (409).
+  - Todos los requisitos del bloque 11 están citados.
+    `makemigrations --check`: sin cambios.
+  - Suites: B 965 pasan y 8 fallan, todas de trazabilidad del bloque
+    12; F 205 pasan.
+  - **La comprobación en el navegador queda para revisión humana.**
 
 ---
 

@@ -42,7 +42,8 @@ bloque 13.
 | 2026-10-09 | T-11.3 API de clientes | `db558b2` | B 952 / 10 · F 190 / 0 | Sin `?activo=`, la lista incluye a los inactivos, porque el Administrador los necesita para reactivarlos; el selector de la venta pedirá `activo=true`. El carnet se busca **solo por coincidencia exacta**, para que no se pueda adivinar cifra a cifra. La edición es solo `PATCH`, sin `PUT`. |
 | 2026-10-09 | T-11.4 Cliente en la venta ⚠️ | `39a782b` | B 964 / 8 · F 190 / 0 | La fila del cliente se bloquea con `select_for_update` para que una desactivación simultánea no se cuele. Un `cliente_id` inexistente responde 400 junto al campo. **Incidente corregido:** al insertar la función auxiliar quedó bajo el `@transaction.atomic` de `registrar_venta`, y la venta dejó de ser atómica. Lo detectaron las pruebas de concurrencia de T-8.5 (6 fallos) y se corrigió antes del commit. Se actualizó la prueba de firma de T-4.2 para incluir `cliente_id`; sigue garantizando que no entra precio. |
 | 2026-10-09 | T-11.5 Pantallas de clientes | `d093179` | B 964 / 8 · F 200 / 0 | La lista muestra los activos por defecto; el filtro se puede limpiar para ver todos. Tras registrar un cliente desde la lista se abre su detalle. El formulario avisa junto al carnet de que es un dato personal. |
-| 2026-10-09 | T-11.6 Selector de cliente en la venta | siguiente commit | B 964 / 8 · F 205 / 0 | El modo por defecto es «Cliente ocasional», para que la pantalla funcione igual que en la v1.3. Con un cliente registrado solo se envía su id, porque el nombre y el teléfono los copia el servidor. |
+| 2026-10-09 | T-11.6 Selector de cliente en la venta | `30f8d92` | B 964 / 8 · F 205 / 0 | El modo por defecto es «Cliente ocasional», para que la pantalla funcione igual que en la v1.3. Con un cliente registrado solo se envía su id, porque el nombre y el teléfono los copia el servidor. |
+| 2026-10-09 | T-11.7 Revisión del bloque 11 | siguiente commit | B 965 / 8 · F 205 / 0 | El ciclo comprueba también que la garantía no lleva el carnet **de un cliente real**: la prueba de T-10.5 solo podía buscar la palabra. |
 
 ## Pendiente para revisión humana
 
@@ -108,6 +109,11 @@ bloque 13.
     confirmar la venta.
   - Repetir registrando un cliente nuevo desde el botón del diálogo.
   - Comprobar que un cliente desactivado no aparece en la búsqueda.
+- **T-11.7, ciclo del bloque 11:**
+  - Vender a un cliente registrado y, después, cambiarle el nombre y el
+    teléfono en su ficha.
+  - Abrir el detalle de la venta: debe conservar los datos originales.
+  - Emitir su garantía: no debe aparecer el carnet.
 - **Dependencias:** `npm audit` informa de 1 vulnerabilidad alta en
   `source-map-js`, una herramienta de desarrollo que ya estaba instalada
   antes de esta versión; no viene de JsBarcode. No apliqué `npm audit
@@ -115,4 +121,4 @@ bloque 13.
 
 ## Dónde se detuvo la sesión
 
-T-11.6 terminada. **Siguiente: T-11.7** (revisión del bloque 11).
+T-11.7 terminada. **Siguiente: T-12.1** (cálculo del reporte por rango).
