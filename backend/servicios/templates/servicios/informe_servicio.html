@@ -1,122 +1,16 @@
+{% extends "pdf/base.html" %}
 {% comment %}
 Informe de servicio tecnico en PDF (RF-67).
 
-Es el UNICO documento que sale del sistema hacia el cliente. No es un
-documento fiscal: spec.md 2.2 sigue excluyendo la facturacion.
+Documento que se entrega al cliente. No es un documento fiscal: spec.md
+2.2 sigue excluyendo la facturacion.
 
-El pie lo escribe el servidor -fecha y autor-, que es la razon de que
-el informe se genere aqui y no en el navegador.
-
-Se escribe con tablas y estilos en linea a proposito: xhtml2pdf no
-implementa flexbox ni grid, y una maquetacion moderna saldria
-descolocada en el PDF.
+El membrete, la linea morada y el pie con fecha y autor vienen de
+core/templates/pdf/base.html (T-10.4), que comparten la garantia y el
+reporte. Aqui solo vive lo propio del informe.
 {% endcomment %}
-<!DOCTYPE html>
-<html lang="es">
-  <head>
-    <meta charset="utf-8" />
-    <style>
-      /* El pie va en un marco estatico, que es el mecanismo propio de
-         xhtml2pdf: `position: fixed` lo ignora y el pie acabaria
-         flotando al final del texto en lugar de anclado abajo. Asi
-         ademas se repite en cada pagina si la descripcion es larga.
 
-         Carta = 21,59 x 27,94 cm. Margenes de 1,8 y 2 cm dejan
-         17,6 cm utiles de ancho. */
-      @page {
-        size: letter portrait;
-        margin: 1.8cm 2cm;
-
-        @frame contenido {
-          left: 2cm;
-          width: 17.6cm;
-          top: 1.8cm;
-          height: 24.3cm;
-        }
-
-        @frame pie_pagina {
-          -pdf-frame-content: pie;
-          left: 2cm;
-          width: 17.6cm;
-          top: 26.3cm;
-          height: 1.2cm;
-        }
-      }
-
-      body {
-        font-family: Helvetica, sans-serif;
-        font-size: 10.5pt;
-        color: #18181b;
-        line-height: 1.45;
-      }
-
-      .membrete td {
-        vertical-align: middle;
-      }
-
-      .membrete .marca {
-        font-size: 17pt;
-        font-weight: bold;
-        letter-spacing: 0.5pt;
-      }
-
-      .membrete .giro {
-        font-size: 9pt;
-        color: #52525b;
-      }
-
-      /* Linea morada de la identidad (plan.md 7.6).
-
-         Se dibuja con <hr> y no con el borde de un div vacio: sin
-         contenido, xhtml2pdf no le da altura al div y el borde no
-         llega a dibujarse.
-
-         El grosor y el color van en los ATRIBUTOS del <hr>, no en el
-         CSS: xhtml2pdf construye la linea leyendo `color` y `size`
-         del propio tag e ignora las reglas de hoja de estilo, por lo
-         que la regla salia negra y fina. Del CSS solo respeta los
-         margenes. */
-      .regla {
-        margin: 10pt 0 14pt;
-      }
-
-      h1 {
-        font-size: 13pt;
-        margin: 0;
-        text-transform: uppercase;
-        letter-spacing: 0.6pt;
-      }
-
-      .numero {
-        font-size: 13pt;
-        font-weight: bold;
-        color: #6d28d9;
-      }
-
-      h2 {
-        font-size: 10pt;
-        text-transform: uppercase;
-        letter-spacing: 0.5pt;
-        color: #52525b;
-        border-bottom: 0.5pt solid #d4d4d8;
-        padding-bottom: 3pt;
-        margin: 16pt 0 6pt;
-      }
-
-      .datos td {
-        padding: 2.5pt 0;
-      }
-
-      .datos .etiqueta {
-        color: #52525b;
-        width: 32%;
-      }
-
-      .parrafo {
-        margin: 0;
-        text-align: justify;
-      }
-
+{% block estilos %}
       .monto {
         font-size: 13pt;
         font-weight: bold;
@@ -125,41 +19,13 @@ descolocada en el PDF.
       .sin-cotizar {
         color: #b45309;
       }
+{% endblock %}
 
-      #pie {
-        border-top: 0.5pt solid #d4d4d8;
-        padding-top: 5pt;
-        font-size: 8pt;
-        color: #71717a;
-      }
-    </style>
-  </head>
+{% block titulo %}Informe de servicio técnico{% endblock %}
 
-  <body>
-    <table class="membrete" width="100%">
-      <tr>
-        <td width="80">
-          <img src="{{ logo }}" width="72" alt="PC-Solution" />
-        </td>
-        <td>
-          <div class="marca">PC-SOLUTION</div>
-          <div class="giro">
-            Laboratorio técnico de computadoras<br />
-            Sucre, Bolivia
-          </div>
-        </td>
-      </tr>
-    </table>
+{% block numero %}N.º {{ solicitud.id }}{% endblock %}
 
-    <hr class="regla" color="#7c3aed" size="2.5" />
-
-    <table width="100%">
-      <tr>
-        <td><h1>Informe de servicio técnico</h1></td>
-        <td align="right" class="numero">N.º {{ solicitud.id }}</td>
-      </tr>
-    </table>
-
+{% block contenido %}
     <h2>Datos de la solicitud</h2>
     <table class="datos" width="100%">
       <tr>
@@ -245,10 +111,4 @@ descolocada en el PDF.
         como constancia de recepción del equipo.
       </p>
     {% endif %}
-
-    <div id="pie">
-      Generado el {{ generado_en|date:"d/m/Y H:i" }} por {{ generado_por }} ·
-      PC-Solution, Sucre · Documento interno, no válido como factura.
-    </div>
-  </body>
-</html>
+{% endblock %}

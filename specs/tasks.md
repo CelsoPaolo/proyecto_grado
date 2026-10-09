@@ -1161,7 +1161,7 @@ final del documento.
   - Mutaciones detectadas: quitar el recorte al último día del mes, y
     calcular la fecha en UTC.
 
-### [ ] T-10.4 — Plantilla base de documentos PDF
+### [x] T-10.4 — Plantilla base de documentos PDF
 - **Cubre:** RF-76 (habilita), RF-67
 - **Depende de:** T-10.1
 - **Trabajo:** Extraer el membrete, la línea morada y el pie del informe
@@ -1170,6 +1170,17 @@ final del documento.
 - **Hecho cuando:** **todas** las pruebas del informe de servicio pasan
   sin cambios —incluida la que rechaza restos de sintaxis de plantilla—
   y el PDF resultante tiene los mismos colores en su flujo.
+- **Resultado (2026-10-09):** `core/templates/pdf/base.html` con los
+  bloques `estilos`, `titulo`, `numero`, `contenido` y `leyenda`. El
+  informe de servicio la extiende.
+  - Las 15 pruebas de `servicios/tests/test_pdf.py` pasan **sin
+    cambios**.
+  - Prueba nueva en `core/tests/test_plantilla_pdf.py`: los operadores
+    de color del flujo coinciden con los registrados antes de la
+    extracción. Si se quita la línea morada, solo fallan estas pruebas,
+    no las del informe.
+  - Comprobado una vez: el texto del PDF es idéntico con la plantilla
+    antigua y con la nueva, en 3 casos.
 
 ### [ ] T-10.5 — Endpoint de la garantía
 - **Cubre:** RF-76, RF-78, **RN-VEN-14, RN-VEN-15, RN-VEN-16**
