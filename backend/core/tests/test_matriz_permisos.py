@@ -53,6 +53,12 @@ MATRIZ = {
     ("PATCH", "/api/v1/productos/{id}"): (Rol.ADMINISTRADOR,),
     ("PUT", "/api/v1/productos/{id}"): (Rol.ADMINISTRADOR,),
     ("DELETE", "/api/v1/productos/{id}"): (Rol.ADMINISTRADOR,),
+    # ── Inventario: solo Administrador (RN-MOV-06) ────────────────────
+    # Ni siquiera el Encargado de Ventas, que si consulta el catalogo:
+    # el libro y el ajuste son control de inventario, no venta.
+    ("POST", "/api/v1/productos/{id}/ajustar-existencias"): (Rol.ADMINISTRADOR,),
+    ("GET", "/api/v1/productos/{id}/movimientos"): (Rol.ADMINISTRADOR,),
+    ("GET", "/api/v1/movimientos-stock"): (Rol.ADMINISTRADOR,),
     # ── Ventas: Administrador y Ventas ───────────────────────────────
     # El alcance dentro del rol (propias frente a todas) lo controla
     # get_queryset, no el permiso de entrada: se verifica en

@@ -889,7 +889,7 @@ final del documento.
   automática; las pruebas que descuadran el libro a propósito llevan la
   marca `libro_libre`.
 
-### [ ] T-8.6 — API de movimientos y de ajuste
+### [x] T-8.6 — API de movimientos y de ajuste
 - **Cubre:** RF-73, RF-82, RF-83, RN-MOV-06, RNF-18
 - **Depende de:** T-8.5
 - **Trabajo:** `GET /movimientos-stock` con filtros, `GET
@@ -899,6 +899,13 @@ final del documento.
 - **Hecho cuando:** el Encargado de Ventas recibe 403 en los tres;
   `POST`, `PATCH` y `DELETE` sobre `/movimientos-stock` responden 405;
   los filtros funcionan combinados y la respuesta viene paginada.
+- **Resultado (2026-10-09):** el ajuste responde 201 con el movimiento
+  creado; 400 junto al campo si la entrada no vale; 409 si no hay
+  diferencia. Decisión de implementación: un filtro inválido en
+  `/movimientos-stock` (producto, tipo o fecha) responde **400** en lugar
+  de ignorarse, porque en una auditoría una lista sin filtrar parecería
+  una respuesta válida. Las fechas se filtran por el día en hora de
+  Bolivia, no en UTC.
 
 ### [ ] T-8.7 — Pantallas de movimientos y ajuste
 - **Cubre:** RF-73, RF-82, RF-83, RNF-14, RNF-15

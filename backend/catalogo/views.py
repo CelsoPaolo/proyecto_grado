@@ -7,6 +7,7 @@ Encargado de Ventas (spec.md matriz 4.4).
 from django.db.models import Count
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
@@ -20,6 +21,12 @@ from catalogo.services import (
     umbral_stock_bajo,
 )
 from core.permissions import EsAdministrador, PuedeVender
+from inventario.serializers import (
+    AjustarExistenciasSerializer,
+    MovimientoStockSerializer,
+)
+from inventario.services import ajustar_existencias
+from inventario.views import movimientos_para_listar
 
 
 class CategoriaViewSet(viewsets.ModelViewSet):
@@ -68,6 +75,8 @@ class ProductoViewSet(
     search_fields = ["nombre", "descripcion"]
 
     def get_permissions(self):
+        # Todo lo que no es consultar el catalogo es del Administrador,
+        # incluidos el ajuste y el historial de movimientos (RN-MOV-06).
         if self.action in ("list", "retrieve"):
             return [PuedeVender()]
         return [EsAdministrador()]
@@ -114,3 +123,46 @@ class ProductoViewSet(
         """
         producto = retirar_producto(producto=self.get_object())
         return Response(ProductoSerializer(producto).data)
+
+    @action(detail=True, methods=["post"], url_path="ajustar-existencias")
+    def ajustar_existencias(self, request, pk=None):
+        """POST /productos/{id}/ajustar-existencias - CU-CAT-07 (RF-73).
+
+        Sustituye a editar el stock con PATCH, que ahora responde 400
+        (RN-CAT-10). La diferencia NO se calcula aqui ni en la interfaz:
+        la calcula el servicio contra la fila ya bloqueada (plan.md 6.5).
+
+        Vale tambien para un producto retirado (CU-CAT-07): sus unidades
+        siguen fisicamente en el almacen y pueden contarse.
+        """
+        producto = self.get_object()
+
+        entrada = AjustarExistenciasSerializer(data=request.data)
+        entrada.is_valid(raise_exception=True)
+
+        movimiento = ajustar_existencias(
+            producto_id=producto.pk,
+            cantidad_real=entrada.validated_data["cantidad_real"],
+            motivo=entrada.validated_data["motivo"],
+            usuario=request.user,
+        )
+
+        movimiento = movimientos_para_listar().get(pk=movimiento.pk)
+        return Response(
+            MovimientoStockSerializer(movimiento).data, status=status.HTTP_201_CREATED
+        )
+
+    @action(detail=True, methods=["get"])
+    def movimientos(self, request, pk=None):
+        """GET /productos/{id}/movimientos - CU-CAT-08 (RF-83).
+
+        El historial del producto, del mas reciente al mas antiguo y
+        paginado (RNF-18): un producto de mucha rotacion acumula miles.
+        """
+        producto = self.get_object()
+        consulta = movimientos_para_listar().filter(producto=producto)
+
+        pagina = self.paginate_queryset(consulta)
+        return self.get_paginated_response(
+            MovimientoStockSerializer(pagina, many=True).data
+        )
