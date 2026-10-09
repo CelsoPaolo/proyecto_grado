@@ -60,6 +60,19 @@ export const rutas = [
     meta: { roles: [ADMIN, VENTAS], titulo: 'Catálogo', icono: 'pi pi-box' },
   },
   {
+    path: '/catalogo/:id',
+    name: 'producto-detalle',
+    component: () => import('@/views/catalogo/ProductoDetalleView.vue'),
+    meta: { roles: [ADMIN, VENTAS], titulo: 'Detalle de producto', enMenu: false },
+  },
+  {
+    // RN-MOV-06: el libro solo lo consulta el Administrador.
+    path: '/movimientos',
+    name: 'movimientos',
+    component: () => import('@/views/inventario/MovimientosView.vue'),
+    meta: { roles: [ADMIN], titulo: 'Movimientos', icono: 'pi pi-history' },
+  },
+  {
     path: '/ventas',
     name: 'ventas',
     component: () => import('@/views/ventas/VentasView.vue'),

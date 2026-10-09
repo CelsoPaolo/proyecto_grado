@@ -907,7 +907,7 @@ final del documento.
   una respuesta válida. Las fechas se filtran por el día en hora de
   Bolivia, no en UTC.
 
-### [ ] T-8.7 — Pantallas de movimientos y ajuste
+### [x] T-8.7 — Pantallas de movimientos y ajuste
 - **Cubre:** RF-73, RF-82, RF-83, RNF-14, RNF-15
 - **Depende de:** T-8.6
 - **Trabajo:** Pantalla de movimientos con filtros; historial en el
@@ -917,6 +917,15 @@ final del documento.
 - **Hecho cuando:** un ajuste desde la interfaz aparece en el historial
   del producto con su motivo; el Encargado de Ventas no ve ni el menú ni
   las acciones.
+- **Resultado (2026-10-09):** construido y con pruebas de Vitest (16).
+  - El ajuste se confirma en dos pasos dentro del mismo diálogo: primero
+    se revisa «de X a Y (±N)» con el motivo, y luego se confirma.
+  - Si el servidor registra otra diferencia, porque se vendió mientras
+    tanto, se avisa.
+  - Historial en el detalle del producto (ruta nueva `/catalogo/:id`) y
+    pantalla `/movimientos`.
+  - El Encargado de Ventas ni ve las acciones ni pide el historial.
+  - **Comprobación visual pendiente** (ver `docs/avance_v1.4.md`).
 
 ### [ ] T-8.8 — Revisión del bloque 8
 - **Depende de:** T-8.1 a T-8.7

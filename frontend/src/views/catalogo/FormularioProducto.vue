@@ -10,7 +10,8 @@
    editar se muestran sin poder cambiarlas y no se envian: el servidor
    rechaza con 400 una edicion que las incluya, porque desde la v1.4
    solo cambian por venta, anulacion o ajuste con motivo, que dejan su
-   movimiento. La accion «Ajustar existencias» llega en T-8.7. */
+   movimiento. Se corrigen con «Ajustar existencias», en el detalle del
+   producto (AjustarExistencias.vue). */
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import InputNumber from 'primevue/inputnumber'

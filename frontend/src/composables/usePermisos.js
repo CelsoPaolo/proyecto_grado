@@ -26,6 +26,10 @@ export function usePermisos() {
     puedeGestionarCatalogo: esAdministrador,
     puedeConsultarCatalogo: puedeVender,
 
+    // Inventario: ajustar y consultar movimientos, solo Administrador
+    // (RN-MOV-06). Ventas consulta el catalogo, pero no su libro.
+    puedeGestionarInventario: esAdministrador,
+
     // Ventas: el historial propio lo ve quien vende; todas, el Administrador.
     puedeRegistrarVentas: puedeVender,
     puedeVerTodasLasVentas: esAdministrador,

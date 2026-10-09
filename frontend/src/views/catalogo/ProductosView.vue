@@ -16,6 +16,7 @@ import ToggleButton from 'primevue/togglebutton'
 import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
 import { onMounted, ref } from 'vue'
+import { RouterLink } from 'vue-router'
 
 import { categoriasApi, productosApi } from '@/api/catalogo'
 import { usePermisos } from '@/composables/usePermisos'
@@ -192,7 +193,9 @@ onMounted(() => {
           <div class="producto">
             <img v-if="data.imagen" :src="data.imagen" :alt="data.nombre" />
             <i v-else class="pi pi-image sin-imagen" aria-hidden="true" />
-            <span>{{ data.nombre }}</span>
+            <RouterLink :to="{ name: 'producto-detalle', params: { id: data.id } }">
+              {{ data.nombre }}
+            </RouterLink>
           </div>
         </template>
       </Column>
