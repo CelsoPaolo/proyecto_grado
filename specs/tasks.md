@@ -991,13 +991,21 @@ final del documento.
   - Aplicado a la base de desarrollo: sus 7 productos tienen ya códigos
     de `2000000000015` a `2000000000077`.
 
-### [ ] T-9.3 — Búsqueda por código
+### [x] T-9.3 — Búsqueda por código
 - **Cubre:** RF-70
 - **Depende de:** T-9.2
 - **Trabajo:** Filtro `?codigo=` de coincidencia exacta en
   `GET /productos`; el código en las respuestas de lista y detalle.
 - **Hecho cuando:** un código exacto devuelve un único producto; uno
   incompleto o inexistente devuelve una lista vacía sin error.
+- **Resultado (2026-10-09):** `?codigo=` busca por coincidencia exacta,
+  quitando los espacios de alrededor.
+  - Un código vacío no devuelve el catálogo entero, sino una lista vacía.
+  - Un código incompleto, con el dígito de control equivocado o
+    inexistente da una lista vacía, sin error.
+  - Mutaciones detectadas: la búsqueda parcial (`contains`) y la que
+    ignora el código vacío.
+  - La búsqueda por código de fábrica llega con T-9.7.
 
 ### [ ] T-9.7 — Código de fábrica opcional *(PA-07)*
 > Insertada al aprobar la v1.4. Conserva el número siguiente al último

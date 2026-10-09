@@ -101,6 +101,12 @@ class ProductoViewSet(
         if self.request.query_params.get("stock_bajo") == "true":
             consulta = consulta.filter(stock__lte=umbral_stock_bajo())
 
+        # RF-70 — coincidencia EXACTA, nunca parcial: un lector que lea
+        # mal un digito no debe encontrar otro producto (RN-VEN-17). Un
+        # codigo incompleto o inexistente da una lista vacia, no un error.
+        if (codigo := self.request.query_params.get("codigo")) is not None:
+            consulta = consulta.filter(codigo=codigo.strip())
+
         return consulta
 
     def perform_create(self, serializer):
