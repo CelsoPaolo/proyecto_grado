@@ -30,6 +30,11 @@ export function usePermisos() {
     // (RN-MOV-06). Ventas consulta el catalogo, pero no su libro.
     puedeGestionarInventario: esAdministrador,
 
+    // Clientes: consultan, registran y editan Administrador y Ventas;
+    // desactivar y reactivar, solo el Administrador (RN-CLI-07).
+    puedeGestionarClientes: puedeVender,
+    puedeCambiarEstadoCliente: esAdministrador,
+
     // Ventas: el historial propio lo ve quien vende; todas, el Administrador.
     puedeRegistrarVentas: puedeVender,
     puedeVerTodasLasVentas: esAdministrador,

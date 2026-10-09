@@ -73,6 +73,19 @@ export const rutas = [
     meta: { roles: [ADMIN], titulo: 'Movimientos', icono: 'pi pi-history' },
   },
   {
+    // RN-CLI-07: el Encargado de Servicios no entra al módulo (PA-06).
+    path: '/clientes',
+    name: 'clientes',
+    component: () => import('@/views/clientes/ClientesView.vue'),
+    meta: { roles: [ADMIN, VENTAS], titulo: 'Clientes', icono: 'pi pi-id-card' },
+  },
+  {
+    path: '/clientes/:id',
+    name: 'cliente-detalle',
+    component: () => import('@/views/clientes/ClienteDetalleView.vue'),
+    meta: { roles: [ADMIN, VENTAS], titulo: 'Detalle de cliente', enMenu: false },
+  },
+  {
     path: '/ventas',
     name: 'ventas',
     component: () => import('@/views/ventas/VentasView.vue'),

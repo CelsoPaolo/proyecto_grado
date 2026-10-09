@@ -1324,11 +1324,21 @@ final del documento.
   - 10 pruebas. Mutaciones detectadas: usar los datos de la petición, y
     no comprobar si el cliente está activo.
 
-### [ ] T-11.5 — Pantallas de clientes
+### [x] T-11.5 — Pantallas de clientes
 - **Cubre:** RF-84 a RF-89, RNF-14
 - **Depende de:** T-11.3
 - **Hecho cuando:** el carnet solo aparece en el detalle; desactivar y
   reactivar piden confirmación y solo los ve el Administrador.
+- **Resultado (2026-10-09):** construido, con 10 pruebas de Vitest.
+  - `/clientes` es la lista sin carnet, con búsqueda y filtro de activos
+    (activos por defecto).
+  - `/clientes/:id` es el único sitio con el carnet, y tiene auditoría.
+  - `FormularioCliente.vue` sirve para el alta y la edición, y se
+    reutiliza en la venta.
+  - Desactivar y reactivar: solo el Administrador, con confirmación.
+  - El Encargado de Servicios no tiene menú ni puede entrar (PA-06).
+  - Mutaciones detectadas: cambiar el estado sin confirmación, y mostrar
+    la acción a Ventas.
 
 ### [ ] T-11.6 — Selector de cliente en el registro de venta
 - **Cubre:** RF-79, RNF-16

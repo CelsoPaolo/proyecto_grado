@@ -40,7 +40,8 @@ bloque 13.
 | 2026-10-09 | T-11.1 App `clientes` y modelo `Cliente` | `7a74c37` | B 894 / 17 · F 190 / 0 | `actualizado_por` es obligatorio: al registrar un cliente coincide con `creado_por`. La dirección es un `CharField(255)` en blanco. Se retiraron tres citas prematuras (RF-84, RF-89 y RNF-26), que se implementan en la API (T-11.3). |
 | 2026-10-09 | T-11.2 Servicio de clientes | `4ebc392` | B 908 / 13 · F 190 / 0 | Desactivar un cliente ya inactivo no es un error, solo no cambia nada. El mensaje de carnet duplicado **no dice a qué cliente pertenece**, para no revelar un dato personal (RN-CLI-06). Hay dos defensas ante el duplicado; la mutación de una sola sobrevive, y es lo esperado. |
 | 2026-10-09 | T-11.3 API de clientes | `db558b2` | B 952 / 10 · F 190 / 0 | Sin `?activo=`, la lista incluye a los inactivos, porque el Administrador los necesita para reactivarlos; el selector de la venta pedirá `activo=true`. El carnet se busca **solo por coincidencia exacta**, para que no se pueda adivinar cifra a cifra. La edición es solo `PATCH`, sin `PUT`. |
-| 2026-10-09 | T-11.4 Cliente en la venta ⚠️ | siguiente commit | B 964 / 8 · F 190 / 0 | La fila del cliente se bloquea con `select_for_update` para que una desactivación simultánea no se cuele. Un `cliente_id` inexistente responde 400 junto al campo. **Incidente corregido:** al insertar la función auxiliar quedó bajo el `@transaction.atomic` de `registrar_venta`, y la venta dejó de ser atómica. Lo detectaron las pruebas de concurrencia de T-8.5 (6 fallos) y se corrigió antes del commit. Se actualizó la prueba de firma de T-4.2 para incluir `cliente_id`; sigue garantizando que no entra precio. |
+| 2026-10-09 | T-11.4 Cliente en la venta ⚠️ | `39a782b` | B 964 / 8 · F 190 / 0 | La fila del cliente se bloquea con `select_for_update` para que una desactivación simultánea no se cuele. Un `cliente_id` inexistente responde 400 junto al campo. **Incidente corregido:** al insertar la función auxiliar quedó bajo el `@transaction.atomic` de `registrar_venta`, y la venta dejó de ser atómica. Lo detectaron las pruebas de concurrencia de T-8.5 (6 fallos) y se corrigió antes del commit. Se actualizó la prueba de firma de T-4.2 para incluir `cliente_id`; sigue garantizando que no entra precio. |
+| 2026-10-09 | T-11.5 Pantallas de clientes | siguiente commit | B 964 / 8 · F 200 / 0 | La lista muestra los activos por defecto; el filtro se puede limpiar para ver todos. Tras registrar un cliente desde la lista se abre su detalle. El formulario avisa junto al carnet de que es un dato personal. |
 
 ## Pendiente para revisión humana
 
@@ -94,6 +95,13 @@ bloque 13.
 - **T-10.7:** vender un producto con garantía, emitirla y abrir el PDF.
   Cambiar los meses del producto, emitirla otra vez y comprobar que el
   vencimiento es el mismo.
+- **T-11.5, clientes:**
+  - Menú «Clientes»: buscar por nombre, por teléfono y por carnet
+    exacto; el carnet no debe verse en la lista.
+  - Registrar un cliente con un carnet repetido: el error debe aparecer
+    junto al campo.
+  - En el detalle, como Administrador, desactivar y reactivar con
+    confirmación. Como Encargado de Ventas, no debe aparecer esa acción.
 - **Dependencias:** `npm audit` informa de 1 vulnerabilidad alta en
   `source-map-js`, una herramienta de desarrollo que ya estaba instalada
   antes de esta versión; no viene de JsBarcode. No apliqué `npm audit
@@ -101,4 +109,4 @@ bloque 13.
 
 ## Dónde se detuvo la sesión
 
-T-11.4 terminada. **Siguiente: T-11.5** (pantallas de clientes).
+T-11.5 terminada. **Siguiente: T-11.6** (selector de cliente en la venta).
