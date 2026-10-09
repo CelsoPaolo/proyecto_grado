@@ -1087,11 +1087,24 @@ final del documento.
     - sin el control de existencias, se agrega un producto agotado.
   - **Verificación con lector o teléfono pendiente** (revisión humana).
 
-### [ ] T-9.6 — Revisión del bloque 9
+### [x] T-9.6 — Revisión del bloque 9
 - **Depende de:** T-9.1 a T-9.5, T-9.7
 - **Hecho cuando:** una venta completa se arma solo con lecturas de
   código —internos y de fábrica—, comprobado en el navegador. Suite
   completa ejecutada y resultado mostrado.
+- **Resultado (2026-10-09):** una venta armada solo con lecturas, por la
+  API (`catalogo/tests/test_ciclo_bloque9.py`).
+  - Mezcla códigos internos, de fábrica EAN-13 y Code128 (este último en
+    minúsculas), y lecturas repetidas.
+  - Un producto retirado y un código incompleto no entran.
+  - Ninguna lectura identifica a más de un producto, y la venta contiene
+    exactamente lo leído.
+  - Todos los RF y RNF del bloque 9 están citados.
+    `makemigrations --check`: sin cambios.
+  - Suites: B 827 pasan y 22 fallan, todas de trazabilidad de bloques
+    10 a 13; F 182 pasan.
+  - **Comprobación en el navegador con lecturas reales pendiente**
+    (revisión humana).
 
 ---
 
