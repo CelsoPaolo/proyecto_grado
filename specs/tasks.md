@@ -1421,7 +1421,7 @@ final del documento.
   - Prueba nueva: el panel y el reporte de hoy coinciden, con una venta
     anulada de por medio. Si el panel usa otro criterio, falla.
 
-### [ ] T-12.3 — Detalles del reporte
+### [x] T-12.3 — Detalles del reporte
 - **Cubre:** RN-REP-04, RN-REP-05, RN-REP-06, RF-92, RF-93, RF-94
 - **Depende de:** T-12.1
 - **Hecho cuando:** los productos más vendidos son diez como máximo, con
@@ -1429,6 +1429,15 @@ final del documento.
   ventas; los servicios por estado **incluyen las canceladas** como fila
   propia, los cuatro estados aparecen aunque valgan cero, y ninguna
   cancelada suma a un importe (PA-08).
+- **Resultado (2026-10-09):** `calcular()` añade tres secciones:
+  - `productos_mas_vendidos`: 10 como máximo, ordenados por unidades y,
+    a igualdad, por importe, con el código y el nombre actual;
+  - `ventas_por_usuario`: sus importes suman el total de ventas;
+  - `servicios_por_estado`: los 4 estados siempre, canceladas incluidas,
+    solo recuentos.
+  - El panel pide `con_detalles=False`.
+  - Mutaciones detectadas: sin desempate por importe, sin rellenar los
+    estados que valen cero, y contar también las ventas anuladas.
 
 ### [ ] T-12.4 — API del reporte
 - **Cubre:** RF-90, RN-REP-10

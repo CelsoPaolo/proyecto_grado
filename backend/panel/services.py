@@ -40,7 +40,7 @@ def ventas_del_dia(fecha=None):
     reporte de hoy no pueden dar numeros distintos.
     """
     fecha = fecha or _hoy()
-    return reportes.calcular(fecha, fecha)["ventas"]
+    return reportes.calcular(fecha, fecha, con_detalles=False)["ventas"]
 
 
 def servicios_del_dia(fecha=None):
@@ -51,7 +51,7 @@ def servicios_del_dia(fecha=None):
     panel.reportes (RN-REP-08).
     """
     fecha = fecha or _hoy()
-    return reportes.calcular(fecha, fecha)["servicios"]
+    return reportes.calcular(fecha, fecha, con_detalles=False)["servicios"]
 
 
 def ingreso_total(ventas, servicios):
@@ -111,7 +111,7 @@ def resumen_del_panel(fecha=None):
     fecha = fecha or _hoy()
     # RN-REP-08: las cifras del dia SON el reporte del rango [hoy, hoy].
     # Una sola llamada a la misma funcion que usa /reportes.
-    reporte = reportes.calcular(fecha, fecha)
+    reporte = reportes.calcular(fecha, fecha, con_detalles=False)
 
     return {
         "fecha": fecha,

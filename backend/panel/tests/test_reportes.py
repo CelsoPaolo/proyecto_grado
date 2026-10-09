@@ -153,3 +153,98 @@ def test_el_panel_y_el_reporte_de_hoy_dan_las_mismas_cifras():
     assert panel["servicios_dia"] == reporte["servicios"]
     assert panel["ingreso_total"] == reporte["ingreso_total"]
     assert reporte["ingreso_total"]["importe"] == Decimal("200.00")
+
+
+# ─────────────────────────────────────────────────────────────────────
+# T-12.3 — detalles del reporte (RN-REP-04 a RN-REP-06)
+# ─────────────────────────────────────────────────────────────────────
+def _vender_varios(vendedor, lineas, momento):
+    with momento:
+        return registrar_venta(
+            usuario=vendedor,
+            cliente_nombre="Cliente",
+            cliente_telefono="70000000",
+            items=[{"producto_id": p.pk, "cantidad": n} for p, n in lineas],
+        )
+
+
+def test_los_mas_vendidos_son_diez_como_maximo_y_desempatan_por_importe():
+    vendedor = VendedorFactory()
+    productos = [ProductoFactory(stock=50, precio=Decimal(10 + i)) for i in range(12)]
+    # 12 productos con 1 unidad cada uno; los dos primeros con 3.
+    _vender_varios(vendedor, [(p, 3 if i < 2 else 1) for i, p in enumerate(productos)], _en(2026, 10, 2))
+
+    filas = calcular(DESDE, HASTA)["productos_mas_vendidos"]
+
+    assert len(filas) == 10
+    # A igualdad de unidades, primero el de mayor importe.
+    assert [f["producto_id"] for f in filas[:2]] == [productos[1].pk, productos[0].pk]
+    # Del resto (1 unidad cada uno) entran los 8 de mayor importe, que
+    # son los de precio mas alto; los dos mas baratos (2 y 3) quedan fuera.
+    assert {f["producto_id"] for f in filas[2:]} == {p.pk for p in productos[4:]}
+    unidades = [f["unidades"] for f in filas]
+    assert unidades == sorted(unidades, reverse=True)
+    assert filas[0] == {
+        "producto_id": productos[1].pk,
+        "codigo": productos[1].codigo,
+        "nombre": productos[1].nombre,
+        "unidades": 3,
+        "importe": Decimal("33.00"),
+    }
+
+
+def test_los_mas_vendidos_no_cuentan_ventas_anuladas_ni_de_fuera_del_rango():
+    vendedor = VendedorFactory()
+    a, b = ProductoFactory(stock=50), ProductoFactory(stock=50)
+    _vender_varios(vendedor, [(a, 1)], _en(2026, 10, 2))
+    anulada = _vender_varios(vendedor, [(b, 9)], _en(2026, 10, 2))
+    anular_venta(venta=anulada, usuario=vendedor, motivo="Devolución")
+    _vender_varios(vendedor, [(b, 9)], _en(2026, 10, 9))
+
+    assert [f["producto_id"] for f in calcular(DESDE, HASTA)["productos_mas_vendidos"]] == [a.pk]
+
+
+def test_las_ventas_por_usuario_suman_el_total_de_ventas():
+    ana, juan = VendedorFactory(nombre_completo="Ana"), VendedorFactory(nombre_completo="Juan")
+    vender("100.00", _en(2026, 10, 2), ana)
+    vender("50.00", _en(2026, 10, 3), ana)
+    vender("300.00", _en(2026, 10, 4), juan)
+
+    reporte = calcular(DESDE, HASTA)
+    filas = reporte["ventas_por_usuario"]
+
+    assert [(f["nombre_completo"], f["cantidad"], f["importe"]) for f in filas] == [
+        ("Juan", 1, Decimal("300.00")),
+        ("Ana", 2, Decimal("150.00")),
+    ]
+    assert sum(f["importe"] for f in filas) == reporte["ventas"]["importe"]
+    assert sum(f["cantidad"] for f in filas) == reporte["ventas"]["cantidad"]
+
+
+def test_servicios_por_estado_incluye_las_canceladas_y_los_cuatro_estados():
+    """PA-08: las canceladas, fila propia; ningun estado falta aunque
+    valga cero; y ninguna cancelada suma a un importe."""
+    servicio(EstadoSolicitud.REGISTRADA, _en(2026, 10, 2))
+    servicio(EstadoSolicitud.CANCELADA, _en(2026, 10, 3), datetime(2026, 10, 3, 18, tzinfo=LA_PAZ), "700.00")
+    servicio(EstadoSolicitud.CANCELADA, _en(2026, 10, 4), datetime(2026, 10, 4, 18, tzinfo=LA_PAZ), "0.00")
+    servicio(EstadoSolicitud.REGISTRADA, _en(2026, 9, 20))  # registrada fuera del rango
+
+    reporte = calcular(DESDE, HASTA)
+
+    assert reporte["servicios_por_estado"] == {
+        "REGISTRADA": 1,
+        "EN_ATENCION": 0,
+        "FINALIZADA": 0,
+        "CANCELADA": 2,
+    }
+    assert reporte["servicios"]["importe"] == Decimal("0.00")
+    assert reporte["ingreso_total"]["importe"] == Decimal("0.00")
+
+
+def test_un_rango_vacio_trae_las_secciones_vacias_y_los_cuatro_estados_en_cero():
+    reporte = calcular(DESDE, HASTA)
+
+    assert reporte["productos_mas_vendidos"] == []
+    assert reporte["ventas_por_usuario"] == []
+    assert set(reporte["servicios_por_estado"].values()) == {0}
+    assert len(reporte["servicios_por_estado"]) == 4
