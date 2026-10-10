@@ -53,7 +53,8 @@ bloque 13.
 | 2026-10-09 | T-12.7 Coherencia de las tres salidas ⚠️ | `08bcd97` | **B 1026 / 0** · F 205 / 0 | **El guardián de trazabilidad llega a 0 fallos.** Hallazgo de rendimiento: con estadísticas viejas, `productos_mas_vendidos` (que usaba `venta__in=<subconsulta>`) tardaba 213 s por petición en la suite completa. Se reescribe como join, y la prueba ejecuta `ANALYZE` tras la carga, porque RNF-28 habla de «carga normal» y dentro de la transacción de la prueba autovacuum no ve las filas. El comando de importación (T-OP.2) ejecutará `ANALYZE` al aplicar. Hubo además una parada aislada de 214 s en una ejecución suelta que no se reprodujo, con el mismo origen. |
 | 2026-10-09 | T-12.8 Pantalla de reportes | `feb94c8` | B 1026 / 0 · F 217 / 0 | Al abrir se muestra «Este mes». Al elegir un rango a mano se quita el atajo, y al revés. Los atajos se calculan con la fecha del navegador, que es la de Bolivia en el equipo de la tienda. `useDescarga.guardar()` acepta `{tipo, extension, descripcion}`. |
 | 2026-10-09 | T-13.1 Matriz de permisos y guardianes | `ae7e7d6` | B 1063 / 0 · F 217 / 0 | Las 17 reglas v1.4 de `plan.md` §9 se añaden al guardián de cobertura, apuntando a pruebas que ya existían. La de RN-CAT-10 se completó con la comprobación de «no crea movimiento» que exigía el plan y no estaba escrita. |
-| 2026-10-09 | T-13.2 Usabilidad de lo nuevo | siguiente commit | B 1063 / 0 · F 217 / 0 | Sin cambios de código. Se marca hecha la parte automatizable; el recorrido en tres anchos queda abajo. «Registrar cliente» no pide confirmación, igual que el resto de altas del sistema: RNF-14 se aplica a modificar y desactivar, no a crear. |
+| 2026-10-09 | T-13.2 Usabilidad de lo nuevo | `2d54513` | B 1063 / 0 · F 217 / 0 | Sin cambios de código. Se marca hecha la parte automatizable; el recorrido en tres anchos queda abajo. «Registrar cliente» no pide confirmación, igual que el resto de altas del sistema: RNF-14 se aplica a modificar y desactivar, no a crear. |
+| 2026-10-09 | T-13.3 Coherencia y documentación | siguiente commit | B 1064 / 0 · F 217 / 0 | `plan.md` pasa a la v1.4 con una tabla §11.4 de precisiones de implementación (ninguna cambia un requerimiento, así que `spec.md` no se toca). README y guion actualizados. Esquema OpenAPI sin avisos y vigilado por una prueba. |
 
 ## Pendiente para revisión humana
 
@@ -148,4 +149,4 @@ bloque 13.
 
 ## Dónde se detuvo la sesión
 
-T-13.2 terminada (parte automatizable). **Siguiente: T-13.3** (coherencia y documentación).
+Bloques 8 a 13 terminados. **Siguiente: T-OP.2** (comando `importar_catalogo` con informe y huella). T-OP.4 (aplicar) espera aprobación expresa.

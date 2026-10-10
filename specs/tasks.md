@@ -1576,13 +1576,25 @@ final del documento.
   - **El recorrido manual en los tres anchos queda para revisión
     humana.**
 
-### [ ] T-13.3 — Coherencia y documentación
+### [x] T-13.3 — Coherencia y documentación
 - **Cubre:** RNF-22
 - **Depende de:** T-13.2
 - **Trabajo:** Recorrer los 97 RF y 29 RNF contra lo construido;
   actualizar README, guion de la demostración y documentación de la API.
 - **Hecho cuando:** `spec.md` describe el sistema tal como quedó, y toda
   diferencia encontrada se resolvió editando primero `specs/`.
+- **Resultado (2026-10-09):**
+  - **RF y RNF:** el guardián de trazabilidad confirma que los 97 RF y
+    los 29 RNF están citados donde se implementan. Las precisiones de la
+    implementación quedan en `plan.md` §11.4, versión 1.4. **No hubo
+    que cambiar `spec.md`:** ninguna precisión altera un requerimiento.
+  - **README:** alcance, stack (xhtml2pdf, openpyxl, JsBarcode), apps
+    nuevas, cifras de pruebas, pruebas clave y 9 pasos nuevos en el
+    guion de la demostración.
+  - **Documentación de la API:** una colisión de nombres de enumeración
+    (`tipo`) quedó resuelta. Una prueba nueva genera el esquema OpenAPI
+    con `--fail-on-warn`. La versión de la API pasa a 1.4.0.
+  - Suites: B 1064 pasan y 0 fallan; F 217 pasan.
 
 ---
 

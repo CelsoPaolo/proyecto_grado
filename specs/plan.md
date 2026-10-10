@@ -2,11 +2,13 @@
 
 - **Proyecto:** Sistema ERP interno para PC-Solution (Sucre, Bolivia)
 - **Documento:** Etapa 2 de Spec-Driven Development — Plan técnico
-- **Versión:** 1.3
-- **Fecha:** 2026-10-08
-- **Estado:** **Aprobado** el 2026-10-08 — la v1.2 está implementada; la
-  v1.3 diseña las cinco funcionalidades de `spec.md` v1.4 y está
-  pendiente de implementar. Siguen vigentes PT-01 a PT-04 (sección 13)
+- **Versión:** 1.4
+- **Fecha:** 2026-10-09
+- **Estado:** **Aprobado** el 2026-10-08 — la v1.3 diseñó las cinco
+  funcionalidades de `spec.md` v1.4, y la v1.4 de este plan las deja
+  **implementadas** (bloques 8 a 13), con las precisiones de §11.4.
+  Queda pendiente la importación del catálogo anterior (§11.3), que se
+  aplica con aprobación expresa. Siguen vigentes PT-01 a PT-05 (sección 13)
 - **Deriva de:** `spec.md` v1.4
 
 ### Historial de versiones
@@ -17,6 +19,7 @@
 | 1.1 | 2026-09-22 | Se resuelven los puntos pendientes PT-01 a PT-04. Alcance limitado a entorno de desarrollo (PT-01); **invalidación inmediata de sesiones** al bloquear una cuenta, con corrección de un error técnico de la v1.0 (PT-02); PrimeVue confirmado (PT-03); sin carga de datos de ejemplo, salvo el arranque del primer administrador (PT-04). |
 | 1.2 | 2026-09-30 | Se añaden §7.6 (paleta e identidad visual: cromo oscuro sobre área clara, morado como color de marca y los estados semánticos conservando sus colores) y §7.7 (pantalla de Inicio por rol, decorativa, que deja de duplicar la barra lateral). Decisiones de presentación posteriores a las primeras sesiones de uso; ninguna altera un comportamiento y por eso no generan RF nuevos. Se añade además §7.8 y el endpoint `GET /solicitudes/{id}/pdf` en §4.4, que implementan RF-67 y RF-68 de `spec.md` v1.3. |
 | 1.3 | 2026-10-08 | **Diseño de las cinco funcionalidades de `spec.md` v1.4.** Dos apps nuevas, `inventario` (movimientos de stock) y `clientes`; `panel` pasa a servir también los reportes por rango, y el panel diario se reescribe como el reporte de un día para que ambos no puedan divergir (RN-REP-08). Modelo de datos en §3.5; endpoints nuevos en §4.4; el libro de movimientos dentro del patrón de concurrencia en §6.5; lector de códigos, garantía y reportes en §7.9 a §7.11. Dependencias nuevas: `openpyxl` (backend) y `JsBarcode` (frontend), ambas sin componentes nativos. **Hallazgo que condiciona el diseño:** hoy las existencias se editan con el `PATCH` genérico del producto, **sin bloquear la fila**; con un libro de movimientos eso deja de ser aceptable y el ajuste pasa a un servicio propio con `select_for_update()` (§6.5). **De paso se corrigen cinco restos** de versiones anteriores: PostgreSQL 16 en §2.1, «asignación» en §2.3, una restricción de §3.3 que no existe en el modelo, y el ejemplo de `finalizar` y la nota sobre `iniciar` de §4.4, ambos anteriores a la v1.2. **Aprobado con las decisiones PA-06 a PA-08** de `spec.md` §12: se diseña el **código de fábrica** opcional (§3.5, §4.4, §7.9) y «servicios por estado» incluye las canceladas. **Revisado el 2026-10-09:** editar un producto con `stock` en la petición responde 400 en lugar de ignorarlo (§4.4). **Revisado otra vez el 2026-10-09 (T-9.2):** el reverso del paso 2 de la migración del código ya no borra los códigos; volver a aplicarlo cambiaría el código de productos ya etiquetados (§3.5, RN-CAT-08). |
+| 1.4 | 2026-10-09 | **La v1.4 de `spec.md` queda implementada.** §11.4 recoge lo que la implementación precisó sin cambiar el alcance: el filtro inválido de movimientos responde 400, la cola del lector de códigos, el punto de extensión de las condiciones de la garantía, la búsqueda del carnet solo exacta, el `ANALYZE` tras cargas masivas y el join de «más vendidos». Ninguna precisión cambia un requerimiento. |
 
 > Este documento traduce la especificación funcional a **decisiones
 > técnicas concretas**: arquitectura, modelo de datos, contrato de la API,
@@ -2162,6 +2165,25 @@ los tres archivos afectados desde la copia, verificado byte a byte, y
 sin que ninguna tabla cambiara. Desde entonces no se arranca ningún
 servidor de base de datos sobre archivos fuera del proyecto; los datos
 antiguos se leen de los CSV exportados.
+
+### 11.4 Lo que la implementación precisó *(v1.4 de este plan, 2026-10-09)*
+
+Ninguna de estas precisiones cambia un requerimiento de `spec.md` v1.4.
+Son decisiones en las que el plan no entraba, y quedan aquí para que el
+plan describa el sistema tal como quedó. El detalle, con la tarea y el
+porqué, está en `docs/avance_v1.4.md`.
+
+| Tema | Precisión | Tarea |
+|---|---|---|
+| Movimientos | Un filtro inválido en `/movimientos-stock` (producto, tipo o fecha) responde **400** en lugar de ignorarse: en una auditoría, una lista sin filtrar parecería válida. Las fechas se filtran por día en hora de Bolivia. | T-8.6 |
+| Ajuste | Responde **201** con el movimiento creado. La interfaz confirma en dos pasos dentro del diálogo y avisa si el servidor registró otra diferencia porque se vendió mientras tanto. | T-8.6, T-8.7 |
+| Código interno | Se asigna en `Producto.save()` al insertar, no en el servicio de alta, para que lo reciba todo producto. El reverso del paso 2 de su migración no borra códigos (§3.5). | T-9.1, T-9.2 |
+| Lector de códigos (§7.9) | El campo se vacía **en el mismo Intro** y las lecturas se procesan **en cola**, en orden: un lector envía la siguiente antes de que responda la anterior. Una lectura que excedería las existencias avisa en lugar de sumar. Un `?codigo=` vacío devuelve una lista vacía. | T-9.3, T-9.5 |
+| Envío multipart | Las cadenas vacías viajan: sin eso, no se podía vaciar un campo de texto al subir a la vez una imagen nueva. | T-9.7 |
+| Garantía (§7.10) | Las condiciones de garantía de la empresa, que la spec no define, tienen un **punto de extensión único**: `CONDICIONES_DE_GARANTIA` en `ventas/garantia.py`. Vacío, la sección no aparece. | T-10.7 |
+| Clientes | Sin `?activo=`, la lista incluye a los inactivos (el Administrador los reactiva desde ahí); el selector de la venta pide `activo=true`. El carnet se busca **solo por coincidencia exacta**. El mensaje de carnet duplicado no dice de quién es. Un `cliente_id` inexistente en la venta responde 400 junto al campo. | T-11.2 a T-11.4 |
+| Reportes | `calcular(desde, hasta, con_detalles=True)`: el panel diario pide `con_detalles=False`. «Más vendidos» se consulta con un **join** a la venta y no con `venta__in=<subconsulta>`: con estadísticas viejas, PostgreSQL ejecutó la subconsulta como bucle anidado (213 s por petición con un año de datos). Tras una carga masiva, y en la prueba de RNF-28, se ejecuta `ANALYZE`. | T-12.3, T-12.7 |
+| Documentación de la API | Una prueba genera el esquema OpenAPI con `--fail-on-warn`; las enumeraciones `tipo` de la solicitud y del movimiento tienen nombre propio. | T-13.3 |
 
 ---
 

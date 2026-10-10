@@ -192,7 +192,7 @@ SPECTACULAR_SETTINGS = {
         'tienen cuenta ni acceso. Ver specs/spec.md para las reglas '
         'de negocio que cada endpoint implementa.'
     ),
-    'VERSION': '1.0.0',
+    'VERSION': '1.4.0',  # spec.md v1.4
     'SERVE_INCLUDE_SCHEMA': False,
     'COMPONENT_SPLIT_REQUEST': True,
     # `estado` existe en venta y en solicitud con valores distintos;
@@ -200,6 +200,9 @@ SPECTACULAR_SETTINGS = {
     'ENUM_NAME_OVERRIDES': {
         'EstadoVentaEnum': 'ventas.models.EstadoVenta.choices',
         'EstadoSolicitudEnum': 'servicios.models.EstadoSolicitud.choices',
+        # v1.4: `tipo` existe en la solicitud y en el movimiento de stock.
+        'TipoServicioEnum': 'servicios.models.TipoServicio.choices',
+        'TipoMovimientoEnum': 'inventario.models.TipoMovimiento.choices',
     },
 }
 
