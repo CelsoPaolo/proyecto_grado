@@ -113,7 +113,9 @@ defineExpose({ filtros, cargar })
     >
       <Column header="Nombre">
         <template #body="{ data }">
-          <RouterLink :to="{ name: 'cliente-detalle', params: { id: data.id } }">{{ data.nombre }}</RouterLink>
+          <RouterLink :to="{ name: 'cliente-detalle', params: { id: data.id } }" class="enlace-de-tabla">
+            {{ data.nombre }}
+          </RouterLink>
         </template>
       </Column>
       <Column field="telefono" header="Teléfono" />

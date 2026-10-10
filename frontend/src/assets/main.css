@@ -76,3 +76,23 @@ body {
 .p-datatable-wrapper {
   overflow-x: auto;
 }
+
+/* Nombres que abren un detalle dentro de una lista (plan.md 7.13).
+   Se leen como el resto del texto de la tabla: sin el morado ni el
+   subrayado de un enlace, tampoco una vez visitados. Siguen siendo
+   enlaces: el cursor de mano lo indica, y el foco de teclado se
+   conserva y se marca (accesibilidad). Sin ningun otro adorno. */
+.enlace-de-tabla,
+.enlace-de-tabla:visited,
+.enlace-de-tabla:hover,
+.enlace-de-tabla:active {
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.enlace-de-tabla:focus-visible {
+  outline: 2px solid var(--p-primary-color, #7c3aed);
+  outline-offset: 2px;
+  border-radius: 2px;
+}

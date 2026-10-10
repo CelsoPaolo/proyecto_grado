@@ -1702,6 +1702,17 @@ Sustituye a la pantalla de Inicio (§7.7, retirada). Cada rol tiene un
 - **Es navegación, no seguridad** (RN-ACC-04): el servidor sigue
   respondiendo 403 a lo que el rol no puede hacer.
 
+### 7.13 Nombres que abren un detalle *(v1.5, 2026-10-10)*
+
+En las listas, el nombre que abre un detalle se lee como el resto del
+texto de la tabla, no como un enlace del navegador (morado y
+subrayado). Una clase común, `.enlace-de-tabla` en `main.css`: hereda el
+color, sin subrayado —también visitado—, con cursor de mano, y con el
+**indicador de foco de teclado** conservado y marcado. Se aplica al
+producto en el Catálogo, al cliente en Clientes y al producto en la
+tabla de Movimientos, que eran los únicos nombres con enlace en una
+lista. Los accesos del Panel no son nombres y tienen su propio estilo.
+
 ### 7.8 Informe en PDF (RF-67, RF-68)
 
 **Se genera en el servidor.** Se evaluó generarlo en el navegador con

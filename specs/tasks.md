@@ -1790,12 +1790,22 @@ final del documento.
   - Mutaciones detectadas: el bucle de «Sin permiso», seguir cualquier
     `redirigir` y un espacio equivocado.
 
-### [ ] T-14.2 — Nombres sin estilo de enlace en las listas
+### [x] T-14.2 — Nombres sin estilo de enlace en las listas
 - **Trabajo:** Los nombres que abren un detalle en las listas se ven
   como texto de la tabla, sin morado ni subrayado, también visitados;
   conservan el cursor de mano y el foco de teclado (`plan.md` §7.13).
 - **Hecho cuando:** pruebas verifican la clase común en cada nombre que
   enlaza y que el estilo no quita el indicador de foco.
+- **Resultado (2026-10-10):** clase común `.enlace-de-tabla` en
+  `main.css`.
+  - Hereda el color del texto, sin subrayado, también visitado o al
+    pasar el ratón; cursor de mano; foco de teclado marcado.
+  - Aplicada al producto en el Catálogo, al cliente en Clientes y al
+    producto en la tabla de Movimientos.
+  - Revisadas Ventas, Servicios, Usuarios, Categorías y Reportes: no
+    tienen nombres con enlace en sus tablas.
+  - 5 pruebas. Mutaciones detectadas: quitar la clase, y
+    `outline: none`.
 
 ### [ ] T-14.3 — Cabecera y menú lateral fijos
 - **Cubre:** RNF-12

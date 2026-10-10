@@ -51,7 +51,10 @@ function conSigno(n) {
     </Column>
     <Column v-if="conProducto" header="Producto">
       <template #body="{ data }">
-        <RouterLink :to="{ name: 'producto-detalle', params: { id: data.producto } }">
+        <RouterLink
+          :to="{ name: 'producto-detalle', params: { id: data.producto } }"
+          class="enlace-de-tabla"
+        >
           {{ data.producto_nombre }}
         </RouterLink>
       </template>

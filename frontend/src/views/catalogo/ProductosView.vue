@@ -211,7 +211,10 @@ onMounted(() => {
           <div class="producto">
             <img v-if="data.imagen" :src="data.imagen" :alt="data.nombre" />
             <i v-else class="pi pi-image sin-imagen" aria-hidden="true" />
-            <RouterLink :to="{ name: 'producto-detalle', params: { id: data.id } }">
+            <RouterLink
+              :to="{ name: 'producto-detalle', params: { id: data.id } }"
+              class="enlace-de-tabla"
+            >
               {{ data.nombre }}
             </RouterLink>
           </div>

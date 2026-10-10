@@ -60,7 +60,8 @@ bloque 13.
 | 2026-10-09 | T-OP.3 Informe final — **esperando aprobación** | `45f1973` | B 1089 / 0 · F 217 / 0 | Con tus decisiones: imágenes **copiadas** (153 archivos, idénticos por SHA-256; el origen, sin cambios); las tres categorías parecidas se fusionan **renombrando las existentes** con `--fusionar-categorias`, dentro de la huella y de la transacción (`plan.md` §11.3); el precio del producto 98 aparece como «precio por confirmar con la empresa». Huella `3a22466c989cf45c`, igual en dos ejecuciones. Base de desarrollo intacta. |
 | 2026-10-09 | T-OP.3 y T-OP.4 Importación aplicada | `5917464` | B 1089 / 0 · F 217 / 0 | Aprobada por el usuario. Respaldo previo con `pg_dump` (`datos_importacion/respaldos/pcsolution_antes_de_T-OP.4_20261009_205743.dump`). Se usó `--usuario admin`, porque es el único Administrador activo y el comando aprobado decía `<ADMIN>`. Resultado: 160 productos, 15 categorías, 153 `ALTA`, libro cuadrado, los 7 anteriores intactos y las imágenes servidas. |
 | 2026-10-09 | T-OP.5 Carga posterior del recuento (`--solo-existencias`) | `bd6c094` | B 1105 / 0 · F 217 / 0 | **Incluida la columna opcional `meses_garantia`**: complica poco, porque es una edición del producto sin movimiento, idempotente, y entra en la huella. Además, **la huella incluye las existencias actuales**, para que una venta entre el informe y la aplicación lo invalide. Lo contado igual a lo vigente no crea ajuste. La planilla antigua (`planilla_recuento.csv`) queda obsoleta: usar `planilla_recuento_importados.csv`. En la primera ejecución el frontend dio 3 tiempos agotados con el portátil en batería; al repetir, en verde. No se subió el límite. |
-| 2026-10-10 | T-14.1 Espacio de trabajo por rol, sin Inicio | siguiente commit | B 1105 / 0 · F 224 / 0 | **Documentos primero:** `spec.md` v1.4.1 (CU-AUT-01 precisa el destino tras el login; **ningún RF, RNF, RN ni CU retirado**: el Inicio no tenía requerimiento), `plan.md` v1.5 (§7.4 y §7.7 marcadas como retiradas, no borradas; §7.12 nueva) y `tasks.md` v1.2 (bloque 14). La raíz `/` la resuelve el guard tras restaurar la sesión; con un `redirect` se perdía la sesión al recargar. Los tokens CSS de los degradados del Inicio (`--pcs-degradado-*`) quedan en `main.css` sin uso: no se tocaron, para no refactorizar fuera de lo pedido. |
+| 2026-10-10 | T-14.1 Espacio de trabajo por rol, sin Inicio | `0651c8c` | B 1105 / 0 · F 224 / 0 | **Documentos primero:** `spec.md` v1.4.1 (CU-AUT-01 precisa el destino tras el login; **ningún RF, RNF, RN ni CU retirado**: el Inicio no tenía requerimiento), `plan.md` v1.5 (§7.4 y §7.7 marcadas como retiradas, no borradas; §7.12 nueva) y `tasks.md` v1.2 (bloque 14). La raíz `/` la resuelve el guard tras restaurar la sesión; con un `redirect` se perdía la sesión al recargar. Los tokens CSS de los degradados del Inicio (`--pcs-degradado-*`) quedan en `main.css` sin uso: no se tocaron, para no refactorizar fuera de lo pedido. |
+| 2026-10-10 | T-14.2 Nombres sin estilo de enlace | siguiente commit | B 1105 / 0 · F 229 / 0 | Una sola clase en `main.css`, y no estilos sueltos por vista. **No se tocó** la referencia «Venta n.º X» de la tabla de Movimientos: es un número de referencia, no un nombre, y sigue con el estilo de enlace. Si se quiere igual, es una línea. Al pasar el ratón no cambia nada: no se añadió ningún adorno. |
 
 ## Pendiente para revisión humana
 
@@ -167,6 +168,10 @@ bloque 13.
   - Clic en el logo «PC-Solution».
   - Como Ventas, escribir `/usuarios` en la barra: «Sin permiso», y su
     botón lleva a «Registrar venta».
+- **T-14.2, listas:** en el Catálogo, en Clientes y en Movimientos, el
+  nombre debe verse negro y sin subrayar, también tras volver de abrir
+  su detalle. Debe tener cursor de mano, y con Tab se tiene que ver el
+  recuadro de foco.
 - **Dependencias:** `npm audit` informa de 1 vulnerabilidad alta en
   `source-map-js`, una herramienta de desarrollo que ya estaba instalada
   antes de esta versión; no viene de JsBarcode. No apliqué `npm audit
@@ -174,4 +179,4 @@ bloque 13.
 
 ## Dónde se detuvo la sesión
 
-T-14.1 terminada. **Siguiente: T-14.2** (nombres sin estilo de enlace).
+T-14.2 terminada. **Siguiente: T-14.3** (cabecera y menú fijos).
