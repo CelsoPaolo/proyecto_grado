@@ -1670,7 +1670,7 @@ final del documento.
     incluye las existencias, y no comprobar el nombre de la planilla.
   - Formatos e `--imagenes` precisados en `plan.md` §11.4.
 
-### [ ] T-OP.3 — Informe de importación y aprobación ⚠️
+### [x] T-OP.3 — Informe de importación y aprobación ⚠️
 > *Precisado el 2026-10-09, con las decisiones del usuario:* imágenes
 > copiadas a `datos_importacion/catalogo_anterior/imagenes/`; las tres
 > categorías parecidas se fusionan renombrando las existentes con el
@@ -1689,8 +1689,10 @@ final del documento.
   son inválidas, junto con la **fecha del recuento**; y la huella.
 - **Hecho cuando:** **el usuario aprueba el informe** y, si hace falta,
   el mapa de categorías. Sin aprobación explícita no se pasa a T-OP.4.
+- **Resultado (2026-10-09):** el usuario aprobó el informe final, con
+  la huella `3a22466c989cf45c`.
 
-### [ ] T-OP.4 — Aplicar la importación
+### [x] T-OP.4 — Aplicar la importación
 - **Depende de:** T-OP.3, con la aprobación del usuario
 - **Trabajo:** `--aplicar --huella <la aprobada>`.
 - **Hecho cuando:** el número de productos creados y de existencias
@@ -1702,6 +1704,20 @@ final del documento.
   > comando y la entrega para cargarla en esta misma ejecución. Si no
   > está lista, se importa sin ella y las existencias se cargan después
   > con «Ajustar existencias» (CU-CAT-07), una a una.
+- **Resultado (2026-10-09):**
+  - Respaldo previo con `pg_dump` en `datos_importacion/respaldos/pcsolution_antes_de_T-OP.4_20261009_205743.dump` (fuera de Git), legible
+    con `pg_restore --list` (21 tablas con datos).
+  - Se aplicó el comando exacto del informe con `--usuario admin`, el
+    único Administrador activo: 153 productos importados.
+  - Verificación:
+    - 160 productos y 15 categorías;
+    - 153 movimientos `ALTA` (antes había 0, porque los anteriores
+      tienen `SALDO_INICIAL`), todos de `admin` y de cantidad 0;
+    - libro cuadrado y sin cadenas rotas en los 160;
+    - los 7 productos anteriores, sin ningún campo distinto;
+    - las categorías 3, 4 y 5 renombradas, con el mismo id;
+    - imágenes servidas con 200 e idénticas al archivo.
+  - Una segunda ejecución importaría 0.
 
 ---
 

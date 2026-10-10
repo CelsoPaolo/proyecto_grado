@@ -57,7 +57,8 @@ bloque 13.
 | 2026-10-09 | T-13.3 Coherencia y documentación | `ea62b6c` | B 1064 / 0 · F 217 / 0 | `plan.md` pasa a la v1.4 con una tabla §11.4 de precisiones de implementación (ninguna cambia un requerimiento, así que `spec.md` no se toca). README y guion actualizados. Esquema OpenAPI sin avisos y vigilado por una prueba. |
 | 2026-10-09 | T-OP.2 Comando `importar_catalogo` | `37d2b1c` | B 1081 / 0 · F 217 / 0 | **Las imágenes se leen de la carpeta que indique `--imagenes`**, sin ruta por defecto fuera del proyecto: así ninguna ejecución toca archivos de fuera sin que se le indique. La huella incluye el contenido de cada imagen y las cifras del recuento. El comando exige un Administrador activo en `--usuario` y ejecuta `ANALYZE` tras aplicar. |
 | 2026-10-09 | T-OP.3 Informe real — **preparado, esperando aprobación** | `229c8b7` | B 1082 / 0 · F 217 / 0 | Informe sobre los CSV reales **sin imágenes**: están fuera del proyecto y leerlas es una condición de parada. Base de desarrollo intacta antes y después (7 productos, 5 categorías y 7 movimientos). **Defecto corregido:** en la consola de Windows (cp1252) la flecha «←» del informe hacía fallar el comando; ahora es «<-», el archivo de `--salida` se escribe antes y una prueba vigila la codificación. Informe en `datos_importacion/informe_importacion_sin_imagenes.txt`, planilla en `datos_importacion/planilla_recuento.csv` (fuera de Git). |
-| 2026-10-09 | T-OP.3 Informe final — **esperando aprobación** | siguiente commit | B 1089 / 0 · F 217 / 0 | Con tus decisiones: imágenes **copiadas** (153 archivos, idénticos por SHA-256; el origen, sin cambios); las tres categorías parecidas se fusionan **renombrando las existentes** con `--fusionar-categorias`, dentro de la huella y de la transacción (`plan.md` §11.3); el precio del producto 98 aparece como «precio por confirmar con la empresa». Huella `3a22466c989cf45c`, igual en dos ejecuciones. Base de desarrollo intacta. |
+| 2026-10-09 | T-OP.3 Informe final — **esperando aprobación** | `45f1973` | B 1089 / 0 · F 217 / 0 | Con tus decisiones: imágenes **copiadas** (153 archivos, idénticos por SHA-256; el origen, sin cambios); las tres categorías parecidas se fusionan **renombrando las existentes** con `--fusionar-categorias`, dentro de la huella y de la transacción (`plan.md` §11.3); el precio del producto 98 aparece como «precio por confirmar con la empresa». Huella `3a22466c989cf45c`, igual en dos ejecuciones. Base de desarrollo intacta. |
+| 2026-10-09 | T-OP.3 y T-OP.4 Importación aplicada | siguiente commit | B 1089 / 0 · F 217 / 0 | Aprobada por el usuario. Respaldo previo con `pg_dump` (`datos_importacion/respaldos/pcsolution_antes_de_T-OP.4_20261009_205743.dump`). Se usó `--usuario admin`, porque es el único Administrador activo y el comando aprobado decía `<ADMIN>`. Resultado: 160 productos, 15 categorías, 153 `ALTA`, libro cuadrado, los 7 anteriores intactos y las imágenes servidas. |
 
 ## Pendiente para revisión humana
 
@@ -146,10 +147,7 @@ bloque 13.
   y Reportes. Buscar texto cortado, botones que no caben y tablas
   ilegibles.
 - **T-OP.3:** decisiones del usuario tomadas el 2026-10-09 (imágenes, fusiones, precio, sin recuento).
-- **T-OP.3, aprobación final:** informe en
-  `datos_importacion/informe_importacion_final.txt`, huella
-  `3a22466c989cf45c`. Aprobado, T-OP.4 ejecuta exactamente la orden del
-  informe con `--aplicar --huella 3a22466c989cf45c --usuario <administrador>`.
+- **T-OP.4:** importación aplicada el 2026-10-09. Revisar en el catálogo algunos de los 153 productos (imagen, precio, categoría) y el precio del producto 98, que está por confirmar con la empresa.
 - **Dependencias:** `npm audit` informa de 1 vulnerabilidad alta en
   `source-map-js`, una herramienta de desarrollo que ya estaba instalada
   antes de esta versión; no viene de JsBarcode. No apliqué `npm audit
@@ -157,4 +155,4 @@ bloque 13.
 
 ## Dónde se detuvo la sesión
 
-**Detenido en T-OP.3, esperando tu aprobación del informe final** (huella `3a22466c989cf45c`). T-OP.4 no se ejecuta sin ella.
+T-OP.4 aplicada. **Siguiente: T-OP.5** (`--solo-existencias`).
