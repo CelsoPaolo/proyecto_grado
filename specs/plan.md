@@ -2103,6 +2103,31 @@ El comando lee `diferencias_con_seeder.csv` con la opción
 `--diferencias` y solo lo usa para marcar filas en el informe: no
 cambia qué se importa.
 
+#### Fusión de categorías renombrando las existentes *(decidido al revisar el informe, 2026-10-09)*
+
+El informe señaló tres categorías del catálogo antiguo parecidas a otras
+ya creadas en el sistema: «Cables y Adaptadores» y «cables», «Cámaras y
+Videovigilancia» y «Videovigilancia», «Redes y Conectividad» y «Redes».
+**Se fusionan quedándose con el nombre del catálogo antiguo:** la
+categoría existente **se renombra** y los productos importados entran en
+ella. Sus productos actuales la conservan.
+
+- **Se hace dentro de la importación**, con `--fusionar-categorias`
+  (CSV `existente,nombre_final`), y no editando a mano antes: así el
+  renombrado está en el informe, entra en la **huella** y se aplica en
+  la **misma transacción**. Antes de aprobar no se escribe nada.
+- **No rompe nada**: en este sistema la categoría se referencia siempre
+  por su **id** —producto, filtros de la API y rutas de la interfaz— y no
+  tiene *slug*. El nombre solo se muestra, leído en vivo. Renombrar
+  conserva el id.
+- **El nombre final no puede chocar** con otra categoría existente: el
+  `UNIQUE` sin distinguir mayúsculas lo impediría, y el plan lo rechaza
+  antes.
+
+**Precio por confirmar.** El producto 98 (Turtle Beach Stealth 600) se
+importa a 580,00 —base antigua— y el informe lo lista aparte como
+**«precio por confirmar con la empresa»**.
+
 #### Carga de las existencias contadas *(opcional, añadido el 2026-10-09)*
 
 Con 153 productos importados en 0, ajustarlos uno a uno desde el diálogo

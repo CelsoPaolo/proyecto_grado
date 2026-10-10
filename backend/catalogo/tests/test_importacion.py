@@ -160,7 +160,7 @@ def test_las_diferencias_con_el_seeder_se_marcan_sin_cambiar_que_se_importa(orig
 
     texto = importacion.informe(con)
     assert "base antigua 250.50, seeder 280.00, se importaría 250.50" in texto
-    assert "CONFIRMAR CON LA EMPRESA" in texto
+    assert "precio por confirmar con la empresa" in texto
     assert con.a_importar == sin.a_importar and con.huella == sin.huella
 
 
@@ -331,3 +331,81 @@ def test_el_informe_se_puede_mostrar_en_la_consola_de_windows(origen):
     texto = importacion.informe(_plan(origen, existencias_csv=_planilla_rellena(origen, {"1": "3"})))
 
     texto.encode("cp1252")
+
+
+# ─────────────────────────────────────────────────────────────────────
+# Fusion de categorias renombrando la existente (plan.md 11.3)
+# ─────────────────────────────────────────────────────────────────────
+def _fusiones(origen, filas):
+    return _escribir(origen["tmp"] / "fusiones.csv", ["existente", "nombre_final"], filas)
+
+
+def test_la_fusion_renombra_la_existente_y_conserva_su_id_y_sus_productos(origen, admin):
+    redes = CategoriaFactory(nombre="Redes")
+    previo = ProductoFactory(nombre="Antena exterior", categoria=redes)
+    plan = _plan(origen, fusiones_csv=_fusiones(origen, [["Redes", "Redes y Conectividad"]]))
+
+    assert "Redes y Conectividad" in plan.categorias_existentes
+    assert "Redes y Conectividad" not in plan.categorias_nuevas
+    assert "«Redes» -> «Redes y Conectividad» (tiene 1 producto)" in importacion.informe(plan)
+
+    importacion.aplicar(plan, huella=plan.huella, usuario=admin)
+
+    redes.refresh_from_db()
+    assert redes.nombre == "Redes y Conectividad"
+    assert Categoria.objects.filter(nombre__iexact="Redes y Conectividad").count() == 1
+    previo.refresh_from_db()
+    assert previo.categoria_id == redes.pk
+    assert Producto.objects.get(nombre="Router TP-Link AC1200").categoria_id == redes.pk
+
+
+def test_el_informe_con_fusiones_no_escribe_nada(origen):
+    redes = CategoriaFactory(nombre="Redes")
+
+    _plan(origen, fusiones_csv=_fusiones(origen, [["Redes", "Redes y Conectividad"]]))
+
+    redes.refresh_from_db()
+    assert redes.nombre == "Redes"
+
+
+def test_las_fusiones_entran_en_la_huella(origen):
+    CategoriaFactory(nombre="Redes")
+
+    sin = _plan(origen)
+    con = _plan(origen, fusiones_csv=_fusiones(origen, [["Redes", "Redes y Conectividad"]]))
+
+    assert sin.huella != con.huella
+
+
+def test_una_fusion_que_falla_no_deja_ni_el_renombrado(origen, admin):
+    redes = CategoriaFactory(nombre="Redes")
+    plan = _plan(origen, fusiones_csv=_fusiones(origen, [["Redes", "Redes y Conectividad"]]))
+
+    with mock.patch.object(importacion, "crear_producto", side_effect=RuntimeError("fallo")):
+        with pytest.raises(RuntimeError):
+            importacion.aplicar(plan, huella=plan.huella, usuario=admin)
+
+    redes.refresh_from_db()
+    assert redes.nombre == "Redes"
+
+
+@pytest.mark.parametrize(
+    ("filas", "mensaje"),
+    [
+        ([["No existe", "Algo"]], "no existe la categoría"),
+        ([["Redes", "Cámaras"]], "ya es otra categoría existente"),
+    ],
+)
+def test_una_fusion_imposible_se_rechaza_antes_de_aprobar(origen, filas, mensaje):
+    CategoriaFactory(nombre="Redes")
+    CategoriaFactory(nombre="Cámaras")
+
+    with pytest.raises(ValueError, match=mensaje):
+        _plan(origen, fusiones_csv=_fusiones(origen, filas))
+
+
+def test_el_precio_diferente_se_lista_como_por_confirmar_con_la_empresa(origen):
+    texto = importacion.informe(_plan(origen))
+
+    assert "PRECIOS POR CONFIRMAR CON LA EMPRESA:" in texto
+    assert "[2] Router TP-Link AC1200: se importa a 250.50 (el seeder decía 280.00)" in texto

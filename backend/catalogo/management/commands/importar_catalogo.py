@@ -33,6 +33,10 @@ class Command(BaseCommand):
         parser.add_argument("--imagenes", help="carpeta base de las rutas de la columna imagen")
         parser.add_argument("--mapa-categorias", help="CSV origen,destino para fusionar categorías")
         parser.add_argument("--diferencias", help="diferencias_con_seeder.csv, para marcarlas en el informe")
+        parser.add_argument(
+            "--fusionar-categorias",
+            help="CSV existente,nombre_final: renombra la categoría existente y fusiona en ella",
+        )
         parser.add_argument("--planilla-recuento", help="escribe aquí la planilla para el recuento")
         parser.add_argument("--existencias", help="planilla de recuento rellenada")
         parser.add_argument("--salida", help="guarda también el informe en este archivo")
@@ -49,6 +53,7 @@ class Command(BaseCommand):
                 mapa_categorias=opciones["mapa_categorias"],
                 diferencias_csv=opciones["diferencias"],
                 existencias_csv=opciones["existencias"],
+                fusiones_csv=opciones["fusionar_categorias"],
             )
         except (OSError, ValueError, KeyError) as error:
             raise CommandError(f"No se pudieron leer los datos de origen: {error}") from error

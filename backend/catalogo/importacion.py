@@ -82,6 +82,33 @@ def leer_mapa_categorias(ruta):
     return {normalizar(f["origen"]): f["destino"].strip() for f in _leer_csv(ruta)}
 
 
+def leer_fusiones(ruta, existentes):
+    """plan.md 11.3 — CSV `existente,nombre_final`: la categoria
+    existente se RENOMBRA a `nombre_final`, y los productos importados de
+    la categoria antigua con ese nombre entran en ella.
+
+    Se valida aqui, antes de aprobar nada: la categoria debe existir y el
+    nombre final no puede chocar con OTRA existente (el UNIQUE sin
+    distinguir mayusculas lo impediria al aplicar).
+    """
+    if not ruta:
+        return []
+    por_nombre = {normalizar(c.nombre): c for c in existentes}
+    fusiones = []
+    for fila in _leer_csv(ruta):
+        actual, final = fila["existente"].strip(), fila["nombre_final"].strip()
+        categoria = por_nombre.get(normalizar(actual))
+        if categoria is None:
+            raise ValueError(f"--fusionar-categorias: no existe la categoría «{actual}».")
+        otra = por_nombre.get(normalizar(final))
+        if otra is not None and otra.pk != categoria.pk:
+            raise ValueError(f"--fusionar-categorias: «{final}» ya es otra categoría existente.")
+        if len(final) > LARGO_NOMBRE_CATEGORIA or not final:
+            raise ValueError(f"--fusionar-categorias: nombre final no válido: «{final}».")
+        fusiones.append((categoria.pk, categoria.nombre, final, categoria.productos.count()))
+    return fusiones
+
+
 def _huella_de_archivo(ruta):
     return hashlib.sha256(Path(ruta).read_bytes()).hexdigest()
 
@@ -117,6 +144,8 @@ class Plan:
     categorias_existentes: list = field(default_factory=list)
     categorias_parecidas: dict = field(default_factory=dict)  # nueva -> [existentes]
     diferencias: list = field(default_factory=list)
+    # (id, nombre_actual, nombre_final, productos que ya tiene)
+    fusiones: list = field(default_factory=list)
     recuento: dict = field(default_factory=dict)
     huella: str = ""
 
@@ -185,6 +214,7 @@ def construir_plan(
     mapa_categorias=None,
     diferencias_csv=None,
     existencias_csv=None,
+    fusiones_csv=None,
 ):
     """Decide que se importaria, sin escribir nada en la base."""
     plan = Plan()
@@ -192,6 +222,12 @@ def construir_plan(
     categorias_antiguas = {f["id"].strip(): f["nombre"].strip() for f in _leer_csv(categorias_csv)}
     mapa = leer_mapa_categorias(mapa_categorias)
     existentes = list(Categoria.objects.all())
+    plan.fusiones = leer_fusiones(fusiones_csv, existentes)
+    # El plan se calcula como si los renombrados ya estuvieran hechos:
+    # asi «Redes y Conectividad» coincide con la «Redes» renombrada.
+    nombres_finales = {pk: final for pk, _, final, _ in plan.fusiones}
+    for categoria in existentes:
+        categoria.nombre = nombres_finales.get(categoria.pk, categoria.nombre)
     existentes_por_nombre = {normalizar(c.nombre): c.nombre for c in existentes}
     productos_existentes = {normalizar(n) for n in Producto.objects.values_list("nombre", flat=True)}
     imagenes = Path(imagenes) if imagenes else None
@@ -298,7 +334,11 @@ def calcular_huella(plan):
     datos = [
         {k: v for k, v in p.items() if k != "imagen"} for p in sorted(plan.a_importar, key=lambda p: p["id_antiguo"])
     ]
-    canonico = json.dumps(datos, ensure_ascii=False, sort_keys=True)
+    canonico = json.dumps(
+        {"productos": datos, "fusiones": [list(f[:3]) for f in plan.fusiones]},
+        ensure_ascii=False,
+        sort_keys=True,
+    )
     return hashlib.sha256(canonico.encode("utf-8")).hexdigest()[:16]
 
 
@@ -337,6 +377,14 @@ def aplicar(plan, *, huella, usuario):
 
     creados = []
     with transaction.atomic():
+        # Primero los renombrados (plan.md 11.3): conservan el id, asi que
+        # sus productos actuales siguen en ellas.
+        for pk, actual, final, _ in plan.fusiones:
+            categoria = Categoria.objects.select_for_update().get(pk=pk)
+            if normalizar(categoria.nombre) != normalizar(actual):
+                raise HuellaNoCoincide(f"La categoría {pk} ya no se llama «{actual}».")
+            categoria.nombre = final
+            categoria.save(update_fields=["nombre"])
         categorias = {}
         for p in plan.a_importar:
             clave = normalizar(p["categoria"])
@@ -389,6 +437,13 @@ def informe(plan, *, fecha_de_ejecucion=None):
     lineas += [f"  - [{i}] {n}: {m}" for i, n, m in plan.sin_imagen]
     lineas.append("")
 
+    if plan.fusiones:
+        lineas.append("Categorías existentes que se RENOMBRAN (fusión; conservan su id y sus productos):")
+        lineas += [
+            f"  - «{actual}» -> «{final}» (tiene {n} producto{'s' if n != 1 else ''})"
+            for _, actual, final, n in plan.fusiones
+        ]
+        lineas.append("")
     lineas.append(f"Categorías que ya existen: {', '.join(plan.categorias_existentes) or 'ninguna'}")
     lineas.append(f"Categorías que se crearían: {len(plan.categorias_nuevas)}")
     for nombre in plan.categorias_nuevas:
@@ -400,13 +455,22 @@ def informe(plan, *, fecha_de_ejecucion=None):
     if plan.diferencias:
         lineas.append("Productos que difieren entre la base antigua y el seeder:")
         for d in plan.diferencias:
-            aviso = "  <- CONFIRMAR CON LA EMPRESA" if d.get("campo") == "precio" else ""
+            aviso = "  <- precio por confirmar con la empresa" if d.get("campo") == "precio" else ""
             estado = "" if d["se_importa"] else " (no se importa)"
             lineas.append(
                 f"  - [{d['id_antiguo']}] {d['nombre']}, {d['campo']}: base antigua {d['base_antigua']}, "
                 f"seeder {d['seeder']}, se importaría {d['valor_que_se_importaria']}{estado}{aviso}"
             )
         lineas.append("")
+        por_confirmar = [d for d in plan.diferencias if d.get("campo") == "precio" and d["se_importa"]]
+        if por_confirmar:
+            lineas.append("PRECIOS POR CONFIRMAR CON LA EMPRESA:")
+            lineas += [
+                f"  - [{d['id_antiguo']}] {d['nombre']}: se importa a {d['valor_que_se_importaria']} "
+                f"(el seeder decía {d['seeder']})"
+                for d in por_confirmar
+            ]
+            lineas.append("")
 
     if plan.recuento:
         r = plan.recuento

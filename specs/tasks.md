@@ -1671,6 +1671,12 @@ final del documento.
   - Formatos e `--imagenes` precisados en `plan.md` §11.4.
 
 ### [ ] T-OP.3 — Informe de importación y aprobación ⚠️
+> *Precisado el 2026-10-09, con las decisiones del usuario:* imágenes
+> copiadas a `datos_importacion/catalogo_anterior/imagenes/`; las tres
+> categorías parecidas se fusionan renombrando las existentes con el
+> nombre antiguo (`--fusionar-categorias`, `plan.md` §11.3); el precio
+> del producto 98 se marca «por confirmar con la empresa»; el recuento
+> no se carga en esta ejecución.
 - **Depende de:** T-OP.1, T-OP.2
 - **Trabajo:** Ejecutar `--informe` sobre los CSV reales y presentarlo:
   cuántos productos se importarían; **cuántos tienen nombre o categoría
