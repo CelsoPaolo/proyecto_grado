@@ -54,10 +54,12 @@ class Command(BaseCommand):
             raise CommandError(f"No se pudieron leer los datos de origen: {error}") from error
 
         texto = importacion.informe(plan, fecha_de_ejecucion=timezone.localdate().isoformat())
-        self.stdout.write(texto)
+        # El archivo primero: si la consola no pudiera mostrar algun
+        # caracter, el informe ya estaria guardado.
         if opciones["salida"]:
             with open(opciones["salida"], "w", encoding="utf-8") as archivo:
                 archivo.write(texto + "\n")
+        self.stdout.write(texto)
 
         if opciones["planilla_recuento"]:
             importacion.escribir_planilla(plan, opciones["planilla_recuento"])

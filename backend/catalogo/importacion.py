@@ -393,14 +393,14 @@ def informe(plan, *, fecha_de_ejecucion=None):
     lineas.append(f"Categorías que se crearían: {len(plan.categorias_nuevas)}")
     for nombre in plan.categorias_nuevas:
         parecidas = plan.categorias_parecidas.get(nombre)
-        extra = f"  ← PARECIDA a: {', '.join(parecidas)} (¿fusionar con --mapa-categorias?)" if parecidas else ""
+        extra = f"  <- PARECIDA a: {', '.join(parecidas)} (¿fusionar con --mapa-categorias?)" if parecidas else ""
         lineas.append(f"  - {nombre}{extra}")
     lineas.append("")
 
     if plan.diferencias:
         lineas.append("Productos que difieren entre la base antigua y el seeder:")
         for d in plan.diferencias:
-            aviso = "  ← CONFIRMAR CON LA EMPRESA" if d.get("campo") == "precio" else ""
+            aviso = "  <- CONFIRMAR CON LA EMPRESA" if d.get("campo") == "precio" else ""
             estado = "" if d["se_importa"] else " (no se importa)"
             lineas.append(
                 f"  - [{d['id_antiguo']}] {d['nombre']}, {d['campo']}: base antigua {d['base_antigua']}, "

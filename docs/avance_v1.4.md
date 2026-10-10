@@ -55,7 +55,8 @@ bloque 13.
 | 2026-10-09 | T-13.1 Matriz de permisos y guardianes | `ae7e7d6` | B 1063 / 0 · F 217 / 0 | Las 17 reglas v1.4 de `plan.md` §9 se añaden al guardián de cobertura, apuntando a pruebas que ya existían. La de RN-CAT-10 se completó con la comprobación de «no crea movimiento» que exigía el plan y no estaba escrita. |
 | 2026-10-09 | T-13.2 Usabilidad de lo nuevo | `2d54513` | B 1063 / 0 · F 217 / 0 | Sin cambios de código. Se marca hecha la parte automatizable; el recorrido en tres anchos queda abajo. «Registrar cliente» no pide confirmación, igual que el resto de altas del sistema: RNF-14 se aplica a modificar y desactivar, no a crear. |
 | 2026-10-09 | T-13.3 Coherencia y documentación | `ea62b6c` | B 1064 / 0 · F 217 / 0 | `plan.md` pasa a la v1.4 con una tabla §11.4 de precisiones de implementación (ninguna cambia un requerimiento, así que `spec.md` no se toca). README y guion actualizados. Esquema OpenAPI sin avisos y vigilado por una prueba. |
-| 2026-10-09 | T-OP.2 Comando `importar_catalogo` | siguiente commit | B 1081 / 0 · F 217 / 0 | **Las imágenes se leen de la carpeta que indique `--imagenes`**, sin ruta por defecto fuera del proyecto: así ninguna ejecución toca archivos de fuera sin que se le indique. La huella incluye el contenido de cada imagen y las cifras del recuento. El comando exige un Administrador activo en `--usuario` y ejecuta `ANALYZE` tras aplicar. |
+| 2026-10-09 | T-OP.2 Comando `importar_catalogo` | `37d2b1c` | B 1081 / 0 · F 217 / 0 | **Las imágenes se leen de la carpeta que indique `--imagenes`**, sin ruta por defecto fuera del proyecto: así ninguna ejecución toca archivos de fuera sin que se le indique. La huella incluye el contenido de cada imagen y las cifras del recuento. El comando exige un Administrador activo en `--usuario` y ejecuta `ANALYZE` tras aplicar. |
+| 2026-10-09 | T-OP.3 Informe real — **preparado, esperando aprobación** | siguiente commit | B 1082 / 0 · F 217 / 0 | Informe sobre los CSV reales **sin imágenes**: están fuera del proyecto y leerlas es una condición de parada. Base de desarrollo intacta antes y después (7 productos, 5 categorías y 7 movimientos). **Defecto corregido:** en la consola de Windows (cp1252) la flecha «←» del informe hacía fallar el comando; ahora es «<-», el archivo de `--salida` se escribe antes y una prueba vigila la codificación. Informe en `datos_importacion/informe_importacion_sin_imagenes.txt`, planilla en `datos_importacion/planilla_recuento.csv` (fuera de Git). |
 
 ## Pendiente para revisión humana
 
@@ -143,6 +144,23 @@ bloque 13.
   (campo de código y selector de cliente), Clientes, detalle de cliente
   y Reportes. Buscar texto cortado, botones que no caben y tablas
   ilegibles.
+- **T-OP.3, APROBACIÓN DE LA IMPORTACIÓN (bloqueante):**
+  1. **Imágenes:** copiar la carpeta de imágenes del proyecto Laravel
+     (la que contiene `productos/…png`) a
+     `datos_importacion/catalogo_anterior/imagenes/`, o autorizar
+     expresamente a leerla en su ubicación. Con imágenes, la huella
+     cambia, y hay que aprobar el informe nuevo.
+  2. **Categorías parecidas:** decidir si se fusionan «Cables y
+     Adaptadores» con «cables», «Cámaras y Videovigilancia» con
+     «Videovigilancia» y «Redes y Conectividad» con «Redes»
+     (`--mapa-categorias`), o si se crean como categorías nuevas.
+  3. **Precio del Turtle Beach Stealth 600:** se importaría a 580,00
+     (base antigua), no a 680,00 (seeder). Confirmar con la empresa.
+  4. **Recuento (opcional):** la planilla está en
+     `datos_importacion/planilla_recuento.csv`. Si se rellena el día
+     del cambio, se carga en la misma ejecución.
+  5. Con todo decidido, aprobar el informe final y su huella; solo
+     entonces se ejecuta T-OP.4 (`--aplicar`).
 - **Dependencias:** `npm audit` informa de 1 vulnerabilidad alta en
   `source-map-js`, una herramienta de desarrollo que ya estaba instalada
   antes de esta versión; no viene de JsBarcode. No apliqué `npm audit
@@ -150,4 +168,4 @@ bloque 13.
 
 ## Dónde se detuvo la sesión
 
-T-OP.2 terminada. **Siguiente: T-OP.3** (informe sobre los CSV reales y aprobación): pendiente de la carpeta de imágenes.
+**Detenido en T-OP.3, esperando tu aprobación** (condiciones de parada 1 y 2): falta la carpeta de imágenes (fuera del proyecto), decidir el mapa de categorías y aprobar el informe con su huella. T-OP.4 no se ejecuta sin esa aprobación.

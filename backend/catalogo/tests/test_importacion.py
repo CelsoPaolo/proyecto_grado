@@ -321,3 +321,13 @@ def test_un_ajuste_que_falla_revierte_tambien_la_importacion(origen, admin):
 
     assert not Producto.objects.exists()
     assert not MovimientoStock.objects.exists()
+
+
+def test_el_informe_se_puede_mostrar_en_la_consola_de_windows(origen):
+    """Con la salida redirigida, la consola de Windows usa cp1252: un
+    caracter fuera de ese juego (una flecha, por ejemplo) hacia fallar el
+    comando al imprimir el informe real."""
+    CategoriaFactory(nombre="Redes")
+    texto = importacion.informe(_plan(origen, existencias_csv=_planilla_rellena(origen, {"1": "3"})))
+
+    texto.encode("cp1252")
