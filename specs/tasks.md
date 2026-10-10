@@ -1511,7 +1511,7 @@ final del documento.
     - Con el plan malo forzado: 34,7 s; con estadísticas al día: 0,11 s.
   - Mutación detectada: el Excel con una cifra distinta.
 
-### [ ] T-12.8 — Pantalla de reportes
+### [x] T-12.8 — Pantalla de reportes
 - **Cubre:** RF-90 a RF-96
 - **Depende de:** T-12.7
 - **Trabajo:** Selector de rango con atajos resueltos en el frontend;
@@ -1520,6 +1520,18 @@ final del documento.
   empieza el lunes y «este mes» el día 1; las exportaciones se descargan;
   un rango sin actividad muestra ceros con aviso. Suite completa
   ejecutada y resultado mostrado.
+- **Resultado (2026-10-09):** pantalla `/reportes`, solo para el
+  Administrador, construida y con 12 pruebas de Vitest.
+  - Atajos «Hoy», «Esta semana» (desde el lunes, con el domingo dentro
+    de la semana anterior) y «Este mes», más un rango a mano.
+  - Tarjetas con el ingreso desglosado y las tres tablas.
+  - Aviso cuando no hay actividad; exportar a PDF y a Excel con el
+    cuadro de guardado.
+  - `useDescarga.js` admite otro tipo y extensión, sin cambiar su
+    comportamiento por defecto.
+  - Mutaciones detectadas: la semana desde el domingo, y el aviso de
+    rango vacío siempre visible.
+  - Suites: B 1026 pasan y 0 fallan; F 217 pasan.
 
 ---
 

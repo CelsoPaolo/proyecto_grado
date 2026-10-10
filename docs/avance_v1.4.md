@@ -50,7 +50,8 @@ bloque 13.
 | 2026-10-09 | T-12.4 API del reporte | `6c4481b` | B 998 / 3 · F 205 / 0 | La validación del rango vive en `panel/reportes.py` y la usarán también el PDF y el Excel, así que las tres salidas rechazan lo mismo. No se pone un tope al rango (RNF-28 habla de rendimiento con hasta un año, no de un límite). |
 | 2026-10-09 | T-12.5 Exportación a PDF | `572292d` | B 1008 / 2 · F 205 / 0 | Título «Reporte de operación», con el rango en el lugar del número. Leyenda propia en el pie: «Reporte interno de operación, no válido como documento fiscal». Las secciones vacías dicen «Sin ventas en el período». |
 | 2026-10-09 | T-12.6 Exportación a Excel | `5597dba` | B 1017 / 1 · F 205 / 0 | `openpyxl` fijado en 3.1.5 en el entorno; en `requirements/base.txt` queda como `>=3.1.5`, al estilo del resto. Trae una sola dependencia, `et-xmlfile`, también Python puro. Las fechas del rango van como fechas de Excel con formato `DD/MM/YYYY`, y el archivo se sirve como `attachment`. |
-| 2026-10-09 | T-12.7 Coherencia de las tres salidas ⚠️ | siguiente commit | **B 1026 / 0** · F 205 / 0 | **El guardián de trazabilidad llega a 0 fallos.** Hallazgo de rendimiento: con estadísticas viejas, `productos_mas_vendidos` (que usaba `venta__in=<subconsulta>`) tardaba 213 s por petición en la suite completa. Se reescribe como join, y la prueba ejecuta `ANALYZE` tras la carga, porque RNF-28 habla de «carga normal» y dentro de la transacción de la prueba autovacuum no ve las filas. El comando de importación (T-OP.2) ejecutará `ANALYZE` al aplicar. Hubo además una parada aislada de 214 s en una ejecución suelta que no se reprodujo, con el mismo origen. |
+| 2026-10-09 | T-12.7 Coherencia de las tres salidas ⚠️ | `08bcd97` | **B 1026 / 0** · F 205 / 0 | **El guardián de trazabilidad llega a 0 fallos.** Hallazgo de rendimiento: con estadísticas viejas, `productos_mas_vendidos` (que usaba `venta__in=<subconsulta>`) tardaba 213 s por petición en la suite completa. Se reescribe como join, y la prueba ejecuta `ANALYZE` tras la carga, porque RNF-28 habla de «carga normal» y dentro de la transacción de la prueba autovacuum no ve las filas. El comando de importación (T-OP.2) ejecutará `ANALYZE` al aplicar. Hubo además una parada aislada de 214 s en una ejecución suelta que no se reprodujo, con el mismo origen. |
+| 2026-10-09 | T-12.8 Pantalla de reportes | siguiente commit | B 1026 / 0 · F 217 / 0 | Al abrir se muestra «Este mes». Al elegir un rango a mano se quita el atajo, y al revés. Los atajos se calculan con la fecha del navegador, que es la de Bolivia en el equipo de la tienda. `useDescarga.guardar()` acepta `{tipo, extension, descripcion}`. |
 
 ## Pendiente para revisión humana
 
@@ -127,6 +128,12 @@ bloque 13.
   lento. El comando de importación ejecutará `ANALYZE` al aplicar. Si
   alguna vez se restaura una copia grande de la base, conviene ejecutar
   `ANALYZE;` en PostgreSQL.
+- **T-12.8, reportes (como Administrador):**
+  - Probar los atajos Hoy, Esta semana y Este mes, y un rango con el
+    calendario.
+  - Comprobar el aviso de «sin actividad» en un rango vacío.
+  - Exportar a PDF y a Excel; abrir ambos archivos y comparar las
+    cifras con la pantalla.
 - **Dependencias:** `npm audit` informa de 1 vulnerabilidad alta en
   `source-map-js`, una herramienta de desarrollo que ya estaba instalada
   antes de esta versión; no viene de JsBarcode. No apliqué `npm audit
@@ -134,4 +141,4 @@ bloque 13.
 
 ## Dónde se detuvo la sesión
 
-T-12.7 terminada. **Siguiente: T-12.8** (pantalla de reportes).
+T-12.8 terminada. **Siguiente: T-13.1** (matriz de permisos y guardianes).

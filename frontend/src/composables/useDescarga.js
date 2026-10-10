@@ -43,7 +43,11 @@ export function useDescarga() {
    * @returns true si se guardo, false si el usuario cancelo el cuadro
    * @throws el error normalizado de la API si la peticion falla
    */
-  async function guardar(obtener, nombre, { tipo = 'application/pdf' } = {}) {
+  async function guardar(
+    obtener,
+    nombre,
+    { tipo = 'application/pdf', extension = '.pdf', descripcion = 'Documento PDF' } = {},
+  ) {
     descargando.value = true
     try {
       const blob = await obtener()
@@ -55,8 +59,8 @@ export function useDescarga() {
             suggestedName: nombre,
             types: [
               {
-                description: 'Documento PDF',
-                accept: { [tipo]: ['.pdf'] },
+                description: descripcion,
+                accept: { [tipo]: [extension] },
               },
             ],
           })

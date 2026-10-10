@@ -73,6 +73,13 @@ export const rutas = [
     meta: { roles: [ADMIN], titulo: 'Movimientos', icono: 'pi pi-history' },
   },
   {
+    // RN-REP-10: solo el Administrador.
+    path: '/reportes',
+    name: 'reportes',
+    component: () => import('@/views/reportes/ReportesView.vue'),
+    meta: { roles: [ADMIN], titulo: 'Reportes', icono: 'pi pi-chart-line' },
+  },
+  {
     // RN-CLI-07: el Encargado de Servicios no entra al módulo (PA-06).
     path: '/clientes',
     name: 'clientes',
