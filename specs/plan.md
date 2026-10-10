@@ -2184,6 +2184,7 @@ porqué, está en `docs/avance_v1.4.md`.
 | Clientes | Sin `?activo=`, la lista incluye a los inactivos (el Administrador los reactiva desde ahí); el selector de la venta pide `activo=true`. El carnet se busca **solo por coincidencia exacta**. El mensaje de carnet duplicado no dice de quién es. Un `cliente_id` inexistente en la venta responde 400 junto al campo. | T-11.2 a T-11.4 |
 | Reportes | `calcular(desde, hasta, con_detalles=True)`: el panel diario pide `con_detalles=False`. «Más vendidos» se consulta con un **join** a la venta y no con `venta__in=<subconsulta>`: con estadísticas viejas, PostgreSQL ejecutó la subconsulta como bucle anidado (213 s por petición con un año de datos). Tras una carga masiva, y en la prueba de RNF-28, se ejecuta `ANALYZE`. | T-12.3, T-12.7 |
 | Documentación de la API | Una prueba genera el esquema OpenAPI con `--fail-on-warn`; las enumeraciones `tipo` de la solicitud y del movimiento tienen nombre propio. | T-13.3 |
+| Importación (§11.3) | Las imágenes se leen de la carpeta que indique `--imagenes` (base de las rutas de la columna `imagen`), **sin ninguna ruta por defecto** hacia fuera del proyecto. El mapa de categorías es un CSV `origen,destino`. La planilla de recuento empieza con la fila `fecha_del_recuento,<fecha>` y sigue con `id_antiguo,nombre,categoria,existencias_contadas`. `--salida` guarda el informe en un archivo. La huella son los 16 primeros caracteres del SHA-256 del conjunto a importar, incluido el contenido de cada imagen. Tras aplicar se ejecuta `ANALYZE`. | T-OP.2 |
 
 ---
 

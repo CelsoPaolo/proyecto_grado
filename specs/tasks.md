@@ -1622,7 +1622,7 @@ final del documento.
   > sobre la copia, que está fuera del proyecto, y la regla de arriba lo
   > prohíbe.
 
-### [ ] T-OP.2 — Comando `importar_catalogo` con informe y huella
+### [x] T-OP.2 — Comando `importar_catalogo` con informe y huella
 - **Depende de:** T-9.6 (código interno y de fábrica) y T-8.3 (servicio
   de alta con movimiento)
 - **Trabajo:** Comando de gestión que lee los dos CSV y la carpeta de
@@ -1661,6 +1661,14 @@ final del documento.
   - cambiar una cifra del CSV de existencias después del informe cambia
     la huella, y `--aplicar` con la huella vieja no hace nada;
   - un ajuste que falla revierte también la importación.
+- **Resultado (2026-10-09):** comando `importar_catalogo`, con la lógica
+  en `catalogo/importacion.py` (`construir_plan`, `informe`,
+  `escribir_planilla` y `aplicar`).
+  - 17 pruebas con CSV de muestra y carpetas temporales, una por cada
+    punto del criterio.
+  - Mutaciones detectadas: aplicar sin transacción, una huella que no
+    incluye las existencias, y no comprobar el nombre de la planilla.
+  - Formatos e `--imagenes` precisados en `plan.md` §11.4.
 
 ### [ ] T-OP.3 — Informe de importación y aprobación ⚠️
 - **Depende de:** T-OP.1, T-OP.2
