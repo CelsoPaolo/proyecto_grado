@@ -9,6 +9,7 @@ import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { useErroresApi } from '@/composables/useErroresApi'
+import { destinoTrasLogin } from '@/router'
 import { useAuthStore } from '@/stores/auth'
 
 const auth = useAuthStore()
@@ -23,7 +24,9 @@ async function ingresar() {
   limpiar()
   try {
     await auth.iniciarSesion(username.value, password.value)
-    router.push(route.query.redirigir || { name: 'inicio' })
+    // spec.md v1.4.1: directo al espacio de trabajo del rol, o a la
+    // pagina que se habia pedido si el rol puede abrirla.
+    router.push(destinoTrasLogin(route.query.redirigir, auth.rol))
   } catch (error) {
     registrar(error)
   }

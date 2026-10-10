@@ -4,6 +4,13 @@
    igualmente (RN-ACC-04). */
 import Button from 'primevue/button'
 import Card from 'primevue/card'
+import { computed } from 'vue'
+
+import { espacioDeTrabajo } from '@/router'
+import { useAuthStore } from '@/stores/auth'
+
+const auth = useAuthStore()
+const destino = computed(() => espacioDeTrabajo(auth.rol))
 </script>
 
 <template>
@@ -16,8 +23,8 @@ import Card from 'primevue/card'
       </p>
     </template>
     <template #footer>
-      <RouterLink :to="{ name: 'inicio' }">
-        <Button label="Volver al inicio" icon="pi pi-home" />
+      <RouterLink v-if="destino.name !== 'sin-permiso'" :to="destino">
+        <Button label="Ir a mi espacio de trabajo" icon="pi pi-arrow-left" />
       </RouterLink>
     </template>
   </Card>

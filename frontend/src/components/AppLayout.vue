@@ -8,7 +8,7 @@ import Tag from 'primevue/tag'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-import { menuPara } from '@/router'
+import { espacioDeTrabajo, menuPara } from '@/router'
 import { useAuthStore } from '@/stores/auth'
 
 const auth = useAuthStore()
@@ -16,6 +16,7 @@ const router = useRouter()
 const menuUsuario = ref(null)
 
 const opciones = computed(() => menuPara(auth.rol))
+const inicioDelRol = computed(() => espacioDeTrabajo(auth.rol))
 
 const opcionesCuenta = computed(() => [
   {
@@ -37,10 +38,11 @@ const opcionesCuenta = computed(() => [
 <template>
   <div class="marco">
     <header class="cabecera">
-      <div class="marca">
-        <i class="pi pi-desktop" />
+      <!-- El logo lleva al espacio de trabajo del rol (plan.md 7.12). -->
+      <RouterLink :to="inicioDelRol" class="marca" aria-label="PC-Solution: ir a mi espacio de trabajo">
+        <i class="pi pi-desktop" aria-hidden="true" />
         <span>PC-Solution</span>
-      </div>
+      </RouterLink>
 
       <div class="identidad">
         <Tag :value="auth.usuario?.rol_display" severity="secondary" />
@@ -106,6 +108,7 @@ const opcionesCuenta = computed(() => [
   font-weight: 700;
   font-size: 1.1rem;
   color: var(--pcs-cromo-texto, #f4f4f5);
+  text-decoration: none;
 }
 
 .identidad {

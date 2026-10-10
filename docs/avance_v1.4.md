@@ -59,7 +59,8 @@ bloque 13.
 | 2026-10-09 | T-OP.3 Informe real — **preparado, esperando aprobación** | `229c8b7` | B 1082 / 0 · F 217 / 0 | Informe sobre los CSV reales **sin imágenes**: están fuera del proyecto y leerlas es una condición de parada. Base de desarrollo intacta antes y después (7 productos, 5 categorías y 7 movimientos). **Defecto corregido:** en la consola de Windows (cp1252) la flecha «←» del informe hacía fallar el comando; ahora es «<-», el archivo de `--salida` se escribe antes y una prueba vigila la codificación. Informe en `datos_importacion/informe_importacion_sin_imagenes.txt`, planilla en `datos_importacion/planilla_recuento.csv` (fuera de Git). |
 | 2026-10-09 | T-OP.3 Informe final — **esperando aprobación** | `45f1973` | B 1089 / 0 · F 217 / 0 | Con tus decisiones: imágenes **copiadas** (153 archivos, idénticos por SHA-256; el origen, sin cambios); las tres categorías parecidas se fusionan **renombrando las existentes** con `--fusionar-categorias`, dentro de la huella y de la transacción (`plan.md` §11.3); el precio del producto 98 aparece como «precio por confirmar con la empresa». Huella `3a22466c989cf45c`, igual en dos ejecuciones. Base de desarrollo intacta. |
 | 2026-10-09 | T-OP.3 y T-OP.4 Importación aplicada | `5917464` | B 1089 / 0 · F 217 / 0 | Aprobada por el usuario. Respaldo previo con `pg_dump` (`datos_importacion/respaldos/pcsolution_antes_de_T-OP.4_20261009_205743.dump`). Se usó `--usuario admin`, porque es el único Administrador activo y el comando aprobado decía `<ADMIN>`. Resultado: 160 productos, 15 categorías, 153 `ALTA`, libro cuadrado, los 7 anteriores intactos y las imágenes servidas. |
-| 2026-10-09 | T-OP.5 Carga posterior del recuento (`--solo-existencias`) | siguiente commit | B 1105 / 0 · F 217 / 0 | **Incluida la columna opcional `meses_garantia`**: complica poco, porque es una edición del producto sin movimiento, idempotente, y entra en la huella. Además, **la huella incluye las existencias actuales**, para que una venta entre el informe y la aplicación lo invalide. Lo contado igual a lo vigente no crea ajuste. La planilla antigua (`planilla_recuento.csv`) queda obsoleta: usar `planilla_recuento_importados.csv`. En la primera ejecución el frontend dio 3 tiempos agotados con el portátil en batería; al repetir, en verde. No se subió el límite. |
+| 2026-10-09 | T-OP.5 Carga posterior del recuento (`--solo-existencias`) | `bd6c094` | B 1105 / 0 · F 217 / 0 | **Incluida la columna opcional `meses_garantia`**: complica poco, porque es una edición del producto sin movimiento, idempotente, y entra en la huella. Además, **la huella incluye las existencias actuales**, para que una venta entre el informe y la aplicación lo invalide. Lo contado igual a lo vigente no crea ajuste. La planilla antigua (`planilla_recuento.csv`) queda obsoleta: usar `planilla_recuento_importados.csv`. En la primera ejecución el frontend dio 3 tiempos agotados con el portátil en batería; al repetir, en verde. No se subió el límite. |
+| 2026-10-10 | T-14.1 Espacio de trabajo por rol, sin Inicio | siguiente commit | B 1105 / 0 · F 224 / 0 | **Documentos primero:** `spec.md` v1.4.1 (CU-AUT-01 precisa el destino tras el login; **ningún RF, RNF, RN ni CU retirado**: el Inicio no tenía requerimiento), `plan.md` v1.5 (§7.4 y §7.7 marcadas como retiradas, no borradas; §7.12 nueva) y `tasks.md` v1.2 (bloque 14). La raíz `/` la resuelve el guard tras restaurar la sesión; con un `redirect` se perdía la sesión al recargar. Los tokens CSS de los degradados del Inicio (`--pcs-degradado-*`) quedan en `main.css` sin uso: no se tocaron, para no refactorizar fuera de lo pedido. |
 
 ## Pendiente para revisión humana
 
@@ -157,6 +158,15 @@ bloque 13.
   3. Revisar y aprobar la huella; luego la misma orden con
      `--aplicar --huella <huella> --usuario admin`.
   4. Hacer antes un respaldo con `pg_dump`, como en T-OP.4.
+- **T-14.1, navegación por rol:**
+  - Iniciar sesión con cada rol: el Administrador debe llegar al Panel,
+    el Encargado de Ventas a «Registrar venta» y el de Servicios a
+    «Servicios».
+  - Con la sesión abierta, abrir `/` y `/login` y recargar la página
+    (F5): siempre al espacio de trabajo.
+  - Clic en el logo «PC-Solution».
+  - Como Ventas, escribir `/usuarios` en la barra: «Sin permiso», y su
+    botón lleva a «Registrar venta».
 - **Dependencias:** `npm audit` informa de 1 vulnerabilidad alta en
   `source-map-js`, una herramienta de desarrollo que ya estaba instalada
   antes de esta versión; no viene de JsBarcode. No apliqué `npm audit
@@ -164,4 +174,4 @@ bloque 13.
 
 ## Dónde se detuvo la sesión
 
-**Todas las tareas de la v1.4 terminadas** (bloques 8 a 13 y T-OP.1 a T-OP.5). Quedan solo la revisión humana de la lista de arriba y, cuando la empresa cuente su inventario, la carga del recuento (T-OP.5, con aprobación).
+T-14.1 terminada. **Siguiente: T-14.2** (nombres sin estilo de enlace).

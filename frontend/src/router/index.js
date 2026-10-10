@@ -28,14 +28,15 @@ export const rutas = [
     meta: { publica: true, titulo: 'Iniciar sesión' },
   },
   {
+    // spec.md v1.4.1, plan.md 7.12: la raiz lleva al espacio de trabajo
+    // del rol. La resuelve el GUARD, y no un `redirect`, porque un
+    // redirect se evalua antes de restaurar la sesion: con solo el
+    // refresh guardado mandaria al login a quien ya tiene sesion. El
+    // componente vacio no llega a mostrarse nunca.
     path: '/',
-    redirect: () => ({ name: 'inicio' }),
-  },
-  {
-    path: '/inicio',
-    name: 'inicio',
-    component: () => import('@/views/InicioView.vue'),
-    meta: { roles: [ADMIN, VENTAS, SERVICIOS], titulo: 'Inicio', icono: 'pi pi-home' },
+    name: 'raiz',
+    component: { render: () => null },
+    meta: { raiz: true, roles: [ADMIN, VENTAS, SERVICIOS], titulo: 'PC-Solution', enMenu: false },
   },
   {
     path: '/mi-cuenta/password',
@@ -150,6 +151,8 @@ export const rutas = [
     path: '/sin-permiso',
     name: 'sin-permiso',
     component: () => import('@/views/SinPermisoView.vue'),
+    // Se abre con cualquier sesion (ver el guard): es el destino de
+    // ultimo recurso y no puede a su vez rechazar a nadie.
     meta: { roles: [ADMIN, VENTAS, SERVICIOS], titulo: 'Sin permiso', enMenu: false },
   },
 ]
@@ -182,6 +185,38 @@ export function menuPara(rol) {
     }))
 }
 
+/**
+ * Espacio de trabajo de cada rol (spec.md v1.4.1, CU-AUT-01; plan.md
+ * 7.12): la pantalla en la que pasa la jornada. Es el unico lugar que
+ * lo decide; lo usan el login, la raiz, el logo, el guard y «Sin
+ * permiso». Un rol desconocido va a «Sin permiso», que nunca rechaza.
+ */
+const ESPACIO_DE_TRABAJO = {
+  [ADMIN]: 'panel',
+  [VENTAS]: 'venta-nueva',
+  [SERVICIOS]: 'servicios',
+}
+
+export function espacioDeTrabajo(rol) {
+  return { name: ESPACIO_DE_TRABAJO[rol] ?? 'sin-permiso' }
+}
+
+/**
+ * Adonde ir tras iniciar sesion. Se respeta `?redirigir=` (la pagina
+ * que se pidio sin sesion) solo si es una ruta INTERNA que el rol puede
+ * abrir: una ajena llevaria a «Sin permiso» y una externa seria una
+ * redireccion abierta. En cualquier otro caso, el espacio de trabajo.
+ */
+export function destinoTrasLogin(redirigir, rol) {
+  if (typeof redirigir === 'string' && redirigir.startsWith('/') && !redirigir.startsWith('//')) {
+    const ruta = router.resolve(redirigir)
+    if (ruta.matched.length && !ruta.meta?.publica && puedeEntrar(ruta, rol)) {
+      return redirigir
+    }
+  }
+  return espacioDeTrabajo(rol)
+}
+
 /** Decide si un rol puede entrar a una ruta. */
 export function puedeEntrar(ruta, rol) {
   if (ruta.meta?.publica) return true
@@ -198,16 +233,23 @@ router.beforeEach(async (destino) => {
     await auth.restaurarSesion()
   }
 
+  if (destino.meta?.raiz) {
+    return auth.autenticado ? espacioDeTrabajo(auth.rol) : { name: 'login' }
+  }
+
   if (destino.meta?.publica) {
-    // Quien ya tiene sesion no necesita ver el formulario de ingreso.
-    return auth.autenticado ? { name: 'inicio' } : true
+    // Quien ya tiene sesion no necesita ver el formulario de ingreso:
+    // va a su espacio de trabajo (plan.md 7.12).
+    return auth.autenticado ? espacioDeTrabajo(auth.rol) : true
   }
 
   if (!auth.autenticado) {
     return { name: 'login', query: { redirigir: destino.fullPath } }
   }
 
-  if (!puedeEntrar(destino, auth.rol)) {
+  // «Sin permiso» no rechaza a ninguna sesion: si lo hiciera, un rol
+  // inesperado rebotaria entre esta pagina y si misma.
+  if (destino.name !== 'sin-permiso' && !puedeEntrar(destino, auth.rol)) {
     return { name: 'sin-permiso' }
   }
 

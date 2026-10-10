@@ -2,14 +2,14 @@
 
 - **Proyecto:** Sistema ERP interno para PC-Solution (Sucre, Bolivia)
 - **Documento:** Etapa 2 de Spec-Driven Development — Plan técnico
-- **Versión:** 1.4
-- **Fecha:** 2026-10-09
+- **Versión:** 1.5
+- **Fecha:** 2026-10-10
 - **Estado:** **Aprobado** el 2026-10-08 — la v1.3 diseñó las cinco
   funcionalidades de `spec.md` v1.4, y la v1.4 de este plan las deja
   **implementadas** (bloques 8 a 13), con las precisiones de §11.4.
   Queda pendiente la importación del catálogo anterior (§11.3), que se
   aplica con aprobación expresa. Siguen vigentes PT-01 a PT-05 (sección 13)
-- **Deriva de:** `spec.md` v1.4
+- **Deriva de:** `spec.md` v1.4.1
 
 ### Historial de versiones
 
@@ -20,6 +20,7 @@
 | 1.2 | 2026-09-30 | Se añaden §7.6 (paleta e identidad visual: cromo oscuro sobre área clara, morado como color de marca y los estados semánticos conservando sus colores) y §7.7 (pantalla de Inicio por rol, decorativa, que deja de duplicar la barra lateral). Decisiones de presentación posteriores a las primeras sesiones de uso; ninguna altera un comportamiento y por eso no generan RF nuevos. Se añade además §7.8 y el endpoint `GET /solicitudes/{id}/pdf` en §4.4, que implementan RF-67 y RF-68 de `spec.md` v1.3. |
 | 1.3 | 2026-10-08 | **Diseño de las cinco funcionalidades de `spec.md` v1.4.** Dos apps nuevas, `inventario` (movimientos de stock) y `clientes`; `panel` pasa a servir también los reportes por rango, y el panel diario se reescribe como el reporte de un día para que ambos no puedan divergir (RN-REP-08). Modelo de datos en §3.5; endpoints nuevos en §4.4; el libro de movimientos dentro del patrón de concurrencia en §6.5; lector de códigos, garantía y reportes en §7.9 a §7.11. Dependencias nuevas: `openpyxl` (backend) y `JsBarcode` (frontend), ambas sin componentes nativos. **Hallazgo que condiciona el diseño:** hoy las existencias se editan con el `PATCH` genérico del producto, **sin bloquear la fila**; con un libro de movimientos eso deja de ser aceptable y el ajuste pasa a un servicio propio con `select_for_update()` (§6.5). **De paso se corrigen cinco restos** de versiones anteriores: PostgreSQL 16 en §2.1, «asignación» en §2.3, una restricción de §3.3 que no existe en el modelo, y el ejemplo de `finalizar` y la nota sobre `iniciar` de §4.4, ambos anteriores a la v1.2. **Aprobado con las decisiones PA-06 a PA-08** de `spec.md` §12: se diseña el **código de fábrica** opcional (§3.5, §4.4, §7.9) y «servicios por estado» incluye las canceladas. **Revisado el 2026-10-09:** editar un producto con `stock` en la petición responde 400 en lugar de ignorarlo (§4.4). **Revisado otra vez el 2026-10-09 (T-9.2):** el reverso del paso 2 de la migración del código ya no borra los códigos; volver a aplicarlo cambiaría el código de productos ya etiquetados (§3.5, RN-CAT-08). |
 | 1.4 | 2026-10-09 | **La v1.4 de `spec.md` queda implementada.** §11.4 recoge lo que la implementación precisó sin cambiar el alcance: el filtro inválido de movimientos responde 400, la cola del lector de códigos, el punto de extensión de las condiciones de la garantía, la búsqueda del carnet solo exacta, el `ANALYZE` tras cargas masivas y el join de «más vendidos». Ninguna precisión cambia un requerimiento. |
+| 1.5 | 2026-10-10 | Tres ajustes de interfaz de `spec.md` v1.4.1. **Se retira la pantalla de Inicio** (§7.4 y §7.7, marcadas como retiradas, no borradas): cada rol entra a su espacio de trabajo (§7.12). Los nombres que abren un detalle en las listas dejan de verse como enlaces (§7.13). La cabecera y el menú lateral quedan fijos al desplazarse (§7.5). |
 
 > Este documento traduce la especificación funcional a **decisiones
 > técnicas concretas**: arquitectura, modelo de datos, contrato de la API,
@@ -1548,7 +1549,7 @@ permite navegar nunca puedan divergir**.
 | Módulo | Vistas |
 |---|---|
 | Autenticación | Inicio de sesión; cambio de contraseña propia. |
-| Inicio | Pantalla de entrada por rol: saludo, rol, fecha e ilustración. Sin datos y sin navegación (ver §7.7). |
+| ~~Inicio~~ | ~~Pantalla de entrada por rol: saludo, rol, fecha e ilustración. Sin datos y sin navegación (ver §7.7).~~ **Retirada el 2026-10-10 (v1.5 de este plan):** cada rol entra directamente a su espacio de trabajo (§7.12). |
 | Catálogo | Lista de productos con búsqueda, filtro y marca de stock bajo; formulario de producto; gestión de categorías. |
 | Ventas | Registro de venta (buscador de productos, carrito interno de la pantalla, total en vivo); historial con filtros; detalle con líneas congeladas; diálogo de anulación con motivo. |
 | Servicios | Lista con filtros de estado y tipo, más un acceso rápido a «pendientes de cotizar» que solo ve el Administrador (RF-60); formulario de registro con dirección condicional al tipo, sin monto ni técnico; detalle con línea de tiempo del historial; diálogos de cotizar (monto y técnico, solo Administrador), finalizar (observaciones) y cancelar (motivo), más la acción directa de iniciar. Botón de descarga del informe en PDF (RF-67). |
@@ -1624,7 +1625,13 @@ y estados de interacción (`#6d28d9` al pasar el ratón, anillo de foco
 Verificado en navegador con los tres puntos de corte de §7.5 (1440,
 1024 y 768 px).
 
-### 7.7 Pantalla de Inicio por rol
+### 7.7 Pantalla de Inicio por rol *(retirada el 2026-10-10)*
+
+> **Retirada en la v1.5 de este plan** (`spec.md` v1.4.1). Al usar el
+> sistema, la pantalla se percibió como un paso de más: nadie trabajaba
+> en ella. Cada rol entra ahora directamente a su espacio de trabajo
+> (§7.12). Se conserva el texto como registro de la decisión de
+> entonces; nada de lo que sigue está ya en el código.
 
 Decidido el 30/09/2026, junto con la paleta. Tampoco lleva RF, y por
 el mismo motivo: no muestra ningún dato ni cambia ningún
@@ -1672,6 +1679,28 @@ nada que la frase de al lado no diga ya. El saludo sigue siendo un
 **Queda cubierto por prueba** que el Inicio no contiene ningún
 elemento pulsable. Es lo que impide que la duplicación del menú
 vuelva a colarse más adelante.
+
+### 7.12 Espacio de trabajo por rol *(v1.5, 2026-10-10)*
+
+Sustituye a la pantalla de Inicio (§7.7, retirada). Cada rol tiene un
+**espacio de trabajo**, la pantalla en la que pasa la jornada:
+
+| Rol | Espacio de trabajo | Ruta |
+|---|---|---|
+| Administrador | Panel de indicadores | `panel` |
+| Encargado de Ventas | Registrar venta | `venta-nueva` |
+| Encargado de Servicios | Lista de servicios | `servicios` |
+
+- **Un solo lugar lo decide**: `espacioDeTrabajo(rol)` en
+  `router/index.js`, junto a las rutas. Lo usan el destino tras iniciar
+  sesión, la ruta `/`, el logo de la cabecera, la redirección de quien
+  ya tiene sesión y abre el login, y el botón de «Sin permiso».
+- **Sin bucles ni pantalla en blanco.** Si el login trae un destino
+  (`?redirigir=`) que el rol no puede abrir, se ignora y se va al
+  espacio de trabajo. «Sin permiso» se abre para cualquier sesión, de
+  modo que un rol inesperado no rebota entre dos redirecciones.
+- **Es navegación, no seguridad** (RN-ACC-04): el servidor sigue
+  respondiendo 403 a lo que el rol no puede hacer.
 
 ### 7.8 Informe en PDF (RF-67, RF-68)
 

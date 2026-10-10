@@ -18,7 +18,10 @@ import { useAuthStore } from '../stores/auth'
 
 const push = vi.fn()
 
-vi.mock('vue-router', () => ({
+// Mock PARCIAL: el login importa el router real para decidir el destino
+// (destinoTrasLogin), y ese modulo necesita createRouter de verdad.
+vi.mock('vue-router', async (importOriginal) => ({
+  ...(await importOriginal()),
   useRouter: () => ({ push }),
   useRoute: () => ({ query: {} }),
 }))
@@ -115,13 +118,22 @@ describe('pantalla de ingreso', () => {
     expect(wrapper.text()).toContain('Este campo es obligatorio.')
   })
 
-  it('redirige al inicio tras ingresar correctamente', async () => {
+  // spec.md v1.4.1 (CU-AUT-01): tras ingresar, cada rol va directo a su
+  // espacio de trabajo; ya no hay pantalla de inicio.
+  it.each([
+    ['ADMINISTRADOR', 'panel'],
+    ['VENTAS', 'venta-nueva'],
+    ['SERVICIOS', 'servicios'],
+  ])('tras ingresar, %s va a su espacio de trabajo (%s)', async (rol, destino) => {
     const { wrapper, auth } = montar()
-    auth.iniciarSesion.mockResolvedValue({ rol: 'VENTAS' })
+    auth.iniciarSesion.mockImplementation(async () => {
+      auth.usuario = { rol }
+      return auth.usuario
+    })
 
     await wrapper.find('form').trigger('submit')
     await flushPromises()
 
-    expect(push).toHaveBeenCalledWith({ name: 'inicio' })
+    expect(push).toHaveBeenCalledWith({ name: destino })
   })
 })

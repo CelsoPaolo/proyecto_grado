@@ -79,8 +79,8 @@ describe('guards por rol (spec.md matriz 4.4)', () => {
     expect(puedeEntrar(configuracion, SERVICIOS)).toBe(false)
   })
 
-  it('los tres roles entran al inicio y a su propia cuenta', () => {
-    for (const nombre of ['inicio', 'cambiar-password']) {
+  it('los tres roles entran a su propia cuenta y a «Sin permiso»', () => {
+    for (const nombre of ['cambiar-password', 'sin-permiso']) {
       for (const rol of [ADMIN, VENTAS, SERVICIOS]) {
         expect(puedeEntrar(ruta(nombre), rol)).toBe(true)
       }

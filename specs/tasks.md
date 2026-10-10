@@ -2,7 +2,7 @@
 
 - **Proyecto:** Sistema ERP interno para PC-Solution (Sucre, Bolivia)
 - **Documento:** Etapa 3 de Spec-Driven Development — Desglose de tareas
-- **Versión:** 1.1
+- **Versión:** 1.2
 - **Fecha:** 2026-10-08
 - **Estado:** Bloques 0 a 7 **aprobados y completados** (v1.0). Bloques 8
   a 13 **aprobados el 2026-10-08**, pendientes de implementar (v1.1).
@@ -14,6 +14,7 @@
 |---|---|---|
 | 1.0 | 2026-09-22 | Bloques 0 a 7, 73 tareas, derivadas de `spec.md` v1.1 y `plan.md` v1.1. El bloque 5 se reformuló el 2026-09-29 tras la v1.2 de la especificación. Todas completadas. |
 | 1.1 | 2026-10-08 | **Bloques 8 a 13, 40 tareas**, para las cinco funcionalidades de `spec.md` v1.4 y sus decisiones PA-06 a PA-08 (T-9.7 es la del código de fábrica). Se corrige además la cabecera, que seguía diciendo «borrador pendiente de aprobación», y un resto de la v1.1 en T-6.1 («sin asignar» por «sin cotizar»). |
+| 1.2 | 2026-10-10 | **Bloque 14, tres ajustes de interfaz** de `spec.md` v1.4.1 y `plan.md` v1.5: espacio de trabajo por rol sin pantalla de Inicio, nombres sin estilo de enlace y cabecera y menú fijos. |
 
 > Cada tarea es **atómica** (una unidad de trabajo con un resultado
 > verificable), está **ordenada por dependencia** (nunca depende de una
@@ -1753,6 +1754,57 @@ final del documento.
   - Suites: B 1105 pasan y 0 fallan; F 217 pasan. La primera ejecución
     del frontend dio 3 tiempos agotados con el portátil en batería; al
     repetirla, todo en verde.
+
+---
+
+# Versión 1.4.1 — ajustes de interfaz
+
+## Bloque 14 — Navegación y presentación *(2026-10-10)*
+
+### [x] T-14.1 — Espacio de trabajo por rol, sin pantalla de Inicio
+- **Cubre:** CU-AUT-01 (revisado en `spec.md` v1.4.1), RF-06
+- **Trabajo:** Quitar la pantalla de Inicio, su entrada de menú y su
+  ruta (`plan.md` §7.7, retirada); `espacioDeTrabajo(rol)` como único
+  destino tras el login, en `/`, en el logo, al volver al login con
+  sesión y en «Sin permiso» (`plan.md` §7.12).
+- **Hecho cuando:** pruebas por rol verifican el destino tras iniciar
+  sesión, al abrir `/` y al volver al login; un `?redirigir=` que el rol
+  no puede abrir lleva a su espacio de trabajo; no hay bucles; ninguna
+  ruta ni prueba menciona ya el Inicio.
+- **Resultado (2026-10-10):** sin pantalla de Inicio.
+  - `espacioDeTrabajo(rol)` en `router/index.js` es el único sitio que
+    decide adónde va cada rol: Administrador → `panel`, Ventas →
+    `venta-nueva`, Servicios → `servicios`.
+  - Lo usan el login, la raíz `/`, el logo (ahora es un enlace), el
+    guard al volver al login y «Sin permiso».
+  - `?redirigir=` solo se sigue si es interno y el rol puede abrirlo.
+  - La raíz la resuelve el guard tras restaurar la sesión, y no un
+    `redirect`, que se evalúa antes y mandaba al login a quien ya tenía
+    sesión.
+  - «Sin permiso» no rechaza a ninguna sesión, así que no hay bucles.
+  - Se borraron `InicioView.vue`, `EncabezadoRol.vue`,
+    `IlustracionRol.vue`, `config/identidadRol.js` y su prueba
+    `inicio.test.js`.
+  - 25 pruebas nuevas en `navegacion.test.js`; actualizadas la del login
+    (ahora por rol) y la del router.
+  - Mutaciones detectadas: el bucle de «Sin permiso», seguir cualquier
+    `redirigir` y un espacio equivocado.
+
+### [ ] T-14.2 — Nombres sin estilo de enlace en las listas
+- **Trabajo:** Los nombres que abren un detalle en las listas se ven
+  como texto de la tabla, sin morado ni subrayado, también visitados;
+  conservan el cursor de mano y el foco de teclado (`plan.md` §7.13).
+- **Hecho cuando:** pruebas verifican la clase común en cada nombre que
+  enlaza y que el estilo no quita el indicador de foco.
+
+### [ ] T-14.3 — Cabecera y menú lateral fijos
+- **Cubre:** RNF-12
+- **Trabajo:** Solo el contenido se desplaza; el menú lateral tiene su
+  propio desplazamiento si no cabe; diálogos por encima; impresión sin
+  cambios (`plan.md` §7.5).
+- **Hecho cuando:** pruebas verifican la estructura y las reglas de
+  estilo; la comprobación visual en 1440, 1024 y 768 px queda para
+  revisión humana.
 
 ---
 
