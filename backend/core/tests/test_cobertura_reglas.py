@@ -141,6 +141,78 @@ COBERTURA_OBLIGATORIA = {
             "test_con_stock_suficiente_todas_las_ventas_simultaneas_confirman",
         ),
     ],
+    # ── v1.4 (plan.md seccion 9, filas marcadas v1.3 del plan) ────────
+    "RN-CAT-08": [
+        ("catalogo/tests/test_codigo.py", "test_el_codigo_de_la_peticion_se_ignora_al_editar"),
+        ("catalogo/tests/test_codigo.py", "test_un_producto_nuevo_recibe_un_ean13_interno_valido"),
+        ("catalogo/tests/test_codigo.py", "test_retirar_un_producto_y_crear_otro_da_un_codigo_distinto"),
+    ],
+    "RN-CAT-10": [
+        ("catalogo/tests/test_api_catalogo.py", "test_editar_un_producto_con_existencias_se_rechaza"),
+    ],
+    "RN-CAT-11": [
+        ("catalogo/tests/test_codigo_fabrica.py", "test_un_codigo_repetido_se_rechaza_junto_al_campo_al_crear"),
+        ("catalogo/tests/test_codigo_fabrica.py", "test_un_codigo_con_forma_de_interno_se_rechaza"),
+        ("catalogo/tests/test_codigo_fabrica.py", "test_la_base_rechaza_la_forma_interna_en_sql_crudo"),
+        ("catalogo/tests/test_codigo_fabrica.py", "test_dos_productos_sin_codigo_de_fabrica_conviven"),
+        ("catalogo/tests/test_codigo_fabrica.py", "test_la_busqueda_encuentra_por_cualquiera_de_los_dos_codigos"),
+    ],
+    "RN-VEN-12": [
+        ("ventas/tests/test_servicios_ventas.py", "test_cambiar_los_meses_de_garantia_despues_no_altera_la_venta"),
+        ("ventas/tests/test_garantia_pdf.py", "test_cambiar_los_meses_del_producto_despues_no_cambia_la_garantia"),
+    ],
+    "RN-VEN-13": [
+        ("ventas/tests/test_vencimiento.py", "test_sumar_meses"),
+    ],
+    "RN-VEN-14": [
+        ("ventas/tests/test_garantia_pdf.py", "test_una_venta_anulada_no_emite_garantia"),
+        ("ventas/tests/test_garantia_pdf.py", "test_una_venta_sin_lineas_con_garantia_no_la_emite"),
+        ("ventas/tests/test_garantia_pdf.py", "test_no_lista_las_lineas_sin_garantia"),
+    ],
+    "RN-VEN-16": [
+        ("ventas/tests/test_garantia_pdf.py", "test_otro_encargado_de_ventas_recibe_404_como_si_no_existiera"),
+    ],
+    "RN-MOV-01": [
+        ("inventario/tests/test_movimientos_venta.py", "test_una_venta_rechazada_por_stock_no_deja_movimientos"),
+        ("inventario/tests/test_movimientos_venta.py", "test_un_fallo_al_registrar_el_movimiento_revierte_toda_la_venta"),
+    ],
+    "RN-MOV-03": [
+        ("conftest.py", "_guardian_del_libro"),
+        ("inventario/tests/test_verificacion.py", "test_detecta_un_cambio_de_stock_fuera_del_libro"),
+    ],
+    "RN-MOV-04": [
+        ("inventario/tests/test_modelo.py", "test_un_movimiento_guardado_no_se_modifica"),
+        ("inventario/tests/test_modelo.py", "test_la_via_masiva_tampoco_borra"),
+        ("inventario/tests/test_api_inventario.py", "test_el_libro_no_tiene_verbos_de_escritura"),
+    ],
+    "RN-MOV-05": [
+        ("inventario/tests/test_api_inventario.py", "test_un_ajuste_invalido_se_rechaza_junto_al_campo"),
+        ("inventario/tests/test_api_inventario.py", "test_ajustar_a_lo_mismo_que_hay_responde_409"),
+        ("ventas/tests/test_concurrencia.py", "test_ajustes_y_ventas_simultaneos_dejan_el_libro_cuadrado"),
+    ],
+    "RN-CLI-04": [
+        ("clientes/tests/test_servicios.py", "test_registrar_un_cliente_no_crea_ningun_usuario"),
+    ],
+    "RN-CLI-05": [
+        ("ventas/tests/test_cliente_en_venta.py", "test_editar_y_desactivar_el_cliente_no_altera_las_ventas_anteriores"),
+    ],
+    "RN-CLI-06": [
+        ("clientes/tests/test_api.py", "test_la_lista_no_contiene_la_clave_carnet_en_ninguna_fila"),
+        ("ventas/tests/test_cliente_en_venta.py", "test_el_detalle_de_la_venta_no_contiene_el_carnet"),
+        ("clientes/tests/test_ciclo_bloque11.py", "test_venta_a_cliente_registrado_editarlo_y_la_venta_conserva_sus_datos"),
+        ("panel/tests/test_coherencia_reportes.py", "test_el_carnet_no_aparece_en_ninguna_salida"),
+    ],
+    "RN-REP-07": [
+        ("panel/tests/test_coherencia_reportes.py", "test_las_cifras_del_resumen_son_identicas_en_las_tres"),
+    ],
+    "RN-REP-08": [
+        ("panel/tests/test_reportes.py", "test_el_panel_y_el_reporte_de_hoy_dan_las_mismas_cifras"),
+    ],
+    "RNF-29": [
+        ("inventario/tests/test_migracion_saldos.py", "test_revertir_borra_los_saldos_y_no_toca_los_productos"),
+        ("catalogo/tests/test_migracion_codigo.py", "test_revertir_los_tres_pasos_devuelve_la_tabla_a_su_estado_anterior"),
+        ("catalogo/tests/test_migracion_codigo.py", "test_todos_los_productos_existentes_reciben_un_codigo_valido_y_distinto"),
+    ],
 }
 
 

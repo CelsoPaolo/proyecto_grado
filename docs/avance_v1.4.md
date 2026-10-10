@@ -51,7 +51,8 @@ bloque 13.
 | 2026-10-09 | T-12.5 Exportación a PDF | `572292d` | B 1008 / 2 · F 205 / 0 | Título «Reporte de operación», con el rango en el lugar del número. Leyenda propia en el pie: «Reporte interno de operación, no válido como documento fiscal». Las secciones vacías dicen «Sin ventas en el período». |
 | 2026-10-09 | T-12.6 Exportación a Excel | `5597dba` | B 1017 / 1 · F 205 / 0 | `openpyxl` fijado en 3.1.5 en el entorno; en `requirements/base.txt` queda como `>=3.1.5`, al estilo del resto. Trae una sola dependencia, `et-xmlfile`, también Python puro. Las fechas del rango van como fechas de Excel con formato `DD/MM/YYYY`, y el archivo se sirve como `attachment`. |
 | 2026-10-09 | T-12.7 Coherencia de las tres salidas ⚠️ | `08bcd97` | **B 1026 / 0** · F 205 / 0 | **El guardián de trazabilidad llega a 0 fallos.** Hallazgo de rendimiento: con estadísticas viejas, `productos_mas_vendidos` (que usaba `venta__in=<subconsulta>`) tardaba 213 s por petición en la suite completa. Se reescribe como join, y la prueba ejecuta `ANALYZE` tras la carga, porque RNF-28 habla de «carga normal» y dentro de la transacción de la prueba autovacuum no ve las filas. El comando de importación (T-OP.2) ejecutará `ANALYZE` al aplicar. Hubo además una parada aislada de 214 s en una ejecución suelta que no se reprodujo, con el mismo origen. |
-| 2026-10-09 | T-12.8 Pantalla de reportes | siguiente commit | B 1026 / 0 · F 217 / 0 | Al abrir se muestra «Este mes». Al elegir un rango a mano se quita el atajo, y al revés. Los atajos se calculan con la fecha del navegador, que es la de Bolivia en el equipo de la tienda. `useDescarga.guardar()` acepta `{tipo, extension, descripcion}`. |
+| 2026-10-09 | T-12.8 Pantalla de reportes | `feb94c8` | B 1026 / 0 · F 217 / 0 | Al abrir se muestra «Este mes». Al elegir un rango a mano se quita el atajo, y al revés. Los atajos se calculan con la fecha del navegador, que es la de Bolivia en el equipo de la tienda. `useDescarga.guardar()` acepta `{tipo, extension, descripcion}`. |
+| 2026-10-09 | T-13.1 Matriz de permisos y guardianes | siguiente commit | B 1063 / 0 · F 217 / 0 | Las 17 reglas v1.4 de `plan.md` §9 se añaden al guardián de cobertura, apuntando a pruebas que ya existían. La de RN-CAT-10 se completó con la comprobación de «no crea movimiento» que exigía el plan y no estaba escrita. |
 
 ## Pendiente para revisión humana
 
@@ -141,4 +142,4 @@ bloque 13.
 
 ## Dónde se detuvo la sesión
 
-T-12.8 terminada. **Siguiente: T-13.1** (matriz de permisos y guardianes).
+T-13.1 terminada. **Siguiente: T-13.2** (usabilidad de lo nuevo).

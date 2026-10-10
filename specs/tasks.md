@@ -1537,7 +1537,7 @@ final del documento.
 
 ## Bloque 13 — Cierre de la v1.4
 
-### [ ] T-13.1 — Matriz de permisos y guardianes
+### [x] T-13.1 — Matriz de permisos y guardianes
 - **Cubre:** RNF-02, RNF-22, RNF-23
 - **Depende de:** bloques 8 a 12
 - **Trabajo:** Comprobar que la matriz de T-1.8 coincide celda por celda
@@ -1546,6 +1546,16 @@ final del documento.
 - **Hecho cuando:** los tres guardianes —matriz, cobertura de reglas y
   trazabilidad— están en verde. **Es la primera vez desde la aprobación
   de la v1.4 que el de trazabilidad lo está.**
+- **Resultado (2026-10-09):** los tres guardianes están en verde.
+  - La matriz de T-1.8 coincide fila por fila con `spec.md` §4.4 v1.4:
+    ajuste y movimientos (A); código (A y V); garantía (A y V, la propia
+    con 404 para la ajena); clientes (A y V; desactivar y reactivar,
+    A); reportes y sus exportaciones (A).
+  - `test_cobertura_reglas.py` suma las 17 filas v1.4 de `plan.md` §9.
+  - La prueba de RN-CAT-10 comprueba además que no se crea ningún
+    movimiento, como pide el plan.
+  - Trazabilidad: 0 fallos, desde T-12.7.
+  - Mutación detectada: apuntar a una prueba inexistente.
 
 ### [ ] T-13.2 — Usabilidad de lo nuevo
 - **Cubre:** RNF-12 a RNF-16

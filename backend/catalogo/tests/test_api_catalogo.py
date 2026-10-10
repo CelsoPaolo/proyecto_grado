@@ -174,7 +174,10 @@ def test_editar_un_producto_con_existencias_se_rechaza(como_admin, stock):
     que no se editan por esta via. Y la peticion entera se rechaza: el
     precio que viene en ella tampoco se aplica.
     """
+    from inventario.models import MovimientoStock
+
     producto = ProductoFactory(stock=10, precio=100)
+    movimientos_antes = MovimientoStock.objects.count()
 
     respuesta = como_admin.patch(
         f"{PRODUCTOS}/{producto.id}", {"stock": stock, "precio": "120.00"}, format="json"
@@ -185,6 +188,8 @@ def test_editar_un_producto_con_existencias_se_rechaza(como_admin, stock):
     assert "Ajustar existencias" in respuesta.data["errores"]["stock"][0]
     producto.refresh_from_db()
     assert (producto.stock, producto.precio) == (10, 100)
+    # plan.md 9: tampoco deja ningun movimiento en el libro.
+    assert MovimientoStock.objects.count() == movimientos_antes
 
 
 def test_editar_un_producto_sin_existencias_se_aplica(como_admin):
