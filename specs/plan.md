@@ -2177,10 +2177,41 @@ recuento** de la planilla junto a la fecha de ejecución, para que la
 diferencia se vea antes de aprobar.
 
 **Si el recuento no está listo al importar**, la importación se hace sin
-`--existencias` y los productos quedan en 0. Cargar después las
-existencias de productos ya importados **no** forma parte de esta
-operación: el comando no repite importaciones, y añadirle un segundo
-modo solo para eso es una decisión que se tomaría entonces.
+`--existencias` y los productos quedan en 0, y las existencias se cargan
+después con el modo `--solo-existencias` (decidido el 2026-10-09, tras
+importar sin recuento; T-OP.5).
+
+#### Carga posterior del recuento: `--solo-existencias` *(T-OP.5, 2026-10-09)*
+
+Un segundo modo del mismo comando para cargar el recuento en productos
+**ya importados**. Mismas reglas que la carga dentro de la importación,
+con tres diferencias que impone el hecho de que los productos ya existen.
+
+- **`--planilla-importados <archivo>`** escribe la planilla de los
+  productos del CSV antiguo **que ya están en el sistema**, con las
+  columnas `id_antiguo,nombre,categoria,existencias_contadas,meses_garantia`
+  y la fila inicial `fecha_del_recuento,`.
+- **`--solo-existencias <planilla>`** informa, y con `--aplicar --huella
+  --usuario` aplica. Cada fila se casa con su producto por `id_antiguo`
+  (el nombre de esa fila en `productos.csv`) **y** por el nombre escrito
+  en la planilla, que deben coincidir. Las filas sin producto en el
+  sistema, con nombre equivocado o con cifras inválidas no se cargan y
+  se listan.
+- **No duplica.** Un producto que ya tiene un `AJUSTE` con el motivo
+  «Carga inicial» **se salta** y se lista como «ya cargado». Ejecutar el
+  modo dos veces no crea ningún movimiento la segunda.
+- **Ajuste contra las existencias actuales.** El ajuste deja el producto
+  en lo contado, calculando la diferencia contra el valor vigente, igual
+  que CU-CAT-07. Si coincide con lo contado no hay ajuste («sin
+  diferencia»). Y como **la huella incluye las existencias actuales** de
+  cada producto, una venta entre el informe y la aplicación invalida la
+  huella: se aplica exactamente lo aprobado.
+- **Meses de garantía, opcional.** Si la columna `meses_garantia` trae un
+  entero no negativo distinto del actual, se fija en el producto en la
+  misma transacción. Es una edición del producto, no un movimiento; solo
+  afecta a las ventas futuras (RN-CAT-09, RN-VEN-12). Vacía, no se toca.
+  Entra en la huella.
+- **Todo o nada**, en una transacción, y `ANALYZE` al terminar.
 
 **Lectura de la base antigua: solo sobre una copia.** Al preparar este
 plan se leyó la base antigua y hubo un incidente: `my.ini` de XAMPP fija

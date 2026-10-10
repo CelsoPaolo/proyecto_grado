@@ -1719,6 +1719,41 @@ final del documento.
     - imágenes servidas con 200 e idénticas al archivo.
   - Una segunda ejecución importaría 0.
 
+### [x] T-OP.5 — Carga posterior del recuento (`--solo-existencias`)
+- **Depende de:** T-OP.4
+- **Trabajo:** `--planilla-importados` y `--solo-existencias`
+  (`plan.md` §11.3), con la columna opcional `meses_garantia`.
+- **Hecho cuando:** pruebas verifican que:
+  - el informe no escribe nada;
+  - cada fila válida deja un `AJUSTE` «Carga inicial» con el autor de
+    `--usuario`, y el producto queda en lo contado; el libro cuadra;
+  - un producto que ya tiene «Carga inicial» se salta, y una segunda
+    ejecución no crea ningún movimiento;
+  - lo contado igual a lo vigente no crea ajuste;
+  - una fila con `id_antiguo` desconocido, nombre que no corresponde,
+    producto que no está en el sistema o cifra inválida no se carga y se
+    lista;
+  - `meses_garantia` válido se aplica en la misma ejecución; vacío no
+    toca nada; inválido se lista y no se aplica;
+  - cambiar una cifra o vender una unidad después del informe cambia la
+    huella y no se aplica nada;
+  - un fallo a mitad no deja ningún ajuste ni ningún cambio de meses.
+- **Resultado (2026-10-09):** `catalogo/recuento.py` y dos opciones del
+  comando: `--planilla-importados` y `--solo-existencias`, esta con
+  `--aplicar --huella --usuario`.
+  - Los productos que ya tienen «Carga inicial» se saltan.
+  - El ajuste se calcula contra las existencias actuales, y la huella
+    las incluye.
+  - Columna opcional `meses_garantia`, aplicada en la misma transacción.
+  - 16 pruebas. Mutaciones detectadas: no saltar los ya cargados, una
+    huella sin las existencias actuales, y aplicar sin transacción.
+  - Planilla real generada en
+    `datos_importacion/planilla_recuento_importados.csv`, con 153
+    productos.
+  - Suites: B 1105 pasan y 0 fallan; F 217 pasan. La primera ejecución
+    del frontend dio 3 tiempos agotados con el portátil en batería; al
+    repetirla, todo en verde.
+
 ---
 
 ## Trazabilidad inversa: requerimiento → tarea

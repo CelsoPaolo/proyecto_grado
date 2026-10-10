@@ -58,7 +58,8 @@ bloque 13.
 | 2026-10-09 | T-OP.2 Comando `importar_catalogo` | `37d2b1c` | B 1081 / 0 · F 217 / 0 | **Las imágenes se leen de la carpeta que indique `--imagenes`**, sin ruta por defecto fuera del proyecto: así ninguna ejecución toca archivos de fuera sin que se le indique. La huella incluye el contenido de cada imagen y las cifras del recuento. El comando exige un Administrador activo en `--usuario` y ejecuta `ANALYZE` tras aplicar. |
 | 2026-10-09 | T-OP.3 Informe real — **preparado, esperando aprobación** | `229c8b7` | B 1082 / 0 · F 217 / 0 | Informe sobre los CSV reales **sin imágenes**: están fuera del proyecto y leerlas es una condición de parada. Base de desarrollo intacta antes y después (7 productos, 5 categorías y 7 movimientos). **Defecto corregido:** en la consola de Windows (cp1252) la flecha «←» del informe hacía fallar el comando; ahora es «<-», el archivo de `--salida` se escribe antes y una prueba vigila la codificación. Informe en `datos_importacion/informe_importacion_sin_imagenes.txt`, planilla en `datos_importacion/planilla_recuento.csv` (fuera de Git). |
 | 2026-10-09 | T-OP.3 Informe final — **esperando aprobación** | `45f1973` | B 1089 / 0 · F 217 / 0 | Con tus decisiones: imágenes **copiadas** (153 archivos, idénticos por SHA-256; el origen, sin cambios); las tres categorías parecidas se fusionan **renombrando las existentes** con `--fusionar-categorias`, dentro de la huella y de la transacción (`plan.md` §11.3); el precio del producto 98 aparece como «precio por confirmar con la empresa». Huella `3a22466c989cf45c`, igual en dos ejecuciones. Base de desarrollo intacta. |
-| 2026-10-09 | T-OP.3 y T-OP.4 Importación aplicada | siguiente commit | B 1089 / 0 · F 217 / 0 | Aprobada por el usuario. Respaldo previo con `pg_dump` (`datos_importacion/respaldos/pcsolution_antes_de_T-OP.4_20261009_205743.dump`). Se usó `--usuario admin`, porque es el único Administrador activo y el comando aprobado decía `<ADMIN>`. Resultado: 160 productos, 15 categorías, 153 `ALTA`, libro cuadrado, los 7 anteriores intactos y las imágenes servidas. |
+| 2026-10-09 | T-OP.3 y T-OP.4 Importación aplicada | `5917464` | B 1089 / 0 · F 217 / 0 | Aprobada por el usuario. Respaldo previo con `pg_dump` (`datos_importacion/respaldos/pcsolution_antes_de_T-OP.4_20261009_205743.dump`). Se usó `--usuario admin`, porque es el único Administrador activo y el comando aprobado decía `<ADMIN>`. Resultado: 160 productos, 15 categorías, 153 `ALTA`, libro cuadrado, los 7 anteriores intactos y las imágenes servidas. |
+| 2026-10-09 | T-OP.5 Carga posterior del recuento (`--solo-existencias`) | siguiente commit | B 1105 / 0 · F 217 / 0 | **Incluida la columna opcional `meses_garantia`**: complica poco, porque es una edición del producto sin movimiento, idempotente, y entra en la huella. Además, **la huella incluye las existencias actuales**, para que una venta entre el informe y la aplicación lo invalide. Lo contado igual a lo vigente no crea ajuste. La planilla antigua (`planilla_recuento.csv`) queda obsoleta: usar `planilla_recuento_importados.csv`. En la primera ejecución el frontend dio 3 tiempos agotados con el portátil en batería; al repetir, en verde. No se subió el límite. |
 
 ## Pendiente para revisión humana
 
@@ -148,6 +149,14 @@ bloque 13.
   ilegibles.
 - **T-OP.3:** decisiones del usuario tomadas el 2026-10-09 (imágenes, fusiones, precio, sin recuento).
 - **T-OP.4:** importación aplicada el 2026-10-09. Revisar en el catálogo algunos de los 153 productos (imagen, precio, categoría) y el precio del producto 98, que está por confirmar con la empresa.
+- **T-OP.5, carga del recuento (cuando se haga):**
+  1. Contar el día del cambio sobre
+     `datos_importacion/planilla_recuento_importados.csv`, rellenando la
+     fecha, `existencias_contadas` y, si se quiere, `meses_garantia`.
+  2. Informe: `python manage.py importar_catalogo --productos ../datos_importacion/catalogo_anterior/productos.csv --solo-existencias <planilla>`.
+  3. Revisar y aprobar la huella; luego la misma orden con
+     `--aplicar --huella <huella> --usuario admin`.
+  4. Hacer antes un respaldo con `pg_dump`, como en T-OP.4.
 - **Dependencias:** `npm audit` informa de 1 vulnerabilidad alta en
   `source-map-js`, una herramienta de desarrollo que ya estaba instalada
   antes de esta versión; no viene de JsBarcode. No apliqué `npm audit
@@ -155,4 +164,4 @@ bloque 13.
 
 ## Dónde se detuvo la sesión
 
-T-OP.4 aplicada. **Siguiente: T-OP.5** (`--solo-existencias`).
+**Todas las tareas de la v1.4 terminadas** (bloques 8 a 13 y T-OP.1 a T-OP.5). Quedan solo la revisión humana de la lista de arriba y, cuando la empresa cuente su inventario, la carga del recuento (T-OP.5, con aprobación).
