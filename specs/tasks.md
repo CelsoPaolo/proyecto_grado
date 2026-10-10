@@ -1557,12 +1557,24 @@ final del documento.
   - Trazabilidad: 0 fallos, desde T-12.7.
   - Mutación detectada: apuntar a una prueba inexistente.
 
-### [ ] T-13.2 — Usabilidad de lo nuevo
+### [x] T-13.2 — Usabilidad de lo nuevo
 - **Cubre:** RNF-12 a RNF-16
 - **Depende de:** T-13.1
 - **Hecho cuando:** recorrido manual en los tres anchos de pantalla;
   toda acción nueva que modifica datos —ajustar, desactivar, reactivar—
   pide confirmación; toda la interfaz nueva está en español.
+- **Resultado (2026-10-09), parte automatizable:**
+  - Confirmación de las acciones nuevas que modifican datos, cubierta
+    por pruebas: el ajuste se confirma en dos pasos dentro del diálogo
+    (`inventario.test.js`); desactivar y reactivar un cliente usan
+    `ConfirmDialog` (`clientes.test.js`).
+  - Español: en las vistas y componentes nuevos no queda texto visible
+    en inglés; PrimeVue usa el locale `es`.
+  - Tablas: la regla global `.p-datatable-wrapper { overflow-x: auto }`
+    de `main.css` (RNF-12) cubre también las nuevas, y las rejillas
+    nuevas usan `auto-fit`/`flex-wrap`.
+  - **El recorrido manual en los tres anchos queda para revisión
+    humana.**
 
 ### [ ] T-13.3 — Coherencia y documentación
 - **Cubre:** RNF-22
