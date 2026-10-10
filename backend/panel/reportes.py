@@ -72,8 +72,15 @@ def productos_mas_vendidos(desde, hasta):
     muestra su nombre actual y su codigo, que no cambia nunca (plan.md
     4.4). El id desempata al final para que el orden sea estable.
     """
+    # Join directo con la venta, no `venta__in=<subconsulta>`: con
+    # estadisticas desactualizadas (tras una carga masiva) PostgreSQL
+    # llego a ejecutar la subconsulta como bucle anidado, del orden de
+    # minutos con un ano de datos (T-12.7).
     filas = (
-        DetalleVenta.objects.filter(venta__in=ventas_confirmadas(desde, hasta))
+        DetalleVenta.objects.filter(
+            venta__estado=EstadoVenta.CONFIRMADA,
+            venta__fecha_hora__date__range=(desde, hasta),
+        )
         .values("producto_id")
         .annotate(
             codigo=F("producto__codigo"),

@@ -49,7 +49,8 @@ bloque 13.
 | 2026-10-09 | T-12.3 Detalles del reporte | `2b5c934` | B 983 / 4 · F 205 / 0 | `calcular(..., con_detalles=False)` para el panel, que no usa las tablas. Ventas por usuario ordenadas por importe descendente. Desempate final por id en las dos tablas, para que el orden sea estable entre la pantalla, el PDF y el Excel. |
 | 2026-10-09 | T-12.4 API del reporte | `6c4481b` | B 998 / 3 · F 205 / 0 | La validación del rango vive en `panel/reportes.py` y la usarán también el PDF y el Excel, así que las tres salidas rechazan lo mismo. No se pone un tope al rango (RNF-28 habla de rendimiento con hasta un año, no de un límite). |
 | 2026-10-09 | T-12.5 Exportación a PDF | `572292d` | B 1008 / 2 · F 205 / 0 | Título «Reporte de operación», con el rango en el lugar del número. Leyenda propia en el pie: «Reporte interno de operación, no válido como documento fiscal». Las secciones vacías dicen «Sin ventas en el período». |
-| 2026-10-09 | T-12.6 Exportación a Excel | siguiente commit | B 1017 / 1 · F 205 / 0 | `openpyxl` fijado en 3.1.5 en el entorno; en `requirements/base.txt` queda como `>=3.1.5`, al estilo del resto. Trae una sola dependencia, `et-xmlfile`, también Python puro. Las fechas del rango van como fechas de Excel con formato `DD/MM/YYYY`, y el archivo se sirve como `attachment`. |
+| 2026-10-09 | T-12.6 Exportación a Excel | `5597dba` | B 1017 / 1 · F 205 / 0 | `openpyxl` fijado en 3.1.5 en el entorno; en `requirements/base.txt` queda como `>=3.1.5`, al estilo del resto. Trae una sola dependencia, `et-xmlfile`, también Python puro. Las fechas del rango van como fechas de Excel con formato `DD/MM/YYYY`, y el archivo se sirve como `attachment`. |
+| 2026-10-09 | T-12.7 Coherencia de las tres salidas ⚠️ | siguiente commit | **B 1026 / 0** · F 205 / 0 | **El guardián de trazabilidad llega a 0 fallos.** Hallazgo de rendimiento: con estadísticas viejas, `productos_mas_vendidos` (que usaba `venta__in=<subconsulta>`) tardaba 213 s por petición en la suite completa. Se reescribe como join, y la prueba ejecuta `ANALYZE` tras la carga, porque RNF-28 habla de «carga normal» y dentro de la transacción de la prueba autovacuum no ve las filas. El comando de importación (T-OP.2) ejecutará `ANALYZE` al aplicar. Hubo además una parada aislada de 214 s en una ejecución suelta que no se reprodujo, con el mismo origen. |
 
 ## Pendiente para revisión humana
 
@@ -120,6 +121,12 @@ bloque 13.
     teléfono en su ficha.
   - Abrir el detalle de la venta: debe conservar los datos originales.
   - Emitir su garantía: no debe aparecer el carnet.
+- **Rendimiento tras cargas masivas (T-12.7):** justo después de cargar
+  muchos datos de golpe, y antes de que autovacuum actualice las
+  estadísticas (normalmente en minutos), un reporte de un año podría ir
+  lento. El comando de importación ejecutará `ANALYZE` al aplicar. Si
+  alguna vez se restaura una copia grande de la base, conviene ejecutar
+  `ANALYZE;` en PostgreSQL.
 - **Dependencias:** `npm audit` informa de 1 vulnerabilidad alta en
   `source-map-js`, una herramienta de desarrollo que ya estaba instalada
   antes de esta versión; no viene de JsBarcode. No apliqué `npm audit
@@ -127,4 +134,4 @@ bloque 13.
 
 ## Dónde se detuvo la sesión
 
-T-12.6 terminada. **Siguiente: T-12.7** (coherencia de las tres salidas).
+T-12.7 terminada. **Siguiente: T-12.8** (pantalla de reportes).

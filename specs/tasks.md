@@ -1485,7 +1485,7 @@ final del documento.
   - La prueba abre el archivo con `openpyxl`. Mutación detectada: un
     importe escrito como texto.
 
-### [ ] T-12.7 — Coherencia de las tres salidas ⚠️
+### [x] T-12.7 — Coherencia de las tres salidas ⚠️
 - **Cubre:** **RN-REP-07**, **RN-REP-09**, RNF-26, RNF-28
 - **Depende de:** T-12.5, T-12.6
 - **Trabajo:** Prueba que genera el JSON, el PDF y el Excel del mismo
@@ -1494,6 +1494,22 @@ final del documento.
 - **Hecho cuando:** las cifras son idénticas en las tres; el carnet no
   aparece en ninguna; el reporte de un año y su exportación tardan menos
   de 5 segundos.
+- **Resultado (2026-10-09):** `panel/tests/test_coherencia_reportes.py`.
+  - El JSON, el PDF y el Excel del mismo rango coinciden cifra a cifra
+    en las cuatro secciones.
+  - El carnet de un cliente que compró en el rango no aparece en
+    ninguna salida, ni dentro del XML del xlsx.
+  - Un año de datos sintéticos (unas 7.300 ventas y 1.800 servicios): el
+    JSON, el PDF y el Excel tardan cada uno unos 2–3 s, por debajo del
+    límite de 5.
+  - **Hallazgo:** en la suite completa cada petición tardaba 213 s. Con
+    las estadísticas de PostgreSQL desactualizadas, el planificador
+    elegía un bucle anidado para `venta__in=<subconsulta>`.
+    - Corregido de dos formas: la consulta pasa a un join directo, y la
+      prueba ejecuta `ANALYZE` tras la carga, que es la condición de
+      «carga normal».
+    - Con el plan malo forzado: 34,7 s; con estadísticas al día: 0,11 s.
+  - Mutación detectada: el Excel con una cifra distinta.
 
 ### [ ] T-12.8 — Pantalla de reportes
 - **Cubre:** RF-90 a RF-96
