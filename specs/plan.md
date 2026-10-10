@@ -1576,6 +1576,18 @@ presentación apilada en pantallas estrechas. No se diseña para teléfono
 móvil: `spec.md` §2.2 excluye la aplicación móvil y el personal trabaja
 en mostrador.
 
+
+**Cabecera y menú fijos** *(v1.5, 2026-10-10)*. Al desplazarse, la
+cabecera y el menú lateral quedan en su sitio y solo se mueve el
+contenido. Se hace con `position: sticky`, no con un contenedor de
+scroll propio: la página sigue desplazándose con normalidad, y así la
+impresión, los PDF y la etiqueta no cambian (además, `@media print` las
+devuelve al flujo normal). La cabecera tiene una altura fija
+(`--pcs-alto-cabecera`) y el menú se pega justo debajo, con el alto de
+la ventana y **su propio scroll** si no cabe. Su `z-index` (100) queda
+por debajo de los diálogos, menús y desplegables de PrimeVue (1000 y
+1100), que siguen encima de todo. En tableta, la barra de menú
+horizontal también queda fija bajo la cabecera.
 ### 7.6 Paleta e identidad visual
 
 Decidido el 30/09/2026, después de las primeras sesiones de uso: la

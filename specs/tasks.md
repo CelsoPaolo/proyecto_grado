@@ -1807,7 +1807,7 @@ final del documento.
   - 5 pruebas. Mutaciones detectadas: quitar la clase, y
     `outline: none`.
 
-### [ ] T-14.3 — Cabecera y menú lateral fijos
+### [x] T-14.3 — Cabecera y menú lateral fijos
 - **Cubre:** RNF-12
 - **Trabajo:** Solo el contenido se desplaza; el menú lateral tiene su
   propio desplazamiento si no cabe; diálogos por encima; impresión sin
@@ -1815,6 +1815,18 @@ final del documento.
 - **Hecho cuando:** pruebas verifican la estructura y las reglas de
   estilo; la comprobación visual en 1440, 1024 y 768 px queda para
   revisión humana.
+- **Resultado (2026-10-10):** la cabecera y el menú lateral son
+  `sticky`.
+  - La cabecera tiene una altura fija en `--pcs-alto-cabecera`; el menú
+    se pega debajo, con el alto de la ventana y `overflow-y: auto`.
+  - `z-index` 100, por debajo de los diálogos y menús de PrimeVue (1000
+    y 1100).
+  - En tableta, la barra horizontal sigue fija. Con `@media print`,
+    ambas vuelven al flujo normal.
+  - 7 pruebas. Mutaciones detectadas: sin `sticky`, `z-index` por
+    encima de los diálogos, sin la regla de impresión y sin el scroll
+    del menú.
+  - **La comprobación visual queda para revisión humana.**
 
 ---
 

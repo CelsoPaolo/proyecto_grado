@@ -80,7 +80,18 @@ const opcionesCuenta = computed(() => [
 </template>
 
 <style scoped>
+/* Cabecera y menu lateral FIJOS al desplazarse (plan.md 7.5, T-14.3):
+   con `position: sticky` y no con un contenedor de scroll propio. La
+   pagina sigue desplazandose con normalidad, de modo que la impresion,
+   el PDF y la etiqueta (@media print) no cambian. La cabecera tiene una
+   altura fija para que el menu se pegue exactamente debajo y el
+   contenido no quede tapado.
+
+   z-index 100: por encima del contenido, pero por DEBAJO de los
+   dialogos, menus y desplegables de PrimeVue (1000 o mas, montados en
+   <body>), que siguen apareciendo encima de todo. */
 .marco {
+  --pcs-alto-cabecera: 3.75rem;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -91,11 +102,16 @@ const opcionesCuenta = computed(() => [
    no se escriben aqui, para que el cromo se ajuste desde un solo
    sitio. */
 .cabecera {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-sizing: border-box;
+  height: var(--pcs-alto-cabecera);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.75rem 1.25rem;
+  padding: 0 1.25rem;
   background: var(--pcs-cromo-fondo, #09090b);
   border-bottom: 1px solid var(--pcs-cromo-borde, #27272a);
   color: var(--pcs-cromo-texto, #f4f4f5);
@@ -135,6 +151,15 @@ const opcionesCuenta = computed(() => [
 }
 
 .lateral {
+  /* Fijo bajo la cabecera, con su propio scroll si no cabe en la
+     ventana, sin mover el resto. */
+  position: sticky;
+  top: var(--pcs-alto-cabecera);
+  align-self: flex-start;
+  box-sizing: border-box;
+  height: calc(100vh - var(--pcs-alto-cabecera));
+  overflow-y: auto;
+  z-index: 100;
   width: 220px;
   flex-shrink: 0;
   padding: 1rem 0.75rem;
@@ -188,7 +213,11 @@ const opcionesCuenta = computed(() => [
     flex-direction: column;
   }
 
+  /* La barra horizontal tambien queda fija bajo la cabecera. */
   .lateral {
+    align-self: stretch;
+    height: auto;
+    overflow-y: visible;
     width: 100%;
     flex-direction: row;
     overflow-x: auto;
@@ -198,6 +227,18 @@ const opcionesCuenta = computed(() => [
 
   .contenido {
     padding: 1rem;
+  }
+}
+
+/* Al imprimir, cabecera y menu vuelven al flujo normal: nada fijo que
+   se repita en cada hoja. La etiqueta del producto tiene su propia
+   regla de impresion, que oculta todo lo demas. */
+@media print {
+  .cabecera,
+  .lateral {
+    position: static;
+    height: auto;
+    overflow: visible;
   }
 }
 </style>
