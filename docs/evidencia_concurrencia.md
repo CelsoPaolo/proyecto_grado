@@ -1,7 +1,7 @@
 # Evidencia: concurrencia en el libro de movimientos de stock (T-8.5)
 
 **Fecha de las ejecuciones:** 2026-10-09
-**Rama:** `feat/v1.4` · commit de T-8.5: `b02c6bd`
+**Rama:** `feat/v1.4` · commit de T-8.5: `17e91f5`
 **Entorno:** Windows 11, PostgreSQL 18, Django 5.1, portátil conectado a la corriente
 **Requisitos que respalda:** RNF-08, RNF-24, RN-MOV-03, CU-CAT-07
 
