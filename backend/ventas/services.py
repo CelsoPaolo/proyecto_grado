@@ -15,6 +15,7 @@ from django.db import transaction
 from django.db.models import F
 from django.utils import timezone
 
+from catalogo.codigos import generar_codigos_de_unidad
 from catalogo.models import Producto
 from clientes.exceptions import ClienteInactivo
 from clientes.models import Cliente
@@ -28,7 +29,7 @@ from ventas.exceptions import (
     VentaSinItems,
     VentaYaAnulada,
 )
-from ventas.models import DetalleVenta, EstadoVenta, Venta
+from ventas.models import DetalleVenta, EstadoVenta, UnidadVendida, Venta
 
 
 def _bloquear_productos(ids):
@@ -214,6 +215,18 @@ def registrar_venta(*, usuario, items, cliente_nombre="", cliente_telefono="", c
         )
 
     DetalleVenta.objects.bulk_create(detalles)
+
+    # RF-102 y RN-VEN-18: un codigo propio por cada unidad vendida, en
+    # esta misma transaccion. Si cualquier paso anterior fallo, no se
+    # llega aqui; si algo falla despues, el atomic revierte tambien las
+    # unidades (RNF-09). Los numeros que la secuencia ya entrego no se
+    # reutilizan nunca: eso es justamente lo que se quiere.
+    codigos = iter(generar_codigos_de_unidad(sum(d.cantidad for d in detalles)))
+    UnidadVendida.objects.bulk_create(
+        UnidadVendida(detalle=detalle, codigo=next(codigos))
+        for detalle in detalles
+        for _ in range(detalle.cantidad)
+    )
 
     venta.total = total
     venta.save(update_fields=["total"])

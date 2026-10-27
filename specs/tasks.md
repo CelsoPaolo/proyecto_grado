@@ -1927,7 +1927,7 @@ los requerimientos de la v1.5 todavía sin implementar.
   - Backend: 1182 pruebas, 5 fallos del guardián; frontend 247 / 247.
   - **La comprobación visual queda para revisión humana.**
 
-### [ ] T-15.5 — Código de unidad al confirmar la venta ⚠️
+### [x] T-15.5 — Código de unidad al confirmar la venta ⚠️
 - **Cubre:** RF-102, RN-VEN-18, RNF-09
 - **Trabajo:** Modelo `UnidadVendida`, secuencia `unidad_codigo_seq` y
   generalización de `catalogo/codigos.py`; asignación en
@@ -1937,6 +1937,21 @@ los requerimientos de la v1.5 todavía sin implementar.
   EAN-13 válidos con prefijo 21 y todos distintos —también entre ventas
   simultáneas—, que una venta rechazada no asigna ninguno y que la
   migración es reversible.
+- **Resultado (2026-10-26):** `UnidadVendida`, migración
+  `ventas/0005_unidad_vendida` y `generar_codigos_de_unidad()`.
+  - `catalogo/codigos.py` recibe el prefijo y la secuencia como
+    parámetros, con los del producto por defecto: el código de producto
+    no cambia.
+  - Los números se piden en una sola consulta (`nextval` sobre
+    `generate_series`) y las filas se crean con `bulk_create`.
+  - Aplicada a la base de desarrollo: la tabla nace vacía; las ventas
+    anteriores no reciben códigos.
+  - 11 pruebas en `test_unidades.py`, entre ellas 20 ventas simultáneas
+    de 3 unidades: 60 códigos, todos distintos.
+  - Mutación detectada: repetir un mismo código para todas las unidades,
+    que es el problema de la garantía 17.
+  - Backend: 1193 pruebas, 4 fallos del guardián (RF-101, RF-103 a
+    RF-105); frontend 247 / 247.
 
 ### [ ] T-15.6 — Anulación de los códigos de unidad
 - **Cubre:** RF-103, RN-VEN-19, RNF-10

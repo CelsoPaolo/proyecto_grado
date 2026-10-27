@@ -212,3 +212,46 @@ class DetalleVenta(models.Model):
 
     def __str__(self):
         return f"{self.cantidad} x {self.producto_nombre}"
+
+
+class UnidadVendida(models.Model):
+    """RN-VEN-18 y RN-VEN-19 (v1.5) — una fila por cada unidad vendida.
+
+    Una linea de 7 unidades tiene 7 filas, cada una con su codigo: asi
+    la garantia identifica la unidad fisica concreta, no el modelo de
+    producto (plan.md 3.6). Solo las ventas confirmadas desde la v1.5
+    las tienen: a las anteriores no se les asignan (RNF-30).
+    """
+
+    detalle = models.ForeignKey(
+        DetalleVenta,
+        on_delete=models.CASCADE,  # no existe sin su linea; las ventas no se borran
+        related_name="unidades",
+        verbose_name="línea de la venta",
+    )
+    # EAN-13 con prefijo 21, de la secuencia unidad_codigo_seq. Nunca se
+    # edita ni se reutiliza, ni siquiera si la venta se anula.
+    codigo = models.CharField(
+        "código de unidad",
+        max_length=13,
+        unique=True,
+        editable=False,
+    )
+    # RN-VEN-19: quien y cuando ya estan en la venta anulada; repetirlo
+    # en cada unidad seria un dato duplicado que podria divergir.
+    anulada = models.BooleanField("anulada", default=False)
+
+    class Meta:
+        verbose_name = "unidad vendida"
+        verbose_name_plural = "unidades vendidas"
+        ordering = ["id"]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(codigo__regex=r"^21[0-9]{11}$"),
+                name="unidad_codigo_formato",
+                violation_error_message="El código de unidad debe tener 13 dígitos y empezar por 21.",
+            ),
+        ]
+
+    def __str__(self):
+        return self.codigo
