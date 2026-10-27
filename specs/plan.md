@@ -2,14 +2,16 @@
 
 - **Proyecto:** Sistema ERP interno para PC-Solution (Sucre, Bolivia)
 - **Documento:** Etapa 2 de Spec-Driven Development — Plan técnico
-- **Versión:** 1.5
-- **Fecha:** 2026-10-10
+- **Versión:** 1.6
+- **Fecha:** 2026-10-26
 - **Estado:** **Aprobado** el 2026-10-08 — la v1.3 diseñó las cinco
   funcionalidades de `spec.md` v1.4, y la v1.4 de este plan las deja
   **implementadas** (bloques 8 a 13), con las precisiones de §11.4.
-  Queda pendiente la importación del catálogo anterior (§11.3), que se
-  aplica con aprobación expresa. Siguen vigentes PT-01 a PT-05 (sección 13)
-- **Deriva de:** `spec.md` v1.4.1
+  La importación del catálogo anterior (§11.3) ya se aplicó. La v1.6
+  diseña los tres ajustes de `spec.md` v1.5 (§3.6, §7.14, §11.5), en
+  implementación en el bloque 15. Siguen vigentes PT-01 a PT-05
+  (sección 13)
+- **Deriva de:** `spec.md` v1.5
 
 ### Historial de versiones
 
@@ -21,6 +23,7 @@
 | 1.3 | 2026-10-08 | **Diseño de las cinco funcionalidades de `spec.md` v1.4.** Dos apps nuevas, `inventario` (movimientos de stock) y `clientes`; `panel` pasa a servir también los reportes por rango, y el panel diario se reescribe como el reporte de un día para que ambos no puedan divergir (RN-REP-08). Modelo de datos en §3.5; endpoints nuevos en §4.4; el libro de movimientos dentro del patrón de concurrencia en §6.5; lector de códigos, garantía y reportes en §7.9 a §7.11. Dependencias nuevas: `openpyxl` (backend) y `JsBarcode` (frontend), ambas sin componentes nativos. **Hallazgo que condiciona el diseño:** hoy las existencias se editan con el `PATCH` genérico del producto, **sin bloquear la fila**; con un libro de movimientos eso deja de ser aceptable y el ajuste pasa a un servicio propio con `select_for_update()` (§6.5). **De paso se corrigen cinco restos** de versiones anteriores: PostgreSQL 16 en §2.1, «asignación» en §2.3, una restricción de §3.3 que no existe en el modelo, y el ejemplo de `finalizar` y la nota sobre `iniciar` de §4.4, ambos anteriores a la v1.2. **Aprobado con las decisiones PA-06 a PA-08** de `spec.md` §12: se diseña el **código de fábrica** opcional (§3.5, §4.4, §7.9) y «servicios por estado» incluye las canceladas. **Revisado el 2026-10-09:** editar un producto con `stock` en la petición responde 400 en lugar de ignorarlo (§4.4). **Revisado otra vez el 2026-10-09 (T-9.2):** el reverso del paso 2 de la migración del código ya no borra los códigos; volver a aplicarlo cambiaría el código de productos ya etiquetados (§3.5, RN-CAT-08). |
 | 1.4 | 2026-10-09 | **La v1.4 de `spec.md` queda implementada.** §11.4 recoge lo que la implementación precisó sin cambiar el alcance: el filtro inválido de movimientos responde 400, la cola del lector de códigos, el punto de extensión de las condiciones de la garantía, la búsqueda del carnet solo exacta, el `ANALYZE` tras cargas masivas y el join de «más vendidos». Ninguna precisión cambia un requerimiento. |
 | 1.5 | 2026-10-10 | Tres ajustes de interfaz de `spec.md` v1.4.1. **Se retira la pantalla de Inicio** (§7.4 y §7.7, marcadas como retiradas, no borradas): cada rol entra a su espacio de trabajo (§7.12). Los nombres que abren un detalle en las listas dejan de verse como enlaces (§7.13). La cabecera y el menú lateral quedan fijos al desplazarse (§7.5). |
+| 1.6 | 2026-10-26 | **Diseño de los tres ajustes de `spec.md` v1.5** (§3.6, §7.14, §11.5). **Búsqueda sin tildes** con la extensión `unaccent` de PostgreSQL, activada por una migración y usada a través de `django.contrib.postgres`, que forma parte de Django: **ninguna dependencia nueva**. **Teléfono y carnet** con validadores comunes en `core/validadores.py`, aplicados en el serializer, en el servicio y en la base de datos. **Código por unidad** en un modelo nuevo, `UnidadVendida`, con su propia secuencia y el prefijo 21. **Hallazgo que condiciona el diseño:** hay ventas y solicitudes antiguas con teléfonos fuera de formato, y una restricción `NOT VALID` de PostgreSQL vuelve a comprobarse cada vez que una de esas filas se actualiza: anular una venta antigua o cambiar el estado de una solicitud antigua fallaría. La restricción del teléfono se limita por eso a las filas **creadas después** de la migración (§3.6, RNF-30). |
 
 > Este documento traduce la especificación funcional a **decisiones
 > técnicas concretas**: arquitectura, modelo de datos, contrato de la API,
@@ -780,6 +783,81 @@ columna redundante que además podría desincronizarse.
   `clientes` lo declara: ni el de la venta, ni el de la garantía, ni el
   de los reportes. La minimización de RNF-26 queda en la forma de los
   datos, no en la disciplina de quien escriba la próxima vista.
+
+### 3.6 Modelo de datos de la v1.5 *(v1.6 de este plan)*
+
+**Una tabla nueva**, `UnidadVendida`, en la app `ventas`. El resto del
+modelo no cambia de forma; cambian sus restricciones.
+
+```
+┌──────────────────────┐        ┌──────────────────────────────┐
+│ DetalleVenta         │ 1    N │ UnidadVendida       (ventas) │
+│──────────────────────│◄───────│──────────────────────────────│
+│ …campos de §3.1/§3.5…│        │ detalle   FK CASCADE         │
+│ cantidad             │        │ codigo    13  UQ  ★          │
+└──────────────────────┘        │ anulada   bool  (false)      │
+                                └──────────────────────────────┘
+★ EAN-13 con prefijo 21, de la secuencia unidad_codigo_seq
+```
+
+**`UnidadVendida`** (RN-VEN-18, RN-VEN-19):
+
+- **Una fila por unidad**: una línea de 7 unidades tiene 7 filas.
+- **`codigo`**: EAN-13 con prefijo **21**, calculado con las mismas
+  funciones que el código de producto (`catalogo/codigos.py`, que se
+  generaliza para recibir el prefijo y la secuencia). Sale de una
+  **secuencia propia**, `unidad_codigo_seq`, por la misma razón que la
+  del producto (§3.5): una secuencia no devuelve nunca dos veces el
+  mismo número, ni aunque la transacción que lo pidió se revierta; eso
+  es literalmente «no se reutiliza». Restricciones `UNIQUE` y `CHECK`
+  de la forma `^21[0-9]{11}$`.
+- **`anulada`**: la marca de RN-VEN-19. Quién y cuándo anuló ya está en
+  la venta: repetirlo en cada unidad sería un dato duplicado que podría
+  divergir.
+- **`detalle` con `CASCADE`**, como el detalle con su venta: una unidad
+  no existe sin su línea, y las ventas no se borran nunca (RN-VEN-06).
+- **Sin migración de datos:** las ventas anteriores no reciben códigos
+  (RNF-30), así que la tabla nace vacía.
+
+**Restricción del teléfono sin efecto sobre las filas antiguas**
+(RN-CLI-09, RNF-30). En `Venta.cliente_telefono` —vacío o 8 dígitos— y
+en `SolicitudServicio.cliente_telefono` —8 dígitos— se añade un `CHECK`.
+La forma obvia, `ADD CONSTRAINT … NOT VALID`, **no sirve**: PostgreSQL
+no revisa las filas existentes al crearla, pero sí **cada vez que una de
+ellas se actualiza**. Hoy hay 8 ventas y 2 solicitudes con teléfonos
+fuera de formato, así que anular una de esas ventas, o cambiar de
+estado una de esas solicitudes, fallaría. Por eso la condición es:
+
+```sql
+CHECK (id <= <último id al migrar> OR cliente_telefono ~ '^[0-9]{8}$')
+```
+
+La migración lee el último `id` de cada tabla al aplicarse y lo escribe
+en la restricción. Es un dato propio de cada base: en la base de
+pruebas, vacía, vale 0 y la regla se aplica a todas las filas. Por eso
+estas dos restricciones **no se declaran en `Meta.constraints`**, sino
+solo en su migración (`RunPython` con SQL y su reverso, RNF-29), y la
+regla se aplica además en el serializer y en el servicio, que dan el
+error junto al campo (RNF-15).
+
+**Cliente** (RN-CLI-01, RN-CLI-02, RN-CLI-09). El carnet pasa a ser
+obligatorio, de 7 u 8 dígitos y único; el teléfono, de 8 dígitos. Aquí
+**sí** se comprueban todas las filas: los clientes se editan, y un
+cliente con un carnet inválido no debe poder seguir existiendo. La
+migración **no corrige datos**: se aplica cuando el propietario confirme
+que todos los clientes cumplen la regla, y antes se vuelve a comprobar
+(§11.5). La restricción `UNIQUE` parcial del carnet pasa a ser
+`UNIQUE` total, porque ya no hay clientes sin carnet.
+
+**Búsqueda sin tildes** (RN-CAT-12, RN-CLI-08). Una migración de
+`catalogo` activa la extensión `unaccent` (`UnaccentExtension`, de
+`django.contrib.postgres`). Es una extensión **de confianza** desde
+PostgreSQL 13: la activa el dueño de la base sin ser superusuario, y la
+migración la crea también en la base de pruebas y en cualquier base
+restaurada. `django.contrib.postgres` se añade a `INSTALLED_APPS` para
+usar el *lookup* `__unaccent`, que se aplica **a los dos lados** de la
+comparación: quita las tildes del nombre guardado y del texto buscado.
+Sin índice nuevo: el catálogo tiene cientos de productos, no millones.
 
 ---
 
@@ -1725,6 +1803,19 @@ producto en el Catálogo, al cliente en Clientes y al producto en la
 tabla de Movimientos, que eran los únicos nombres con enlace en una
 lista. Los accesos del Panel no son nombres y tienen su propio estilo.
 
+### 7.14 Los ajustes de la v1.5 en la API y en la interfaz *(v1.6 de este plan)*
+
+**Ningún endpoint nuevo.** La matriz de permisos (§4.4) no cambia.
+
+| Ajuste | API | Interfaz |
+|---|---|---|
+| Búsqueda sin tildes (RF-98, RF-99) | `?search=` de `/productos` y `?buscar=` de `/clientes` comparan con `__unaccent__icontains`. En productos, un filtro propio, `BusquedaSinTildes` (`core/filtros.py`), sustituye al `SearchFilter` de DRF, que no admite *transforms* en `search_fields`. | Ninguno: el Catálogo, el buscador de Registrar venta y Clientes ya llaman a esos parámetros. **El campo del código y el lector no se tocan.** |
+| Teléfono (RF-100) | Un validador común, `validar_telefono` en `core/validadores.py`: exactamente 8 dígitos, solo números. Lo usan los serializers y los servicios de clientes, ventas y servicios; el error va junto al campo (RNF-15). En la venta, el teléfono del cliente ocasional puede ir vacío. Si se elige un cliente registrado cuyo teléfono no cumple el formato —un cliente anterior sin corregir—, la venta se rechaza indicando que se corrija en Clientes. | Los campos de teléfono del formulario de cliente, del cliente ocasional y del registro de servicio aceptan solo dígitos, como máximo 8, y avisan antes de enviar. En la venta, el teléfono deja de marcarse como obligatorio. La garantía muestra «—» si la venta no tiene teléfono. |
+| Carnet (RF-101) | `validar_carnet`, en el mismo módulo: 7 u 8 dígitos, solo números. El carnet duplicado sigue respondiendo 409 (RN-CLI-02). | El carnet pasa a ser obligatorio en el formulario de cliente, solo dígitos, de 7 u 8. |
+| Código por unidad (RF-102, RF-103) | Se asigna en `registrar_venta()`, dentro de la misma transacción: los números se piden a la secuencia en una sola consulta (`nextval` sobre `generate_series`) y las filas se crean con `bulk_create`. `anular_venta()` marca `anulada` en la misma transacción. | Ninguno más allá de la garantía. |
+| Garantía por unidad (RF-104) | `lineas_con_garantia()` devuelve una fila por unidad si la venta tiene códigos de unidad, y el formato anterior si no los tiene (RNF-30). La plantilla tiene las dos tablas y elige según un indicador. | Ninguno: el PDF se genera en el servidor. |
+| Aviso del código de unidad (RF-105) | Ninguno: `?codigo=` sigue buscando solo productos. | En Registrar venta, si la búsqueda por código no encuentra ningún producto y el código tiene la forma `^21[0-9]{11}$`, el aviso es «este es un código de unidad, no de producto» en lugar de «no se encontró». Se comprueba **después** de buscar el producto, no antes: así un producto cuyo código de fábrica empezara por 21 se sigue agregando. |
+
 ### 7.8 Informe en PDF (RF-67, RF-68)
 
 **Se genera en el servidor.** Se evaluó generarlo en el navegador con
@@ -2293,6 +2384,23 @@ porqué, está en `docs/avance_v1.4.md`.
 | Reportes | `calcular(desde, hasta, con_detalles=True)`: el panel diario pide `con_detalles=False`. «Más vendidos» se consulta con un **join** a la venta y no con `venta__in=<subconsulta>`: con estadísticas viejas, PostgreSQL ejecutó la subconsulta como bucle anidado (213 s por petición con un año de datos). Tras una carga masiva, y en la prueba de RNF-28, se ejecuta `ANALYZE`. | T-12.3, T-12.7 |
 | Documentación de la API | Una prueba genera el esquema OpenAPI con `--fail-on-warn`; las enumeraciones `tipo` de la solicitud y del movimiento tienen nombre propio. | T-13.3 |
 | Importación (§11.3) | Las imágenes se leen de la carpeta que indique `--imagenes` (base de las rutas de la columna `imagen`), **sin ninguna ruta por defecto** hacia fuera del proyecto. El mapa de categorías es un CSV `origen,destino`. La planilla de recuento empieza con la fila `fecha_del_recuento,<fecha>` y sigue con `id_antiguo,nombre,categoria,existencias_contadas`. `--salida` guarda el informe en un archivo. La huella son los 16 primeros caracteres del SHA-256 del conjunto a importar, incluido el contenido de cada imagen. Tras aplicar se ejecuta `ANALYZE`. | T-OP.2 |
+
+### 11.5 Orden de la v1.5 *(v1.6 de este plan)*
+
+El orden lo fijó el propietario el 2026-10-26. Antes de cambiar nada se
+hizo un respaldo con `pg_dump`
+(`datos_importacion/respaldos/pcsolution_antes_de_v1.5_20261026_225727.dump`,
+fuera de Git) y se revisaron los clientes: de 3, uno incumple el
+formato nuevo del carnet y del teléfono.
+
+1. **Búsqueda sin tildes** (T-15.1, T-15.2).
+2. **Teléfono de 8 dígitos** en los registros nuevos (T-15.3, T-15.4).
+3. **Código por unidad** y garantía por unidad (T-15.5 a T-15.8).
+4. **Carnet obligatorio** (T-15.9), **la última**: su restricción en la
+   base comprueba todas las filas de clientes, y se aplica solo después
+   de que el propietario confirme que corrigió el cliente que incumple.
+   Antes de aplicarla, se vuelve a comprobar que todos los clientes
+   cumplen. El sistema no corrige ni desactiva clientes por su cuenta.
 
 ---
 

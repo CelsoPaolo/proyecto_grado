@@ -2,11 +2,11 @@
 
 - **Proyecto:** Sistema ERP interno para PC-Solution (Sucre, Bolivia)
 - **Documento:** Etapa 3 de Spec-Driven Development — Desglose de tareas
-- **Versión:** 1.2
-- **Fecha:** 2026-10-08
-- **Estado:** Bloques 0 a 7 **aprobados y completados** (v1.0). Bloques 8
-  a 13 **aprobados el 2026-10-08**, pendientes de implementar (v1.1).
-- **Deriva de:** `spec.md` v1.4 y `plan.md` v1.3
+- **Versión:** 1.3
+- **Fecha:** 2026-10-26
+- **Estado:** Bloques 0 a 14 **completados**. Bloque 15 (v1.5)
+  **aprobado el 2026-10-26**, en implementación.
+- **Deriva de:** `spec.md` v1.5 y `plan.md` v1.6
 
 ### Historial de versiones
 
@@ -15,6 +15,7 @@
 | 1.0 | 2026-09-22 | Bloques 0 a 7, 73 tareas, derivadas de `spec.md` v1.1 y `plan.md` v1.1. El bloque 5 se reformuló el 2026-09-29 tras la v1.2 de la especificación. Todas completadas. |
 | 1.1 | 2026-10-08 | **Bloques 8 a 13, 40 tareas**, para las cinco funcionalidades de `spec.md` v1.4 y sus decisiones PA-06 a PA-08 (T-9.7 es la del código de fábrica). Se corrige además la cabecera, que seguía diciendo «borrador pendiente de aprobación», y un resto de la v1.1 en T-6.1 («sin asignar» por «sin cotizar»). |
 | 1.2 | 2026-10-10 | **Bloque 14, tres ajustes de interfaz** de `spec.md` v1.4.1 y `plan.md` v1.5: espacio de trabajo por rol sin pantalla de Inicio, nombres sin estilo de enlace y cabecera y menú fijos. |
+| 1.3 | 2026-10-26 | **Bloque 15, diez tareas**, para los tres ajustes de `spec.md` v1.5 y `plan.md` v1.6: búsqueda sin tildes, teléfono y carnet con formato fijo, y código por unidad. T-15.9, la del carnet, espera la confirmación del propietario. |
 
 > Cada tarea es **atómica** (una unidad de trabajo con un resultado
 > verificable), está **ordenada por dependencia** (nunca depende de una
@@ -1830,6 +1831,111 @@ final del documento.
 
 ---
 
+# Versión 1.5 — ajustes del uso real
+
+## Bloque 15 — Búsqueda, datos de contacto y código por unidad *(2026-10-26)*
+
+Antes de empezar: respaldo con `pg_dump` y revisión de los clientes
+(`plan.md` §11.5). Mientras el bloque está en curso, los únicos fallos
+admitidos en la suite son los del guardián de trazabilidad, que marca
+los requerimientos de la v1.5 todavía sin implementar.
+
+### [ ] T-15.1 — Búsqueda de productos sin tildes
+- **Cubre:** RF-98, RN-CAT-12
+- **Trabajo:** Migración que activa `unaccent`; `django.contrib.postgres`
+  en `INSTALLED_APPS`; filtro `BusquedaSinTildes` en `core/filtros.py`
+  para `?search=` de `/productos` (`plan.md` §3.6, §7.14).
+- **Hecho cuando:** pruebas verifican que «camara», «cámara» y «CAMARA»
+  encuentran «Cámara», que la ñ equivale a la n, que se sigue buscando
+  en la descripción, que la búsqueda por código sigue exacta y que la
+  migración es reversible.
+
+### [ ] T-15.2 — Búsqueda de clientes sin tildes
+- **Cubre:** RF-99, RN-CLI-08
+- **Trabajo:** `?buscar=` de `/clientes` compara el nombre con
+  `__unaccent__icontains`; el carnet sigue exacto.
+- **Hecho cuando:** pruebas verifican la búsqueda sin tildes por nombre
+  y que el carnet parcial sigue sin encontrar a nadie.
+
+### [ ] T-15.3 — Teléfono de 8 dígitos en el servidor
+- **Cubre:** RF-100, RF-15, RN-CLI-09, RN-VEN-10, RN-SER-05, RNF-30
+- **Trabajo:** `validar_telefono` en `core/validadores.py`, usado por los
+  serializers y servicios de clientes, ventas y servicios; teléfono
+  opcional en el cliente ocasional; rechazo de la venta a un cliente
+  registrado con teléfono fuera de formato; restricciones de la base en
+  ventas y solicitudes solo para las filas nuevas (`plan.md` §3.6).
+- **Hecho cuando:** pruebas verifican los rechazos (7 y 9 dígitos,
+  letras, espacios) en los tres lugares, la venta ocasional sin
+  teléfono, que la base rechaza una fila nueva fuera de formato y que
+  una venta y una solicitud **anteriores** con teléfono fuera de formato
+  se siguen pudiendo anular y cambiar de estado. Migraciones reversibles.
+
+### [ ] T-15.4 — Teléfono de 8 dígitos en la interfaz
+- **Cubre:** RF-100, RF-15, RNF-15
+- **Trabajo:** Campos de teléfono de cliente, cliente ocasional y
+  registro de servicio: solo dígitos, como máximo 8, aviso antes de
+  enviar; en la venta, el teléfono deja de ser obligatorio; la garantía
+  muestra «—» sin teléfono.
+- **Hecho cuando:** pruebas de los tres formularios verifican el aviso
+  y que no se envía un teléfono inválido; la venta ocasional se envía
+  sin teléfono.
+
+### [ ] T-15.5 — Código de unidad al confirmar la venta ⚠️
+- **Cubre:** RF-102, RN-VEN-18, RNF-09
+- **Trabajo:** Modelo `UnidadVendida`, secuencia `unidad_codigo_seq` y
+  generalización de `catalogo/codigos.py`; asignación en
+  `registrar_venta()` dentro de la misma transacción (`plan.md` §3.6,
+  §7.14).
+- **Hecho cuando:** pruebas verifican una fila por unidad, códigos
+  EAN-13 válidos con prefijo 21 y todos distintos —también entre ventas
+  simultáneas—, que una venta rechazada no asigna ninguno y que la
+  migración es reversible.
+
+### [ ] T-15.6 — Anulación de los códigos de unidad
+- **Cubre:** RF-103, RN-VEN-19, RNF-10
+- **Trabajo:** `anular_venta()` marca `anulada` en la misma transacción.
+- **Hecho cuando:** pruebas verifican que se marcan todos, que no se
+  borran, que una venta anterior sin códigos se sigue anulando y que
+  anular dos veces no cambia nada.
+
+### [ ] T-15.7 — Garantía por unidad
+- **Cubre:** RF-104, RN-VEN-20, RNF-30
+- **Trabajo:** `lineas_con_garantia()` y la plantilla con las dos
+  formas: por unidad, y la anterior para las ventas sin códigos.
+- **Hecho cuando:** pruebas verifican 7 filas con 7 códigos distintos
+  para 7 unidades, que solo aparecen los productos con garantía y que
+  una venta anterior conserva el formato anterior.
+
+### [ ] T-15.8 — Aviso del código de unidad en Registrar venta
+- **Cubre:** RF-105, RN-VEN-21
+- **Trabajo:** En Registrar venta, aviso «este es un código de unidad, no
+  de producto» cuando la búsqueda por código no encuentra producto y el
+  código tiene la forma de un código de unidad (`plan.md` §7.14).
+- **Hecho cuando:** pruebas verifican el aviso, que no se agrega nada,
+  que un código desconocido de otra forma da el aviso de siempre y que
+  un producto encontrado se agrega aunque su código empiece por 21.
+
+### [ ] T-15.9 — Carnet obligatorio de 7 u 8 dígitos ⚠️
+- **Cubre:** RF-101, RF-84, RN-CLI-01, RN-CLI-02
+- **Depende de:** confirmación del propietario de que corrigió los
+  clientes que incumplían la regla (`plan.md` §11.5).
+- **Trabajo:** `validar_carnet`; carnet obligatorio en el serializer, el
+  servicio y el formulario; restricciones de la base sobre el carnet y
+  el teléfono de los clientes, comprobando todas las filas.
+- **Hecho cuando:** antes de migrar, una consulta confirma que ningún
+  cliente incumple; pruebas verifican los rechazos (6 y 9 dígitos,
+  letras, complemento, vacío), el duplicado con un cliente inactivo y
+  que la migración es reversible.
+
+### [ ] T-15.10 — Revisión del bloque 15
+- **Cubre:** RNF-22, RNF-23
+- **Trabajo:** Trazabilidad inversa, matriz de permisos sin cambios,
+  suites completas.
+- **Hecho cuando:** el guardián de trazabilidad llega a 0 fallos y las
+  dos suites están en verde.
+
+---
+
 ## Trazabilidad inversa: requerimiento → tarea
 
 Comprobación de que ningún requerimiento de `spec.md` quedó sin tarea.
@@ -1927,6 +2033,16 @@ Comprobación de que ningún requerimiento de `spec.md` quedó sin tarea.
 | RN-MOV-01 a RN-MOV-06 | T-8.1 a T-8.6 |
 | RN-CLI-01 a RN-CLI-07 | T-11.1 a T-11.4 |
 | RN-REP-01 a RN-REP-10 | T-12.1 a T-12.7 |
+| **v1.5** | |
+| RF-98, RN-CAT-12 | T-15.1 |
+| RF-99, RN-CLI-08 | T-15.2 |
+| RF-100, RF-15, RN-CLI-09, RN-VEN-10, RN-SER-05 | T-15.3, T-15.4 |
+| RF-101, RF-84, RN-CLI-01, RN-CLI-02 | T-15.9 |
+| RF-102, RN-VEN-18 | **T-15.5** |
+| RF-103, RN-VEN-19 | T-15.6 |
+| RF-104, RF-76, RN-VEN-20 | T-15.7 |
+| RF-105, RN-VEN-21 | T-15.8 |
+| RNF-30 | T-15.3, T-15.6, T-15.7 |
 
 ---
 
