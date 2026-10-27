@@ -1953,12 +1953,18 @@ los requerimientos de la v1.5 todavía sin implementar.
   - Backend: 1193 pruebas, 4 fallos del guardián (RF-101, RF-103 a
     RF-105); frontend 247 / 247.
 
-### [ ] T-15.6 — Anulación de los códigos de unidad
+### [x] T-15.6 — Anulación de los códigos de unidad
 - **Cubre:** RF-103, RN-VEN-19, RNF-10
 - **Trabajo:** `anular_venta()` marca `anulada` en la misma transacción.
 - **Hecho cuando:** pruebas verifican que se marcan todos, que no se
   borran, que una venta anterior sin códigos se sigue anulando y que
   anular dos veces no cambia nada.
+- **Resultado (2026-10-26):** una actualización en `anular_venta()`,
+  dentro de la misma transacción y con la venta ya bloqueada.
+  - 4 pruebas, también que anular una venta no toca los códigos de
+    otra. Mutación detectada: no marcar los códigos.
+  - Backend: 1197 pruebas, 3 fallos del guardián (RF-101, RF-104,
+    RF-105); frontend 247 / 247.
 
 ### [ ] T-15.7 — Garantía por unidad
 - **Cubre:** RF-104, RN-VEN-20, RNF-30

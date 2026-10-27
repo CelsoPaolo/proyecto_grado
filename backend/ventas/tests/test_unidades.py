@@ -19,9 +19,9 @@ from catalogo.services import crear_producto
 from catalogo.tests.factories import ProductoFactory
 from usuarios.models import Rol, Usuario
 from usuarios.tests.factories import VendedorFactory
-from ventas.exceptions import StockInsuficiente
-from ventas.models import UnidadVendida
-from ventas.services import registrar_venta
+from ventas.exceptions import StockInsuficiente, VentaYaAnulada
+from ventas.models import EstadoVenta, UnidadVendida
+from ventas.services import anular_venta, registrar_venta
 from ventas.tests.factories import DetalleVentaFactory
 
 
@@ -191,3 +191,57 @@ class CodigosEnVentasSimultaneas(TransactionTestCase):
         codigos = list(UnidadVendida.objects.values_list("codigo", flat=True))
         self.assertEqual(len(codigos), 60)
         self.assertEqual(len(set(codigos)), 60)
+
+
+# ─────────────────────────────────────────────────────────────────────
+# T-15.6 — Anulacion de los codigos (RF-103, RN-VEN-19)
+# ─────────────────────────────────────────────────────────────────────
+@pytest.mark.django_db
+def test_al_anular_la_venta_sus_codigos_quedan_anulados_y_no_se_borran():
+    vendedor = VendedorFactory()
+    venta = _vender([{"producto_id": ProductoFactory(stock=5).id, "cantidad": 3}], usuario=vendedor)
+    codigos = set(UnidadVendida.objects.filter(detalle__venta=venta).values_list("codigo", flat=True))
+
+    anular_venta(venta=venta, usuario=vendedor, motivo="Error de registro")
+
+    unidades = UnidadVendida.objects.filter(detalle__venta=venta)
+    assert {u.codigo for u in unidades} == codigos
+    assert all(u.anulada for u in unidades)
+
+
+@pytest.mark.django_db
+def test_anular_una_venta_no_toca_los_codigos_de_otra():
+    vendedor = VendedorFactory()
+    producto = ProductoFactory(stock=10)
+    anulada = _vender([{"producto_id": producto.id, "cantidad": 2}], usuario=vendedor)
+    vigente = _vender([{"producto_id": producto.id, "cantidad": 2}], usuario=vendedor)
+
+    anular_venta(venta=anulada, usuario=vendedor, motivo="Error")
+
+    assert not UnidadVendida.objects.filter(detalle__venta=vigente, anulada=True).exists()
+
+
+@pytest.mark.django_db
+def test_una_venta_anterior_sin_codigos_se_sigue_anulando():
+    """RNF-30: no tiene unidades, y anularla funciona como siempre."""
+    detalle = DetalleVentaFactory(cantidad=2)
+    venta = detalle.venta
+
+    anular_venta(venta=venta, usuario=venta.usuario, motivo="Error")
+
+    venta.refresh_from_db()
+    assert venta.estado == EstadoVenta.ANULADA
+
+
+@pytest.mark.django_db
+def test_anular_dos_veces_no_cambia_los_codigos():
+    vendedor = VendedorFactory()
+    venta = _vender([{"producto_id": ProductoFactory(stock=5).id, "cantidad": 2}], usuario=vendedor)
+    anular_venta(venta=venta, usuario=vendedor, motivo="Error")
+    antes = list(UnidadVendida.objects.filter(detalle__venta=venta).values_list("codigo", "anulada"))
+
+    with pytest.raises(VentaYaAnulada):
+        anular_venta(venta=venta, usuario=vendedor, motivo="Otra vez")
+
+    despues = list(UnidadVendida.objects.filter(detalle__venta=venta).values_list("codigo", "anulada"))
+    assert antes == despues

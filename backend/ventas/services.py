@@ -282,6 +282,11 @@ def anular_venta(*, venta, usuario, motivo):
             venta=venta,
         )
 
+    # RF-103 y RN-VEN-19: los codigos de unidad se conservan, marcados
+    # como anulados, en esta misma transaccion (RNF-10). Una venta
+    # anterior a la v1.5 no tiene unidades y esto no hace nada.
+    UnidadVendida.objects.filter(detalle__venta=venta).update(anulada=True)
+
     venta.estado = EstadoVenta.ANULADA
     venta.motivo_anulacion = motivo.strip()
     venta.anulada_por = usuario
