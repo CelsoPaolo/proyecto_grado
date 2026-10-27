@@ -1966,13 +1966,25 @@ los requerimientos de la v1.5 todavía sin implementar.
   - Backend: 1197 pruebas, 3 fallos del guardián (RF-101, RF-104,
     RF-105); frontend 247 / 247.
 
-### [ ] T-15.7 — Garantía por unidad
+### [x] T-15.7 — Garantía por unidad
 - **Cubre:** RF-104, RN-VEN-20, RNF-30
 - **Trabajo:** `lineas_con_garantia()` y la plantilla con las dos
   formas: por unidad, y la anterior para las ventas sin códigos.
 - **Hecho cuando:** pruebas verifican 7 filas con 7 códigos distintos
   para 7 unidades, que solo aparecen los productos con garantía y que
   una venta anterior conserva el formato anterior.
+- **Resultado (2026-10-27):** `lineas_con_garantia()` y
+  `es_garantia_por_unidad()`; la plantilla tiene las dos tablas.
+  - Lo decide la venta guardada, no la fecha: tiene códigos de unidad o
+    no los tiene.
+  - Se generó un PDF de ejemplo con 7 unidades, desde la plantilla y
+    sin datos reales: 7 filas, cada una con su código.
+  - La prueba que esperaba el código del producto en la garantía se
+    actualizó a RN-VEN-20; 2 pruebas nuevas, una de ellas con el
+    formato anterior. Mutación detectada: usar siempre el formato
+    anterior.
+  - Backend: 1199 pruebas, 2 fallos del guardián (RF-101 y RF-105);
+    frontend 247 / 247.
 
 ### [ ] T-15.8 — Aviso del código de unidad en Registrar venta
 - **Cubre:** RF-105, RN-VEN-21

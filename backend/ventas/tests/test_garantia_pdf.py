@@ -18,6 +18,7 @@ from rest_framework.test import APIClient
 from catalogo.tests.factories import ProductoFactory
 from core.exceptions import Codigo
 from usuarios.tests.factories import AdministradorFactory, TecnicoFactory, VendedorFactory
+from ventas.models import UnidadVendida
 from ventas.services import anular_venta, registrar_venta
 
 pytestmark = pytest.mark.django_db
@@ -102,10 +103,13 @@ def test_lista_cliente_codigo_y_vencimiento_de_cada_linea_con_garantia(vendedor,
     assert "70012345" in texto
     assert f"N.º {venta.pk}" in texto
     assert "31/01/2026" in texto  # fecha de la venta en hora de Bolivia
-    assert "Disco SSD 480 GB" in texto and productos["disco"].codigo in texto
+    # v1.5 (RN-VEN-20): cada unidad con SU codigo, no el del producto.
+    assert "Disco SSD 480 GB" in texto
     assert "31/01/2027" in texto  # 12 meses
-    assert "Monitor 24 pulgadas" in texto and productos["monitor"].codigo in texto
+    assert "Monitor 24 pulgadas" in texto
     assert "28/02/2026" in texto  # 31/01 + 1 mes → ultimo dia de febrero
+    for unidad in UnidadVendida.objects.filter(detalle__venta=venta, detalle__meses_garantia__gt=0):
+        assert unidad.codigo in texto
 
 
 def test_no_lista_las_lineas_sin_garantia(vendedor, venta, productos):
@@ -113,6 +117,41 @@ def test_no_lista_las_lineas_sin_garantia(vendedor, venta, productos):
 
     assert "Cable HDMI" not in texto
     assert productos["cable"].codigo not in texto
+    for unidad in UnidadVendida.objects.filter(detalle__venta=venta, detalle__meses_garantia=0):
+        assert unidad.codigo not in texto
+
+
+# ─────────────────────────────────────────────────────────────────────
+# T-15.7 — Garantia por unidad (RF-104, RN-VEN-20, RNF-30)
+# ─────────────────────────────────────────────────────────────────────
+def test_cada_unidad_es_una_fila_con_su_codigo(vendedor, productos):
+    """El caso de la garantia 17: varias unidades del mismo producto son
+    varias filas, cada una con su codigo, no una fila con la cantidad."""
+    venta = _vender(vendedor, [{"producto_id": productos["disco"].id, "cantidad": 5}])
+    codigos = list(UnidadVendida.objects.filter(detalle__venta=venta).values_list("codigo", flat=True))
+
+    texto = _texto(_garantia(_autenticar(vendedor), venta))
+
+    assert len(set(codigos)) == 5
+    for codigo in codigos:
+        assert texto.count(codigo) == 1
+    assert texto.count("Disco SSD 480 GB") == 5
+    assert "Código de unidad" in texto
+    assert "Cantidad" not in texto
+    assert productos["disco"].codigo not in texto
+
+
+def test_una_venta_anterior_conserva_el_formato_anterior(vendedor, venta, productos):
+    """RNF-30: una venta sin codigos de unidad, como las de antes de la
+    v1.5, sigue con una fila por linea, el codigo del producto y la
+    cantidad."""
+    UnidadVendida.objects.filter(detalle__venta=venta).delete()
+
+    texto = _texto(_garantia(_autenticar(vendedor), venta))
+
+    assert "Cantidad" in texto and "Código de unidad" not in texto
+    assert productos["disco"].codigo in texto
+    assert productos["monitor"].codigo in texto
 
 
 def test_declara_que_no_es_un_documento_fiscal(vendedor, venta):

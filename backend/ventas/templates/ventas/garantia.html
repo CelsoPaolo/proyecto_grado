@@ -67,24 +67,51 @@ pie.
     </table>
 
     <h2>Productos con garantía</h2>
-    <table class="lineas" width="100%">
-      <tr>
-        <th width="38%">Producto</th>
-        <th width="22%">Código</th>
-        <th width="10%">Cantidad</th>
-        <th width="12%">Meses</th>
-        <th width="18%">Vence el</th>
-      </tr>
-      {% for linea in lineas %}
+    {% if por_unidad %}
+      {% comment %}
+        RF-104 y RN-VEN-20 (v1.5): una fila por unidad, con su propio
+        codigo. Siete camaras iguales son siete filas y siete codigos.
+      {% endcomment %}
+      <table class="lineas" width="100%">
         <tr>
-          <td>{{ linea.producto }}</td>
-          <td class="codigo">{{ linea.codigo }}</td>
-          <td>{{ linea.cantidad }}</td>
-          <td>{{ linea.meses }}</td>
-          <td class="vence">{{ linea.vence|date:"d/m/Y" }}</td>
+          <th width="44%">Producto</th>
+          <th width="24%">Código de unidad</th>
+          <th width="12%">Meses</th>
+          <th width="20%">Vence el</th>
         </tr>
-      {% endfor %}
-    </table>
+        {% for linea in lineas %}
+          <tr>
+            <td>{{ linea.producto }}</td>
+            <td class="codigo">{{ linea.codigo }}</td>
+            <td>{{ linea.meses }}</td>
+            <td class="vence">{{ linea.vence|date:"d/m/Y" }}</td>
+          </tr>
+        {% endfor %}
+      </table>
+    {% else %}
+      {% comment %}
+        Venta anterior a la v1.5, sin codigos de unidad (RNF-30): el
+        formato de siempre, una fila por linea con el codigo del producto.
+      {% endcomment %}
+      <table class="lineas" width="100%">
+        <tr>
+          <th width="38%">Producto</th>
+          <th width="22%">Código</th>
+          <th width="10%">Cantidad</th>
+          <th width="12%">Meses</th>
+          <th width="18%">Vence el</th>
+        </tr>
+        {% for linea in lineas %}
+          <tr>
+            <td>{{ linea.producto }}</td>
+            <td class="codigo">{{ linea.codigo }}</td>
+            <td>{{ linea.cantidad }}</td>
+            <td>{{ linea.meses }}</td>
+            <td class="vence">{{ linea.vence|date:"d/m/Y" }}</td>
+          </tr>
+        {% endfor %}
+      </table>
+    {% endif %}
 
     {% if condiciones %}
       {% comment %}

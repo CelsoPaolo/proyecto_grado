@@ -11,7 +11,7 @@ from datetime import date
 from django.utils import timezone
 
 from ventas.exceptions import GarantiaDeVentaAnulada, VentaSinGarantia
-from ventas.models import EstadoVenta
+from ventas.models import EstadoVenta, UnidadVendida
 
 # ─────────────────────────────────────────────────────────────────────
 # PUNTO DE EXTENSION: condiciones de la garantia
@@ -69,7 +69,30 @@ def lineas_con_garantia(venta):
     if venta.estado == EstadoVenta.ANULADA:
         raise GarantiaDeVentaAnulada()
 
-    lineas = [
+    con_garantia = [
+        linea
+        for linea in venta.items.select_related("producto").prefetch_related("unidades").order_by("id")
+        if linea.meses_garantia > 0
+    ]
+    if not con_garantia:
+        raise VentaSinGarantia()
+
+    if es_garantia_por_unidad(venta):
+        # RF-104 y RN-VEN-20 (v1.5): una fila por unidad, con SU codigo.
+        return [
+            {
+                "producto": linea.producto_nombre,
+                "codigo": unidad.codigo,
+                "meses": linea.meses_garantia,
+                "vence": vencimiento(venta.fecha_hora, linea.meses_garantia),
+            }
+            for linea in con_garantia
+            for unidad in linea.unidades.all()
+        ]
+
+    # Venta anterior a la v1.5, sin codigos de unidad (RNF-30): el
+    # formato de siempre, una fila por linea.
+    return [
         {
             "producto": linea.producto_nombre,
             # El codigo no se congela: no cambia nunca (RN-CAT-08), asi
@@ -79,9 +102,14 @@ def lineas_con_garantia(venta):
             "meses": linea.meses_garantia,
             "vence": vencimiento(venta.fecha_hora, linea.meses_garantia),
         }
-        for linea in venta.items.select_related("producto").order_by("id")
-        if linea.meses_garantia > 0
+        for linea in con_garantia
     ]
-    if not lineas:
-        raise VentaSinGarantia()
-    return lineas
+
+
+def es_garantia_por_unidad(venta):
+    """RN-VEN-20 — si la venta tiene codigos de unidad (desde la v1.5).
+
+    Lo decide la venta guardada, no la fecha: una venta de la v1.5 los
+    tiene siempre (RN-VEN-18), y una anterior no los tendra nunca.
+    """
+    return UnidadVendida.objects.filter(detalle__venta=venta).exists()

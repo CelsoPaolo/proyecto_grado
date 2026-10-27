@@ -26,7 +26,7 @@ from ventas.serializers import (
     VentaSerializer,
 )
 from ventas import garantia as modulo_garantia
-from ventas.garantia import fecha_local, lineas_con_garantia
+from ventas.garantia import es_garantia_por_unidad, fecha_local, lineas_con_garantia
 from ventas.services import anular_venta, registrar_venta
 
 
@@ -159,6 +159,8 @@ class VentaViewSet(
             {
                 "venta": venta,
                 "lineas": lineas,
+                # RF-104: una fila por unidad, o el formato anterior.
+                "por_unidad": es_garantia_por_unidad(venta),
                 "fecha_venta": fecha_local(venta.fecha_hora),
                 # Se lee del modulo en cada peticion, no al importar:
                 # asi cambiarlo no exige tocar esta vista.
