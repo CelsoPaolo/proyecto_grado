@@ -92,6 +92,25 @@ def test_un_carnet_parcial_no_encuentra_a_nadie(ventas, registrados):
     assert _nombres(ventas, buscar="765432") == []
 
 
+# ─────────────────────────────────────────────────────────────────────
+# T-15.2 — Busqueda por nombre sin tildes (RF-99, RN-CLI-08)
+# ─────────────────────────────────────────────────────────────────────
+@pytest.mark.parametrize("texto", ["gutierrez", "GUTIERREZ", "gutiérrez", "maria gutierrez"])
+def test_el_nombre_se_busca_sin_tildes_ni_mayusculas(ventas, registrados, texto):
+    assert _nombres(ventas, buscar=texto) == ["María Gutiérrez"]
+
+
+def test_un_nombre_sin_tilde_se_encuentra_buscando_con_tilde(ventas):
+    ClienteFactory(nombre="Jose Nunez")
+
+    assert _nombres(ventas, buscar="José Núñez") == ["Jose Nunez"]
+
+
+def test_el_carnet_sigue_buscandose_exacto_aunque_el_nombre_ignore_tildes(ventas, registrados):
+    """RN-CLI-08 solo cambia el nombre: el carnet parcial sigue sin dar nada."""
+    assert _nombres(ventas, buscar="1234567") == []
+
+
 def test_filtra_activos_e_inactivos(ventas, registrados):
     assert _nombres(ventas, activo="true") == ["Juan Pérez", "María Gutiérrez"]
     assert _nombres(ventas, activo="false") == ["Ana Rojas"]

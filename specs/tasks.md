@@ -1861,12 +1861,19 @@ los requerimientos de la v1.5 todavía sin implementar.
     trazabilidad (RF-99 a RF-105 y RNF-30, pendientes); frontend
     236 / 236.
 
-### [ ] T-15.2 — Búsqueda de clientes sin tildes
+### [x] T-15.2 — Búsqueda de clientes sin tildes
 - **Cubre:** RF-99, RN-CLI-08
 - **Trabajo:** `?buscar=` de `/clientes` compara el nombre con
   `__unaccent__icontains`; el carnet sigue exacto.
 - **Hecho cuando:** pruebas verifican la búsqueda sin tildes por nombre
   y que el carnet parcial sigue sin encontrar a nadie.
+- **Resultado (2026-10-26):** una línea en `ClienteViewSet`; el
+  teléfono y el carnet no cambian.
+  - Lo usan la pantalla de Clientes y el selector de cliente de la
+    venta, que llaman al mismo `?buscar=`.
+  - 6 pruebas. Mutación detectada: volver a `__icontains`.
+  - Backend: 1141 pruebas, 7 fallos, todos del guardián de
+    trazabilidad; frontend 236 / 236.
 
 ### [ ] T-15.3 — Teléfono de 8 dígitos en el servidor
 - **Cubre:** RF-100, RF-15, RN-CLI-09, RN-VEN-10, RN-SER-05, RNF-30

@@ -46,7 +46,8 @@ class ClienteViewSet(
         """RF-86 — busqueda y filtro de activos.
 
         `?buscar=`: nombre o telefono que CONTIENEN el texto, o carnet
-        EXACTO. El carnet se busca pero no se muestra: quien lo teclea ya
+        EXACTO. El nombre se compara sin tildes ni mayusculas (RF-99,
+        RN-CLI-08): «gutierrez» encuentra «Gutiérrez». El carnet se busca pero no se muestra: quien lo teclea ya
         lo conoce, y una coincidencia parcial permitiria ir adivinando
         carnets ajenos cifra a cifra.
 
@@ -60,7 +61,7 @@ class ClienteViewSet(
         texto = parametros.get("buscar", "").strip()
         if texto:
             consulta = consulta.filter(
-                Q(nombre__icontains=texto)
+                Q(nombre__unaccent__icontains=texto)
                 | Q(telefono__icontains=texto)
                 | Q(carnet=normalizar_carnet(texto))
             )
