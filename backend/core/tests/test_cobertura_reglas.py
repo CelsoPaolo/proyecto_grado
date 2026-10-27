@@ -212,6 +212,48 @@ COBERTURA_OBLIGATORIA = {
         ("inventario/tests/test_migracion_saldos.py", "test_revertir_borra_los_saldos_y_no_toca_los_productos"),
         ("catalogo/tests/test_migracion_codigo.py", "test_revertir_los_tres_pasos_devuelve_la_tabla_a_su_estado_anterior"),
         ("catalogo/tests/test_migracion_codigo.py", "test_todos_los_productos_existentes_reciben_un_codigo_valido_y_distinto"),
+        # v1.5 (T-15.10): las cuatro migraciones del bloque 15.
+        ("catalogo/tests/test_busqueda_sin_tildes.py", "test_la_migracion_de_unaccent_es_reversible"),
+        ("core/tests/test_telefono.py", "test_las_migraciones_del_telefono_son_reversibles"),
+        ("ventas/tests/test_unidades.py", "test_la_migracion_es_reversible"),
+        ("clientes/tests/test_modelo.py", "test_la_migracion_del_carnet_obligatorio_es_reversible"),
+    ],
+    # ── v1.5 (T-15.10) ───────────────────────────────────────────────
+    "RN-CAT-12": [
+        ("catalogo/tests/test_busqueda_sin_tildes.py", "test_con_o_sin_tilde_encuentra_el_producto"),
+        ("catalogo/tests/test_busqueda_sin_tildes.py", "test_la_busqueda_por_codigo_sigue_siendo_exacta"),
+    ],
+    "RN-CLI-08": [
+        ("clientes/tests/test_api.py", "test_el_nombre_se_busca_sin_tildes_ni_mayusculas"),
+        ("clientes/tests/test_api.py", "test_el_carnet_sigue_buscandose_exacto_aunque_el_nombre_ignore_tildes"),
+    ],
+    "RN-CLI-02": [
+        ("clientes/tests/test_modelo.py", "test_la_base_rechaza_un_carnet_fuera_de_formato"),
+        ("clientes/tests/test_servicios.py", "test_un_carnet_fuera_de_formato_se_rechaza_junto_al_campo"),
+        ("clientes/tests/test_servicios.py", "test_el_carnet_es_unico_aunque_el_otro_este_desactivado"),
+    ],
+    "RN-CLI-09": [
+        ("core/tests/test_telefono.py", "test_la_api_de_clientes_rechaza_un_telefono_fuera_de_formato"),
+        ("core/tests/test_telefono.py", "test_si_se_escribe_el_telefono_del_ocasional_debe_tener_ocho_digitos"),
+        ("core/tests/test_telefono.py", "test_la_api_de_servicios_rechaza_un_telefono_fuera_de_formato"),
+    ],
+    "RN-VEN-18": [
+        ("ventas/tests/test_unidades.py", "test_cada_unidad_vendida_recibe_su_propio_codigo"),
+        ("ventas/tests/test_unidades.py", "test_una_venta_rechazada_no_asigna_ningun_codigo"),
+        ("ventas/tests/test_unidades.py", "test_ningun_codigo_se_repite_entre_ventas_simultaneas"),
+    ],
+    "RN-VEN-19": [
+        ("ventas/tests/test_unidades.py", "test_al_anular_la_venta_sus_codigos_quedan_anulados_y_no_se_borran"),
+    ],
+    "RN-VEN-20": [
+        ("ventas/tests/test_garantia_pdf.py", "test_cada_unidad_es_una_fila_con_su_codigo"),
+        ("ventas/tests/test_garantia_pdf.py", "test_una_venta_anterior_conserva_el_formato_anterior"),
+    ],
+    # RN-VEN-21 se comprueba en la interfaz (frontend/src/__tests__/
+    # codigo-unidad.test.js), fuera del alcance de este guardian.
+    "RNF-30": [
+        ("core/tests/test_telefono.py", "test_las_filas_anteriores_se_siguen_actualizando_y_las_nuevas_no_se_aceptan"),
+        ("ventas/tests/test_unidades.py", "test_una_venta_anterior_sin_codigos_se_sigue_anulando"),
     ],
 }
 

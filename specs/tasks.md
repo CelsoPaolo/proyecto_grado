@@ -4,8 +4,8 @@
 - **Documento:** Etapa 3 de Spec-Driven Development — Desglose de tareas
 - **Versión:** 1.3
 - **Fecha:** 2026-10-26
-- **Estado:** Bloques 0 a 14 **completados**. Bloque 15 (v1.5)
-  **aprobado el 2026-10-26**, en implementación.
+- **Estado:** Bloques 0 a 15 **completados**. El bloque 15 (v1.5),
+  aprobado el 2026-10-26, se terminó el 2026-10-27.
 - **Deriva de:** `spec.md` v1.5 y `plan.md` v1.6
 
 ### Historial de versiones
@@ -2041,12 +2041,29 @@ los requerimientos de la v1.5 todavía sin implementar.
   - Backend: 1219 pruebas, **0 fallos** (6 omitidas); frontend
     263 / 263.
 
-### [ ] T-15.10 — Revisión del bloque 15
+### [x] T-15.10 — Revisión del bloque 15
 - **Cubre:** RNF-22, RNF-23
 - **Trabajo:** Trazabilidad inversa, matriz de permisos sin cambios,
   suites completas.
 - **Hecho cuando:** el guardián de trazabilidad llega a 0 fallos y las
   dos suites están en verde.
+- **Resultado (2026-10-27):** bloque 15 cerrado.
+  - **El guardián de trazabilidad llega a 0 fallos:** los 105 RF y 30
+    RNF están citados.
+  - Guardián de cobertura (`plan.md` §9): se añaden RN-CAT-12,
+    RN-CLI-02, RN-CLI-08, RN-CLI-09, RN-VEN-18 a RN-VEN-20 y RNF-30, y
+    las cuatro migraciones del bloque en RNF-29, apuntando a pruebas que
+    ya existían. RN-VEN-21 se prueba en la interfaz.
+  - Matriz de permisos sin cambios: el bloque no añade endpoints.
+  - Restos de las reglas anteriores: ninguno en el código ni en las
+    pantallas; las migraciones de 0001 conservan, como deben, su forma
+    original.
+  - Migraciones aplicadas a la base de desarrollo, con el respaldo previo
+    de `plan.md` §11.5: `catalogo/0007`, `ventas/0004` y `0005`,
+    `servicios/0002` y `clientes/0002`.
+  - **Backend: 1241 pruebas, 0 fallos (6 omitidas); frontend 263 / 263.**
+  - **La comprobación visual de los formularios y de la garantía en el
+    sistema en funcionamiento queda para revisión humana.**
 
 ---
 

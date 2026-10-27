@@ -4,8 +4,8 @@
 - **Documento:** Etapa 1 de Spec-Driven Development — Especificación funcional
 - **Versión:** 1.5
 - **Fecha:** 2026-10-26
-- **Estado:** **Aprobada** — la v1.4.1 está implementada; la v1.5,
-  aprobada por el propietario el 2026-10-26, está **en implementación**.
+- **Estado:** **Aprobada** — la v1.5, aprobada por el propietario el
+  2026-10-26, está **implementada** (bloque 15 de `tasks.md`, 2026-10-27).
   Incorpora las decisiones PA-01 a PA-08 (secciones 11 y 12) y PA-09 a
   PA-13 (sección 13)
 

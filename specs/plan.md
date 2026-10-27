@@ -8,8 +8,8 @@
   funcionalidades de `spec.md` v1.4, y la v1.4 de este plan las deja
   **implementadas** (bloques 8 a 13), con las precisiones de §11.4.
   La importación del catálogo anterior (§11.3) ya se aplicó. La v1.6
-  diseña los tres ajustes de `spec.md` v1.5 (§3.6, §7.14, §11.5), en
-  implementación en el bloque 15. Siguen vigentes PT-01 a PT-05
+  diseña los tres ajustes de `spec.md` v1.5 (§3.6, §7.14, §11.5),
+  **implementados** en el bloque 15 (2026-10-27). Siguen vigentes PT-01 a PT-05
   (sección 13)
 - **Deriva de:** `spec.md` v1.5
 
@@ -2042,6 +2042,16 @@ incumplir la especificación):
 | RN-REP-07 *(v1.3)* | Para el mismo rango, las cifras del JSON, del PDF y del Excel son idénticas. |
 | RN-REP-08 *(v1.3)* | El reporte de hoy y `panel/resumen` devuelven las mismas cifras. |
 | RNF-29 *(v1.3)* | Las migraciones de datos —códigos y saldos iniciales— se aplican y se revierten sobre una base con productos sin perder datos. |
+| RN-CAT-12 *(v1.6)* | «camara», «cámara» y «CAMARA» encuentran «Cámara»; la búsqueda por código sigue exacta. |
+| RN-CLI-08 *(v1.6)* | El nombre del cliente se busca sin tildes; el carnet parcial sigue sin encontrar a nadie. |
+| RN-CLI-02 *(v1.6)* | Carnet vacío, de 6 o 9 dígitos o con complemento → rechazado por el servicio y por la base; repetido aunque el otro cliente esté desactivado → 409. |
+| RN-CLI-09 *(v1.6)* | Teléfono de 7 o 9 dígitos, con letras o espacios → 400 en clientes, en el cliente ocasional y en servicios. |
+| RN-VEN-18 *(v1.6)* | 7 unidades → 7 códigos distintos; venta rechazada → ninguno; 20 ventas simultáneas → ningún código repetido. |
+| RN-VEN-19 *(v1.6)* | Anular → los códigos se conservan, marcados como anulados. |
+| RN-VEN-20 *(v1.6)* | Una fila por unidad con su código; una venta sin códigos de unidad conserva el formato anterior. |
+| RN-VEN-21 *(v1.6)* | En Registrar venta, un código de unidad avisa y no agrega nada (prueba de interfaz). |
+| RNF-30 *(v1.6)* | Una venta y una solicitud anteriores con teléfono fuera de formato se siguen anulando y atendiendo; una venta anterior sin códigos se sigue anulando. |
+| RNF-29 *(v1.6)* | Las cuatro migraciones del bloque 15 se aplican y se revierten. |
 
 ---
 
