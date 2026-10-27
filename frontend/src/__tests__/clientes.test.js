@@ -181,6 +181,9 @@ describe('formulario', () => {
       errores: { carnet: ['Ya hay un cliente registrado con ese carnet.'] },
     })
     const wrapper = await abrir()
+    // v1.5: un teléfono válido, para que el formulario llegue al servidor.
+    await wrapper.find('#cliente-nombre').setValue('María')
+    await wrapper.find('#cliente-telefono').setValue('70012345')
 
     await wrapper.find('form').trigger('submit')
     await flushPromises()

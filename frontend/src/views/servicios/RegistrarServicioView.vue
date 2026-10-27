@@ -19,6 +19,7 @@ import { useRouter } from 'vue-router'
 
 import { TIPOS_SERVICIO, exigeDireccion, serviciosApi } from '@/api/servicios'
 import { useErroresApi } from '@/composables/useErroresApi'
+import { MENSAJE_TELEFONO, soloDigitosDeTelefono, telefonoValido } from '@/utils/telefono'
 
 const router = useRouter()
 const toast = useToast()
@@ -51,6 +52,11 @@ watch(esADomicilio, (aDomicilio) => {
 
 async function guardar() {
   limpiar()
+  // RF-100 y RN-SER-05: se avisa antes de enviar.
+  if (!telefonoValido(formulario.value.clienteTelefono)) {
+    registrar({ errores: { cliente_telefono: [MENSAJE_TELEFONO] } })
+    return
+  }
   guardando.value = true
   try {
     const solicitud = await serviciosApi.registrar(formulario.value)
@@ -99,12 +105,16 @@ async function guardar() {
               <label for="telefono">Teléfono</label>
               <InputText
                 id="telefono"
-                v-model="formulario.clienteTelefono"
+                :model-value="formulario.clienteTelefono"
+                inputmode="numeric"
+                maxlength="8"
                 :invalid="Boolean(errorDe('cliente_telefono'))"
+                @update:model-value="formulario.clienteTelefono = soloDigitosDeTelefono($event)"
               />
               <small v-if="errorDe('cliente_telefono')" class="error">
                 {{ errorDe('cliente_telefono') }}
               </small>
+              <small v-else class="ayuda">8 dígitos.</small>
             </div>
           </div>
 

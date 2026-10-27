@@ -39,6 +39,7 @@ import { productosApi } from '@/api/catalogo'
 import { clientesApi } from '@/api/clientes'
 import { ventasApi } from '@/api/ventas'
 import { useErroresApi } from '@/composables/useErroresApi'
+import { MENSAJE_TELEFONO, soloDigitosDeTelefono, telefonoValido } from '@/utils/telefono'
 import FormularioCliente from '@/views/clientes/FormularioCliente.vue'
 
 const router = useRouter()
@@ -100,7 +101,8 @@ const puedeConfirmar = computed(
     lineas.value.length > 0 &&
     (modoCliente.value === 'registrado'
       ? Boolean(clienteElegido.value?.id)
-      : clienteNombre.value.trim() !== '' && clienteTelefono.value.trim() !== ''),
+      : // v1.5 (PA-09): basta el nombre; el teléfono es opcional.
+        clienteNombre.value.trim() !== ''),
 )
 
 async function buscarProductos(evento) {
@@ -213,6 +215,16 @@ function limpiarTodo() {
 
 async function confirmar() {
   limpiar()
+  // RF-100: el teléfono del ocasional es opcional, pero si se escribe,
+  // con 8 dígitos. Se avisa antes de enviar.
+  if (
+    modoCliente.value === 'ocasional' &&
+    clienteTelefono.value !== '' &&
+    !telefonoValido(clienteTelefono.value)
+  ) {
+    registrar({ errores: { cliente_telefono: [MENSAJE_TELEFONO] } })
+    return
+  }
   faltantes.value = []
   confirmando.value = true
   try {
@@ -317,11 +329,14 @@ async function confirmar() {
               </small>
             </div>
             <div class="campo">
-              <label for="telefono">Teléfono</label>
+              <label for="telefono">Teléfono <span class="ayuda">(opcional, 8 dígitos)</span></label>
               <InputText
                 id="telefono"
-                v-model="clienteTelefono"
+                :model-value="clienteTelefono"
+                inputmode="numeric"
+                maxlength="8"
                 :invalid="Boolean(errorDe('cliente_telefono'))"
+                @update:model-value="clienteTelefono = soloDigitosDeTelefono($event)"
               />
               <small v-if="errorDe('cliente_telefono')" class="error">
                 {{ errorDe('cliente_telefono') }}

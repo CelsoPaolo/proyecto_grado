@@ -1905,7 +1905,7 @@ los requerimientos de la v1.5 todavía sin implementar.
   - Backend: 1181 pruebas, 5 fallos, todos del guardián de
     trazabilidad (RF-101 a RF-105); frontend 236 / 236.
 
-### [ ] T-15.4 — Teléfono de 8 dígitos en la interfaz
+### [x] T-15.4 — Teléfono de 8 dígitos en la interfaz
 - **Cubre:** RF-100, RF-15, RNF-15
 - **Trabajo:** Campos de teléfono de cliente, cliente ocasional y
   registro de servicio: solo dígitos, como máximo 8, aviso antes de
@@ -1914,6 +1914,18 @@ los requerimientos de la v1.5 todavía sin implementar.
 - **Hecho cuando:** pruebas de los tres formularios verifican el aviso
   y que no se envía un teléfono inválido; la venta ocasional se envía
   sin teléfono.
+- **Resultado (2026-10-26):** `utils/telefono.js`, con la misma regla y
+  el mismo mensaje que el servidor.
+  - El campo filtra al escribir, pero no al cargar: un cliente anterior
+    con un teléfono fuera de formato se ve tal cual, para corregirlo.
+  - En la venta, la etiqueta dice «(opcional, 8 dígitos)». La garantía
+    muestra «—» sin teléfono.
+  - 11 pruebas en `telefono.test.js` y 1 en `test_garantia_pdf.py`. La
+    del carnet duplicado de `clientes.test.js` ahora escribe un teléfono
+    válido, porque el formulario ya no envía uno vacío.
+  - Mutación detectada: quitar el aviso del formulario de cliente.
+  - Backend: 1182 pruebas, 5 fallos del guardián; frontend 247 / 247.
+  - **La comprobación visual queda para revisión humana.**
 
 ### [ ] T-15.5 — Código de unidad al confirmar la venta ⚠️
 - **Cubre:** RF-102, RN-VEN-18, RNF-09

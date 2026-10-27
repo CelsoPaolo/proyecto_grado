@@ -4,6 +4,7 @@ Se lee el TEXTO real del PDF, no el HTML que lo origino: lo que importa
 es lo que el cliente se lleva impreso.
 """
 
+import re
 from datetime import datetime
 from io import BytesIO
 from unittest import mock
@@ -133,6 +134,21 @@ def test_no_se_escapa_sintaxis_de_plantilla(vendedor, venta):
 
     for resto in ("{#", "#}", "{%", "%}", "{{", "}}"):
         assert resto not in texto, f"La garantía imprime «{resto}»"
+
+
+def test_sin_telefono_muestra_un_guion(vendedor, productos):
+    """T-15.4: el cliente ocasional puede no dar telefono (RF-15, PA-09)."""
+    venta = registrar_venta(
+        usuario=vendedor,
+        cliente_nombre="Ocasional",
+        items=[{"producto_id": productos["disco"].id, "cantidad": 1}],
+    )
+
+    texto = _texto(_garantia(_autenticar(vendedor), venta))
+
+    # Entre la etiqueta y el valor, pypdf deja un salto de linea o un
+    # espacio segun la version: lo que importa es lo que sigue.
+    assert re.search(r"Teléfono\s+—", texto)
 
 
 def test_no_lleva_carnet(vendedor, venta):

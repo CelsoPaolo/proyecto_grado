@@ -15,6 +15,7 @@ import { computed, ref, watch } from 'vue'
 
 import { clientesApi } from '@/api/clientes'
 import { useErroresApi } from '@/composables/useErroresApi'
+import { MENSAJE_TELEFONO, soloDigitosDeTelefono, telefonoValido } from '@/utils/telefono'
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
@@ -49,6 +50,11 @@ watch(
 
 async function guardar() {
   limpiar()
+  // RF-100: se avisa antes de enviar; el servidor vuelve a comprobarlo.
+  if (!telefonoValido(formulario.value.telefono)) {
+    registrar({ errores: { telefono: [MENSAJE_TELEFONO] } })
+    return
+  }
   guardando.value = true
   try {
     const guardado = editando.value
@@ -85,8 +91,18 @@ async function guardar() {
       </div>
       <div class="campo">
         <label for="cliente-telefono">Teléfono</label>
-        <InputText id="cliente-telefono" v-model="formulario.telefono" :invalid="Boolean(errorDe('telefono'))" />
+        <!-- Solo dígitos, como máximo 8, al escribir. Un teléfono anterior
+             que no cumple se muestra tal cual, para que se corrija. -->
+        <InputText
+          id="cliente-telefono"
+          :model-value="formulario.telefono"
+          inputmode="numeric"
+          maxlength="8"
+          :invalid="Boolean(errorDe('telefono'))"
+          @update:model-value="formulario.telefono = soloDigitosDeTelefono($event)"
+        />
         <small v-if="errorDe('telefono')" class="error">{{ errorDe('telefono') }}</small>
+        <small v-else class="ayuda">8 dígitos.</small>
       </div>
       <div class="campo">
         <label for="cliente-direccion">Dirección <span class="ayuda">(opcional)</span></label>

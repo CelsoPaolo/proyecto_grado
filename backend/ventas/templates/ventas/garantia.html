@@ -58,7 +58,7 @@ pie.
       </tr>
       <tr>
         <td class="etiqueta">Teléfono</td>
-        <td>{{ venta.cliente_telefono }}</td>
+        <td>{{ venta.cliente_telefono|default:"—" }}</td>
       </tr>
       <tr>
         <td class="etiqueta">Fecha de la venta</td>
