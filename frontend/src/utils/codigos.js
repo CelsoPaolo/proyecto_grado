@@ -12,3 +12,9 @@ export function esEan13Valido(codigo) {
   )
   return (10 - (suma % 10)) % 10 === Number(codigo[12])
 }
+
+/** RN-VEN-21 (v1.5): la forma de un código de unidad, con prefijo 21.
+ *  Mismo patrón que PATRON_UNIDAD en backend/catalogo/codigos.py. */
+export function esCodigoDeUnidad(codigo) {
+  return /^21[0-9]{11}$/.test(codigo ?? '')
+}

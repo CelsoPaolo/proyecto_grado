@@ -1986,7 +1986,7 @@ los requerimientos de la v1.5 todavía sin implementar.
   - Backend: 1199 pruebas, 2 fallos del guardián (RF-101 y RF-105);
     frontend 247 / 247.
 
-### [ ] T-15.8 — Aviso del código de unidad en Registrar venta
+### [x] T-15.8 — Aviso del código de unidad en Registrar venta
 - **Cubre:** RF-105, RN-VEN-21
 - **Trabajo:** En Registrar venta, aviso «este es un código de unidad, no
   de producto» cuando la búsqueda por código no encuentra producto y el
@@ -1994,6 +1994,15 @@ los requerimientos de la v1.5 todavía sin implementar.
 - **Hecho cuando:** pruebas verifican el aviso, que no se agrega nada,
   que un código desconocido de otra forma da el aviso de siempre y que
   un producto encontrado se agrega aunque su código empiece por 21.
+- **Resultado (2026-10-27):** `esCodigoDeUnidad()` en `utils/codigos.js`
+  y una rama en `procesarCodigo()`. El resto del lector (cola de
+  lecturas, foco, selección) no cambió.
+  - El aviso dice «Este es un código de unidad, no de producto. No se
+    agregó nada.».
+  - 6 pruebas en `codigo-unidad.test.js`. Mutación detectada: quitar el
+    aviso.
+  - Backend: 1199 pruebas, 1 fallo del guardián (RF-101, la tarea
+    T-15.9 pendiente); frontend 253 / 253.
 
 ### [ ] T-15.9 — Carnet obligatorio de 7 u 8 dígitos ⚠️
 - **Cubre:** RF-101, RF-84, RN-CLI-01, RN-CLI-02

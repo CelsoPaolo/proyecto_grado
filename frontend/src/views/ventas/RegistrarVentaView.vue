@@ -39,6 +39,7 @@ import { productosApi } from '@/api/catalogo'
 import { clientesApi } from '@/api/clientes'
 import { ventasApi } from '@/api/ventas'
 import { useErroresApi } from '@/composables/useErroresApi'
+import { esCodigoDeUnidad } from '@/utils/codigos'
 import { MENSAJE_TELEFONO, soloDigitosDeTelefono, telefonoValido } from '@/utils/telefono'
 import FormularioCliente from '@/views/clientes/FormularioCliente.vue'
 
@@ -166,6 +167,14 @@ async function procesarCodigo(valor) {
   }
 
   if (!producto) {
+    // RF-105 y RN-VEN-21: se comprueba DESPUÉS de buscar el producto,
+    // no antes, para que un producto encontrado se agregue siempre.
+    if (esCodigoDeUnidad(valor)) {
+      return rechazarLectura(
+        valor,
+        'Este es un código de unidad, no de producto. No se agregó nada.',
+      )
+    }
     return rechazarLectura(
       valor,
       `Ningún producto del catálogo tiene el código ${valor}. No se agregó nada.`,
