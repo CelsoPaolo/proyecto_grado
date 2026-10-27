@@ -13,6 +13,7 @@ from django.utils import timezone
 from rest_framework import status
 
 from core.exceptions import Codigo, ErrorDeNegocio
+from core.validadores import MENSAJE_TELEFONO, telefono_valido
 from servicios.models import (
     ESTADOS_TERMINALES,
     EstadoSolicitud,
@@ -138,6 +139,14 @@ def registrar_solicitud(
     no la elige. De ahi sale si la direccion es obligatoria.
     """
     modalidad = MODALIDAD_POR_TIPO[tipo]
+
+    # RF-100 y RN-SER-05: tambien aqui, no solo en el serializer, para
+    # que ningun otro camino registre un telefono fuera de formato.
+    if not telefono_valido(cliente_telefono.strip()):
+        raise ErrorDeNegocio(
+            detalle="Revise los datos del cliente.",
+            errores={"cliente_telefono": [MENSAJE_TELEFONO]},
+        )
 
     solicitud = SolicitudServicio.objects.create(
         cliente_nombre=cliente_nombre.strip(),

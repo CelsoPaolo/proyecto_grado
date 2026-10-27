@@ -53,10 +53,10 @@ def test_nombre_y_telefono_son_obligatorios(vendedor, campo):
 
 
 def test_un_carnet_repetido_da_carnet_duplicado(vendedor):
-    registrar_cliente(usuario=vendedor, nombre="Uno", telefono="1", carnet="1234567")
+    registrar_cliente(usuario=vendedor, nombre="Uno", telefono="70000001", carnet="1234567")
 
     with pytest.raises(CarnetDuplicado):
-        registrar_cliente(usuario=vendedor, nombre="Dos", telefono="2", carnet=" 1234567 ")
+        registrar_cliente(usuario=vendedor, nombre="Dos", telefono="70000002", carnet=" 1234567 ")
 
 
 def test_editar_cambia_los_datos_y_registra_quien_lo_hizo(vendedor):
@@ -71,14 +71,14 @@ def test_editar_cambia_los_datos_y_registra_quien_lo_hizo(vendedor):
 
 
 def test_editar_con_su_propio_carnet_no_es_un_duplicado(vendedor):
-    cliente = registrar_cliente(usuario=vendedor, nombre="Juan", telefono="1", carnet="555")
+    cliente = registrar_cliente(usuario=vendedor, nombre="Juan", telefono="70000001", carnet="555")
 
     editar_cliente(cliente=cliente, usuario=vendedor, nombre="Juan Carlos", carnet="555")
 
 
 def test_editar_al_carnet_de_otro_da_carnet_duplicado(vendedor):
-    registrar_cliente(usuario=vendedor, nombre="Uno", telefono="1", carnet="111")
-    otro = registrar_cliente(usuario=vendedor, nombre="Dos", telefono="2")
+    registrar_cliente(usuario=vendedor, nombre="Uno", telefono="70000001", carnet="111")
+    otro = registrar_cliente(usuario=vendedor, nombre="Dos", telefono="70000002")
 
     with pytest.raises(CarnetDuplicado):
         editar_cliente(cliente=otro, usuario=vendedor, carnet="111")
@@ -86,7 +86,7 @@ def test_editar_al_carnet_de_otro_da_carnet_duplicado(vendedor):
 
 def test_desactivar_no_elimina_y_se_puede_reactivar(vendedor):
     admin = AdministradorFactory()
-    cliente = registrar_cliente(usuario=vendedor, nombre="Juan", telefono="1")
+    cliente = registrar_cliente(usuario=vendedor, nombre="Juan", telefono="70000001")
 
     cambiar_estado_cliente(cliente=cliente, usuario=admin, activo=False)
     assert Cliente.objects.filter(pk=cliente.pk, activo=False).exists()
@@ -97,7 +97,7 @@ def test_desactivar_no_elimina_y_se_puede_reactivar(vendedor):
 
 
 def test_pedir_el_estado_que_ya_tiene_no_registra_un_cambio(vendedor):
-    cliente = registrar_cliente(usuario=vendedor, nombre="Juan", telefono="1")
+    cliente = registrar_cliente(usuario=vendedor, nombre="Juan", telefono="70000001")
 
     cambiar_estado_cliente(cliente=cliente, usuario=AdministradorFactory(), activo=True)
 

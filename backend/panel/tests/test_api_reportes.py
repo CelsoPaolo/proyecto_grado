@@ -40,7 +40,7 @@ def test_devuelve_el_reporte_del_rango_con_importes_como_cadena(admin):
     registrar_venta(
         usuario=VendedorFactory(nombre_completo="Juan Pérez"),
         cliente_nombre="C",
-        cliente_telefono="1",
+        cliente_telefono="70000001",
         items=[{"producto_id": producto.pk, "cantidad": 2}],
     )
 

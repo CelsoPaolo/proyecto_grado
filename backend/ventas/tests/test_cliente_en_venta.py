@@ -145,7 +145,8 @@ def test_sin_cliente_id_ni_datos_del_ocasional_400(vendedor, producto):
     respuesta = _autenticar(vendedor).post(VENTAS, {"items": _items(producto)}, format="json")
 
     assert respuesta.status_code == status.HTTP_400_BAD_REQUEST
-    assert {"cliente_nombre", "cliente_telefono"} <= set(respuesta.data["errores"])
+    # v1.5 (PA-09): solo falta el nombre; el telefono es opcional.
+    assert set(respuesta.data["errores"]) == {"cliente_nombre"}
 
 
 def test_el_detalle_de_la_venta_no_contiene_el_carnet(vendedor, producto, maria):
@@ -175,7 +176,7 @@ def test_la_migracion_de_la_referencia_se_aplica_y_se_revierte_sin_tocar_las_ven
             return {c.name for c in connection.introspection.get_table_description(cursor, "ventas_venta")}
 
     venta = registrar_venta(
-        usuario=VendedorFactory(), cliente_nombre="Ocasional", cliente_telefono="1",
+        usuario=VendedorFactory(), cliente_nombre="Ocasional", cliente_telefono="70000001",
         items=_items(ProductoFactory(stock=5)),
     )
     try:

@@ -65,7 +65,7 @@ def tres_salidas():
         return registrar_venta(
             usuario=usuario,
             items=[{"producto_id": p.pk, "cantidad": n} for p, n in lineas],
-            **(cliente_kw or {"cliente_nombre": "Ocasional", "cliente_telefono": "1"}),
+            **(cliente_kw or {"cliente_nombre": "Ocasional", "cliente_telefono": "70000001"}),
         )
 
     vender(ana, [(a, 2), (b, 1)])
@@ -198,7 +198,7 @@ def un_año_de_datos():
         return Venta(
             usuario=vendedores[i % 4],
             cliente_nombre="Cliente",
-            cliente_telefono="1",
+            cliente_telefono="70000001",
             estado=EstadoVenta.ANULADA if anulada else EstadoVenta.CONFIRMADA,
             total=Decimal("170.00"),
             **(
@@ -223,7 +223,7 @@ def un_año_de_datos():
     )
     SolicitudServicio.objects.bulk_create(
         SolicitudServicio(
-            cliente_nombre="Cliente", cliente_telefono="1", tipo="MANTENIMIENTO", modalidad="TALLER",
+            cliente_nombre="Cliente", cliente_telefono="70000001", tipo="MANTENIMIENTO", modalidad="TALLER",
             descripcion="x", estado=EstadoSolicitud.FINALIZADA, observaciones="Hecho",
             monto_cobrado=Decimal("100.00"), fecha_cierre=timezone.now(),
             registrada_por=tecnico, cerrada_por=tecnico,

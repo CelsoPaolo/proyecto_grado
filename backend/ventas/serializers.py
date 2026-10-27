@@ -3,6 +3,7 @@
 from rest_framework import serializers
 
 from core.serializers import UsuarioBreveSerializer
+from core.validadores import MENSAJE_TELEFONO, telefono_valido
 
 from ventas.models import DetalleVenta, Venta
 
@@ -96,8 +97,9 @@ class RegistrarVentaSerializer(serializers.Serializer):
     """CU-VEN-01 (RF-15)."""
 
     # RF-79: o un cliente registrado (cliente_id), o un cliente
-    # ocasional con nombre y telefono. Con cliente_id, el nombre y el
-    # telefono que lleguen se ignoran: los copia el servidor (RN-VEN-10).
+    # ocasional con su nombre y, si lo da, su telefono (RF-15, v1.5).
+    # Con cliente_id, el nombre y el telefono que lleguen se ignoran: los
+    # copia el servidor (RN-VEN-10).
     cliente_id = serializers.IntegerField(required=False, allow_null=True)
     cliente_nombre = serializers.CharField(max_length=150, required=False, allow_blank=True)
     cliente_telefono = serializers.CharField(max_length=30, required=False, allow_blank=True)
@@ -108,8 +110,10 @@ class RegistrarVentaSerializer(serializers.Serializer):
             errores = {}
             if not datos.get("cliente_nombre", "").strip():
                 errores["cliente_nombre"] = ["Indique el nombre del cliente o elija uno registrado."]
-            if not datos.get("cliente_telefono", "").strip():
-                errores["cliente_telefono"] = ["Indique el teléfono del cliente."]
+            # RF-100 y RN-CLI-09: opcional, pero si se escribe, 8 digitos.
+            telefono = datos.get("cliente_telefono", "").strip()
+            if telefono and not telefono_valido(telefono):
+                errores["cliente_telefono"] = [MENSAJE_TELEFONO]
             if errores:
                 raise serializers.ValidationError(errores)
         return datos

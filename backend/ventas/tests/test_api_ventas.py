@@ -104,7 +104,7 @@ def test_una_venta_sin_items_se_rechaza(como_vendedor):
     """RN-VEN-01."""
     respuesta = como_vendedor.post(
         BASE,
-        {"cliente_nombre": "X", "cliente_telefono": "7", "items": []},
+        {"cliente_nombre": "X", "cliente_telefono": "70000007", "items": []},
         format="json",
     )
 
@@ -121,7 +121,8 @@ def test_una_cantidad_cero_o_negativa_se_rechaza(como_vendedor):
 
 
 def test_faltan_los_datos_del_cliente(como_vendedor):
-    """RN-VEN-10: nombre y telefono son obligatorios."""
+    """RN-VEN-10: el nombre es obligatorio. Desde la v1.5 el telefono del
+    cliente ocasional es opcional (PA-09), asi que no se reclama."""
     producto = ProductoFactory(stock=10)
 
     respuesta = como_vendedor.post(
@@ -132,7 +133,7 @@ def test_faltan_los_datos_del_cliente(como_vendedor):
 
     assert respuesta.status_code == status.HTTP_400_BAD_REQUEST
     assert "cliente_nombre" in respuesta.data["errores"]
-    assert "cliente_telefono" in respuesta.data["errores"]
+    assert "cliente_telefono" not in respuesta.data["errores"]
 
 
 def test_el_cliente_no_puede_imponer_el_precio(como_vendedor):
@@ -173,7 +174,7 @@ def test_no_existen_verbos_de_escritura_sobre_una_venta(
     venta = registrar_venta(
         usuario=vendedor,
         cliente_nombre="X",
-        cliente_telefono="7",
+        cliente_telefono="70000007",
         items=[{"producto_id": producto.id, "cantidad": 1}],
     )
 
@@ -321,7 +322,7 @@ def test_anular_devuelve_las_existencias(como_vendedor, vendedor):
     venta = registrar_venta(
         usuario=vendedor,
         cliente_nombre="Cliente",
-        cliente_telefono="7",
+        cliente_telefono="70000007",
         items=[{"producto_id": producto.id, "cantidad": 4}],
     )
     producto.refresh_from_db()

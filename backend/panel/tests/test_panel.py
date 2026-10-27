@@ -275,12 +275,12 @@ def test_los_pendientes_se_desglosan_por_estado_y_por_cotizacion():
 
     # Registrada y sin cotizar.
     registrar_solicitud(
-        usuario=tecnico, cliente_nombre="A", cliente_telefono="7",
+        usuario=tecnico, cliente_nombre="A", cliente_telefono="70000007",
         tipo=TipoServicio.REPARACION, descripcion="X",
     )
     # En atencion y ya cotizada.
     segunda = registrar_solicitud(
-        usuario=tecnico, cliente_nombre="B", cliente_telefono="7",
+        usuario=tecnico, cliente_nombre="B", cliente_telefono="70000007",
         tipo=TipoServicio.REPARACION, descripcion="X",
     )
     iniciar_atencion(solicitud=segunda, usuario=tecnico)

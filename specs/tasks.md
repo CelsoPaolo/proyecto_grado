@@ -1875,7 +1875,7 @@ los requerimientos de la v1.5 todavía sin implementar.
   - Backend: 1141 pruebas, 7 fallos, todos del guardián de
     trazabilidad; frontend 236 / 236.
 
-### [ ] T-15.3 — Teléfono de 8 dígitos en el servidor
+### [x] T-15.3 — Teléfono de 8 dígitos en el servidor
 - **Cubre:** RF-100, RF-15, RN-CLI-09, RN-VEN-10, RN-SER-05, RNF-30
 - **Trabajo:** `validar_telefono` en `core/validadores.py`, usado por los
   serializers y servicios de clientes, ventas y servicios; teléfono
@@ -1887,6 +1887,23 @@ los requerimientos de la v1.5 todavía sin implementar.
   teléfono, que la base rechaza una fila nueva fuera de formato y que
   una venta y una solicitud **anteriores** con teléfono fuera de formato
   se siguen pudiendo anular y cambiar de estado. Migraciones reversibles.
+- **Resultado (2026-10-26):** `core/validadores.py` y las migraciones
+  `ventas/0004_telefono_formato` y `servicios/0002_telefono_formato`.
+  - Aplicadas a la base de desarrollo: quedan fuera de la regla las
+    ventas 1 a 17 y las solicitudes 1 a 10, que ya existían.
+  - Editar un cliente valida solo el teléfono que se envía: cambiar la
+    dirección de un cliente anterior no obliga a corregir su teléfono
+    en ese momento.
+  - Datos de prueba actualizados: diez archivos usaban teléfonos de
+    mentira de 1 dígito («1», «2», «7») y pasan a tener 8. Dos pruebas
+    que exigían el teléfono del cliente ocasional se actualizaron a
+    PA-09.
+  - 40 pruebas en `core/tests/test_telefono.py`, incluidos los dígitos
+    arábigo-índicos, que `\d` aceptaría.
+  - Mutaciones detectadas: un validador de 7 a 9 dígitos, y la
+    restricción sin la excepción de las filas antiguas.
+  - Backend: 1181 pruebas, 5 fallos, todos del guardián de
+    trazabilidad (RF-101 a RF-105); frontend 236 / 236.
 
 ### [ ] T-15.4 — Teléfono de 8 dígitos en la interfaz
 - **Cubre:** RF-100, RF-15, RNF-15

@@ -10,6 +10,7 @@ from django.db import IntegrityError, transaction
 from clientes.exceptions import CarnetDuplicado
 from clientes.models import Cliente, normalizar_carnet
 from core.exceptions import ErrorDeNegocio
+from core.validadores import MENSAJE_TELEFONO, telefono_valido
 
 CAMPOS_EDITABLES = ("nombre", "telefono", "direccion", "carnet")
 
@@ -26,6 +27,11 @@ def _limpiar(datos):
     for campo, nombre in (("nombre", "el nombre"), ("telefono", "el teléfono")):
         if campo in limpio and not limpio[campo]:
             errores[campo] = [f"Indique {nombre} del cliente."]
+    # RF-100 y RN-CLI-09: el telefono, si llega, con 8 digitos. Solo se
+    # comprueba el que se envia: editar el nombre de un cliente anterior
+    # no obliga a corregir en ese momento un telefono que no se toca.
+    if limpio.get("telefono") and not telefono_valido(limpio["telefono"]):
+        errores["telefono"] = [MENSAJE_TELEFONO]
     if errores:
         raise ErrorDeNegocio(detalle="Revise los datos del cliente.", errores=errores)
     return limpio

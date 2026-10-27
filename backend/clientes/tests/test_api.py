@@ -149,7 +149,7 @@ def test_sin_nombre_o_telefono_400_junto_al_campo(ventas):
 
 def test_un_carnet_repetido_responde_409_carnet_duplicado(ventas, registrados):
     respuesta = ventas.post(
-        CLIENTES, {"nombre": "Otro", "telefono": "1", "carnet": "7654321"}, format="json"
+        CLIENTES, {"nombre": "Otro", "telefono": "70000001", "carnet": "7654321"}, format="json"
     )
 
     assert respuesta.status_code == status.HTTP_409_CONFLICT

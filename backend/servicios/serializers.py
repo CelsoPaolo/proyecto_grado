@@ -3,6 +3,7 @@
 from rest_framework import serializers
 
 from core.serializers import UsuarioBreveSerializer
+from core.validadores import MENSAJE_TELEFONO, telefono_valido
 
 from servicios.models import (
     EventoSolicitud,
@@ -121,6 +122,13 @@ class RegistrarSolicitudSerializer(serializers.Serializer):
     cliente_nombre = serializers.CharField(max_length=150)
     cliente_telefono = serializers.CharField(max_length=30)
     tipo = serializers.ChoiceField(choices=TipoServicio.choices)
+
+    def validate_cliente_telefono(self, valor):
+        """RN-SER-05 y RF-100 (v1.5): exactamente 8 digitos (RN-CLI-09)."""
+        valor = valor.strip()
+        if not telefono_valido(valor):
+            raise serializers.ValidationError(MENSAJE_TELEFONO)
+        return valor
     descripcion = serializers.CharField()
     direccion = serializers.CharField(max_length=255, required=False, allow_blank=True)
 

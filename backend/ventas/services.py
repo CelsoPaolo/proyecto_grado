@@ -19,6 +19,7 @@ from catalogo.models import Producto
 from clientes.exceptions import ClienteInactivo
 from clientes.models import Cliente
 from core.exceptions import ErrorDeNegocio
+from core.validadores import MENSAJE_TELEFONO, telefono_valido
 from inventario.models import TipoMovimiento
 from inventario.services import registrar_movimiento
 from ventas.exceptions import (
@@ -61,13 +62,16 @@ def _cliente_de_la_venta(cliente_id, cliente_nombre, cliente_telefono):
     """
     if cliente_id is None:
         errores = {}
+        telefono = (cliente_telefono or "").strip()
         if not (cliente_nombre or "").strip():
             errores["cliente_nombre"] = ["Indique el nombre del cliente."]
-        if not (cliente_telefono or "").strip():
-            errores["cliente_telefono"] = ["Indique el teléfono del cliente."]
+        # RF-15 y RN-VEN-10 (v1.5): el telefono del cliente ocasional es
+        # opcional; si se escribe, con el formato de RN-CLI-09 (RF-100).
+        if telefono and not telefono_valido(telefono):
+            errores["cliente_telefono"] = [MENSAJE_TELEFONO]
         if errores:
-            raise ErrorDeNegocio(detalle="Faltan los datos del cliente.", errores=errores)
-        return None, cliente_nombre.strip(), cliente_telefono.strip()
+            raise ErrorDeNegocio(detalle="Revise los datos del cliente.", errores=errores)
+        return None, cliente_nombre.strip(), telefono
 
     cliente = Cliente.objects.select_for_update().filter(pk=cliente_id).first()
     if cliente is None:
@@ -77,6 +81,19 @@ def _cliente_de_la_venta(cliente_id, cliente_nombre, cliente_telefono):
         )
     if not cliente.activo:
         raise ClienteInactivo()
+    # Un cliente registrado antes de la v1.5 puede tener un telefono
+    # fuera de formato. La venta lo copiaria, y la base de datos la
+    # rechazaria (plan.md 3.6): se avisa antes, con que hacer.
+    if not telefono_valido(cliente.telefono):
+        raise ErrorDeNegocio(
+            detalle="El teléfono del cliente no tiene 8 dígitos.",
+            errores={
+                "cliente_id": [
+                    "El teléfono de este cliente no tiene 8 dígitos. "
+                    "Corríjalo en Clientes antes de registrar la venta."
+                ]
+            },
+        )
     return cliente, cliente.nombre, cliente.telefono
 
 

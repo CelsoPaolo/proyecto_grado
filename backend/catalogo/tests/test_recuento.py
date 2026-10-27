@@ -135,7 +135,7 @@ def test_el_ajuste_se_calcula_contra_las_existencias_actuales(catalogo, admin):
     from inventario.services import ajustar_existencias
 
     ajustar_existencias(producto_id=producto.pk, cantidad_real=10, motivo="Entrada de mercadería", usuario=admin)
-    registrar_venta(usuario=VendedorFactory(), cliente_nombre="C", cliente_telefono="1",
+    registrar_venta(usuario=VendedorFactory(), cliente_nombre="C", cliente_telefono="70000001",
                     items=[{"producto_id": producto.pk, "cantidad": 3}])
 
     plan = _plan(catalogo, cantidades={"1": "6"})
@@ -201,7 +201,7 @@ def test_cambiar_una_cifra_o_vender_despues_del_informe_cambia_la_huella(catalog
     producto = catalogo["productos"]["2"]
     plan = _plan(catalogo, cantidades={"2": "8"}, nombre_archivo="c.csv")
     ajustar_existencias(producto_id=producto.pk, cantidad_real=3, motivo="Entrada", usuario=admin)
-    registrar_venta(usuario=VendedorFactory(), cliente_nombre="C", cliente_telefono="1",
+    registrar_venta(usuario=VendedorFactory(), cliente_nombre="C", cliente_telefono="70000001",
                     items=[{"producto_id": producto.pk, "cantidad": 1}])
     recalculado = _plan(catalogo, cantidades={"2": "8"}, nombre_archivo="c.csv")
 
