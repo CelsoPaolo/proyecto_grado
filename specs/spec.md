@@ -2,11 +2,12 @@
 
 - **Proyecto:** Sistema ERP interno para PC-Solution (Sucre, Bolivia)
 - **Documento:** Etapa 1 de Spec-Driven Development — Especificación funcional
-- **Versión:** 1.4.1
-- **Fecha:** 2026-10-10
-- **Estado:** **Aprobada** — la v1.4 está implementada; la v1.4.1 es una
-  revisión menor de navegación. Incorpora las decisiones PA-01 a PA-08
-  (secciones 11 y 12)
+- **Versión:** 1.5
+- **Fecha:** 2026-10-26
+- **Estado:** **Aprobada** — la v1.4.1 está implementada; la v1.5,
+  aprobada por el propietario el 2026-10-26, está **en implementación**.
+  Incorpora las decisiones PA-01 a PA-08 (secciones 11 y 12) y PA-09 a
+  PA-13 (sección 13)
 
 ### Historial de versiones
 
@@ -18,6 +19,7 @@
 | 1.3 | 2026-09-30 | **Se añade el informe en PDF de la solicitud de servicio (RF-67, RF-68).** Surge del uso real: el cliente deja su equipo y se va sin nada en la mano, y al recogerlo no hay forma de entregarle por escrito qué se le hizo. Es el único documento que sale del sistema hacia el cliente; §2.2 sigue excluyendo la facturación y el portal del cliente, y esto no lo contradice. |
 | 1.4 | 2026-10-08 | **Cinco funcionalidades nuevas.** (1) **Código por producto** EAN-13 generado por el sistema e inmutable, con búsqueda por código y entrada por lector de código de barras en la venta. (2) **Garantía imprimible**: meses de garantía por producto, congelados en la venta, y PDF de garantía reutilizando el membrete del informe de servicio. (3) **Reportes por rango de fechas** con exportación a PDF y Excel. (4) **Historial de movimientos de stock**, inmutable y registrado en la misma transacción que el cambio de existencias; las existencias dejan de editarse con el resto del producto y pasan a ajustarse con motivo. (5) **Módulo de Clientes** como registro de datos de contacto: **cambia el alcance** de §2.1 y §2.3, pero los clientes siguen **sin cuenta, sin inicio de sesión y sin acceso**. Se revisan RN-VEN-10, CU-CAT-02, CU-CAT-03, CU-CAT-05, CU-VEN-01 y CU-VEN-03. **De paso se corrigen tres restos de la v1.1** que la revisión de la v1.2 no alcanzó: la definición de «Monto cobrado» del glosario, el desglose «sin técnico asignado» de CU-PAN-01, y la mención a un «técnico asignado» en el criterio 4 de §9. **Aprobada con tres decisiones** (§12): las solicitudes de servicio no usan Clientes hasta la v1.5 (PA-06); se añade un **código de fábrica** opcional por producto, reconocido por la búsqueda y por el lector junto al código interno (PA-07, RN-CAT-11, RF-97); y las solicitudes canceladas cuentan como fila informativa en «servicios por estado» (PA-08). **Revisada el 2026-10-09:** una edición de producto que incluya las existencias se **rechaza** con un error junto al campo, en lugar de ignorarse en silencio (CU-CAT-03, RN-CAT-10). |
 | 1.4.1 | 2026-10-10 | **Revisión menor de navegación.** Tras iniciar sesión, cada rol entra **directamente a su espacio de trabajo** —Administrador al panel, Encargado de Ventas al registro de venta y Encargado de Servicios a sus servicios— (CU-AUT-01). La pantalla de inicio decorativa, que era presentación y no tenía requerimiento propio, se retira en `plan.md`. **Ningún RF, RNF, RN ni CU se retira ni cambia de número**; RF-06 sigue vigente sin cambios. |
+| 1.5 | 2026-10-26 | **Tres ajustes surgidos del uso real.** (1) **Búsqueda sin tildes:** buscar productos —en el catálogo y en el registro de venta— y clientes por nombre no distingue tildes ni mayúsculas: «camara» encuentra «Cámara» (RN-CAT-12, RN-CLI-08). (2) **Datos de contacto con formato fijo:** todo teléfono nuevo tiene **exactamente 8 dígitos**, en el registro de clientes, en el cliente ocasional de una venta y en las solicitudes de servicio (RN-CLI-09); el teléfono del cliente ocasional pasa a ser **opcional** (RN-VEN-10), y el **carnet** del cliente pasa a ser **obligatorio**, de **7 u 8 dígitos** y único (RN-CLI-01, RN-CLI-02). (3) **Código por unidad:** al confirmar una venta, **cada unidad vendida recibe su propio código** EAN-13, con prefijo 21, y la garantía lista **una fila por unidad** (RN-VEN-18 a RN-VEN-21). **Nada es retroactivo:** las ventas y solicitudes anteriores conservan sus datos, y sus garantías mantienen el formato anterior (RNF-30). Requerimientos nuevos: RF-98 a RF-105 y RNF-30. Se revisan CU-CAT-05, CU-VEN-01, CU-VEN-03, CU-VEN-04, CU-SER-01, CU-CLI-01, CU-CLI-03, RN-CAT-08, RN-VEN-10, RN-VEN-14, RN-SER-05, RN-CLI-01, RN-CLI-02, RF-15, RF-76 y RF-84. **PA-06** —integrar Clientes en las solicitudes— **no forma parte de esta versión** y queda pendiente. Decisiones en §13. |
 
 > **Nota sobre la numeración:** los identificadores (RF-, RN-, RNF-, CU-,
 > SUP-) son estables entre versiones. Los requerimientos añadidos en la
@@ -120,16 +122,17 @@ estrecho:
 - **Un cliente sigue sin tener cuenta**, sin inicio de sesión y sin
   ningún acceso al sistema (RN-CLI-04). Ser cliente no es ser usuario.
 - **Registrar al cliente es opcional.** Una venta puede seguir
-  haciéndose con un **cliente ocasional**, escribiendo su nombre y
-  teléfono como hasta ahora.
+  haciéndose con un **cliente ocasional**, escribiendo su nombre y,
+  si lo da, su teléfono *(revisado en v1.5: el teléfono pasa a ser
+  opcional, RN-VEN-10)*.
 - **La venta sigue guardando su propia copia** del nombre y el teléfono
   del cliente (RN-VEN-10). La referencia al cliente registrado es
   adicional: editar o desactivar un cliente después **no altera**
   ninguna venta ya hecha (RN-CLI-05).
 - **Las solicitudes de servicio no cambian** en esta versión: siguen
   guardando el contacto del cliente como dato propio y el Encargado de
-  Servicios no accede al módulo de Clientes. Integrarlos queda decidido
-  para la v1.5 (PA-06).
+  Servicios no accede al módulo de Clientes. Integrarlos queda
+  pendiente para una versión posterior: la v1.5 no lo incluye (PA-06).
 
 ---
 
@@ -143,12 +146,13 @@ estrecho:
 | **Categoría** | Agrupación de productos del catálogo (p. ej. laptops, periféricos, redes). |
 | **Producto** | Artículo del catálogo con código, nombre, descripción, precio, existencias, meses de garantía e imagen. |
 | **Código de producto** | Número de 13 dígitos en formato EAN-13 que el sistema asigna a cada producto al crearlo. Identifica al producto de forma única, no se edita y no se reutiliza nunca (RN-CAT-08). Puede imprimirse como código de barras y leerse con un lector. |
+| **Código de unidad** *(v1.5)* | Número de 13 dígitos en formato EAN-13, con prefijo 21, que el sistema asigna a **cada unidad vendida** al confirmar una venta. Identifica esa unidad física concreta —no el modelo de producto—, es único en todo el sistema y no se edita ni se reutiliza nunca (RN-VEN-18). Aparece en la garantía. |
 | **Código de fábrica** | Código de barras que trae impreso el producto o su caja de origen, registrado de forma **opcional**. El lector lo reconoce igual que el código interno, de modo que un producto que ya trae código no necesita etiqueta (RN-CAT-11). |
 | **Existencias (stock)** | Cantidad disponible de un producto para la venta. |
 | **Movimiento de stock** | Registro inmutable de un cambio en las existencias de un producto: cuánto cambió, con qué signo, en qué quedó, quién lo hizo, cuándo y por qué (RN-MOV-01). |
 | **Ajuste de existencias** | Corrección manual de las existencias de un producto para que coincidan con lo contado físicamente. Exige un motivo y deja su movimiento (CU-CAT-07). |
 | **Meses de garantía** | Duración de la garantía de un producto, en meses. Cero significa que el producto no tiene garantía. |
-| **Garantía** | Documento en PDF que la empresa entrega al cliente con los productos de una venta que tienen garantía y la fecha en que vence cada una. **No es un documento fiscal.** |
+| **Garantía** | Documento en PDF que la empresa entrega al cliente con los productos de una venta que tienen garantía y la fecha en que vence cada una. Desde la v1.5 lista **cada unidad** con su código de unidad (RN-VEN-20). **No es un documento fiscal.** |
 | **Venta** | Registro de una transacción de venta con uno o más productos, sus cantidades y el contacto del cliente. |
 | **Detalle de venta** | Línea de una venta: producto, cantidad, y nombre y precio unitario **congelados** al momento de la confirmación. |
 | **Anulación** | Invalidación de una venta registrada por error, que devuelve las existencias al inventario. |
@@ -162,8 +166,9 @@ estrecho:
 | **Existencias bajas** | Producto cuya cantidad disponible es menor o igual al umbral de alerta. |
 | **Umbral de existencias bajas** | Único número, global para todo el catálogo, configurable por el Administrador, a partir del cual un producto se considera con existencias bajas. |
 | **Cliente** | Persona o entidad que compra a la empresa, registrada con sus datos de contacto en el módulo de Clientes. **No es un usuario**: no tiene cuenta, no inicia sesión y no accede al sistema (RN-CLI-04). |
-| **Cliente ocasional** | Cliente de una venta cuyo nombre y teléfono se escriben en la propia venta sin registrarlo en el módulo de Clientes. |
-| **Carnet** | Número del documento de identidad del cliente. Dato personal **opcional**, que solo se muestra en el detalle del cliente (RN-CLI-06). |
+| **Cliente ocasional** | Cliente de una venta cuyo nombre —y, si lo da, su teléfono— se escriben en la propia venta sin registrarlo en el módulo de Clientes. *(Revisado en v1.5: el teléfono es opcional.)* |
+| **Carnet** | Número del documento de identidad del cliente: de 7 u 8 dígitos, sin complemento. Dato personal **obligatorio** desde la v1.5, que identifica al cliente de forma única y solo se muestra en el detalle del cliente (RN-CLI-02, RN-CLI-06). |
+| **Teléfono** *(v1.5)* | Número de contacto de exactamente 8 dígitos, solo números (RN-CLI-09). |
 | **Reporte** | Resumen de ventas y servicios de un rango de fechas, para la administración. Es **operativo, no contable** (§2.2). |
 
 ---
@@ -200,7 +205,8 @@ Responsable de la atención comercial.
 - Consulta el catálogo y las existencias disponibles, buscando por
   nombre o por código, y ve el código de barras de cada producto.
 - Registra ventas, eligiendo un cliente registrado, registrando uno
-  nuevo o escribiendo el nombre y teléfono de un cliente ocasional.
+  nuevo o escribiendo el nombre —y, si lo da, el teléfono— de un
+  cliente ocasional.
   Puede agregar productos con un lector de código de barras.
 - Emite la **garantía** de sus propias ventas.
 - **Consulta, registra y edita clientes.** No puede desactivarlos.
@@ -383,12 +389,13 @@ alta.)*
   nueva; el historial permanece legible.
 
 #### CU-CAT-05 — Consultar el catálogo y las existencias
-*(Revisado en v1.4: búsqueda por código.)*
+*(Revisado en v1.4: búsqueda por código. Revisado en v1.5: búsqueda por
+nombre sin distinguir tildes.)*
 - **Actor:** Administrador, Encargado de Ventas.
 - **Flujo principal:** consulta la lista de productos con su código,
-  categoría, precio y existencias disponibles, con búsqueda por nombre,
-  **búsqueda por código exacto** —el interno o el de fábrica— y filtro
-  por categoría.
+  categoría, precio y existencias disponibles, con búsqueda por nombre
+  **sin distinguir tildes ni mayúsculas** (RN-CAT-12), **búsqueda por
+  código exacto** —el interno o el de fábrica— y filtro por categoría.
 - **Alternativos:** un código que no corresponde a ningún producto → la
   búsqueda no devuelve resultados, sin error.
 - **Postcondición:** ninguna (consulta).
@@ -451,7 +458,8 @@ alta.)*
 
 #### CU-VEN-01 — Registrar una venta
 *(Revisado en v1.4: cliente registrado, entrada por código, garantía
-congelada y movimientos de stock.)*
+congelada y movimientos de stock. Revisado en v1.5: teléfono del
+cliente ocasional opcional, búsqueda sin tildes y código por unidad.)*
 - **Actor:** Encargado de Ventas, Administrador.
 - **Precondición:** existen productos con existencias disponibles.
 - **Flujo principal:**
@@ -460,9 +468,10 @@ congelada y movimientos de stock.)*
        teléfono o carnet; el sistema completa su nombre y teléfono;
      - **registra un cliente nuevo** en ese mismo momento (CU-CLI-01), que
        queda elegido;
-     - o atiende a un **cliente ocasional**, escribiendo su nombre y
-       teléfono sin registrarlo, como hasta la v1.3.
-  2. Agrega uno o más productos buscándolos por nombre **o introduciendo
+     - o atiende a un **cliente ocasional**, escribiendo su nombre y,
+       si lo da, su teléfono, sin registrarlo.
+  2. Agrega uno o más productos buscándolos por nombre —sin distinguir
+     tildes ni mayúsculas (RN-CAT-12)— **o introduciendo
      su código** —el interno o el de fábrica—, por teclado o con un
      **lector de código de barras**. Un código que coincide exactamente
      con un producto disponible lo agrega con cantidad 1, o suma 1 si ya
@@ -474,7 +483,8 @@ congelada y movimientos de stock.)*
      nombre, el precio unitario y los **meses de garantía** de cada
      producto, copia en la venta el nombre y teléfono del cliente,
      registra la referencia al cliente si se eligió uno, registra **un
-     movimiento de stock por producto** y deja la venta a nombre del
+     movimiento de stock por producto**, **asigna un código de unidad a
+     cada unidad vendida** (RN-VEN-18) y deja la venta a nombre del
      usuario que la realizó con su fecha y hora. Todo en una sola
      operación (RNF-09, RNF-24).
   5. Si alguna línea tiene garantía, el sistema ofrece emitirla en ese
@@ -485,16 +495,20 @@ congelada y movimientos de stock.)*
     movimiento** y el sistema indica cuáles faltan y cuánto hay
     disponible.
   - Venta sin productos o con cantidad cero o negativa → se rechaza.
-  - Datos de contacto del cliente incompletos → se rechaza.
+  - Cliente ocasional sin nombre, o con un teléfono que no tiene
+    exactamente 8 dígitos → se rechaza (RN-VEN-10, RN-CLI-09).
   - Se elige un cliente que fue **desactivado** entre la búsqueda y la
     confirmación → se rechaza (RN-CLI-03).
   - El código introducido no corresponde a ningún producto → se avisa y
     no se agrega nada.
+  - El código introducido no corresponde a ningún producto y tiene la
+    forma de un **código de unidad** → se avisa «este es un código de
+    unidad, no de producto» y no se agrega nada (RN-VEN-21).
   - El código corresponde a un producto **retirado o sin existencias** →
     se avisa y no se agrega (RN-CAT-05).
 - **Postcondición:** la venta queda registrada en estado *Confirmada*, el
-  inventario refleja el descuento y cada producto vendido tiene su
-  movimiento de venta.
+  inventario refleja el descuento, cada producto vendido tiene su
+  movimiento de venta y cada unidad vendida, su código de unidad.
 
 #### CU-VEN-02 — Consultar el historial de ventas
 - **Actor:** Encargado de Ventas (solo las propias), Administrador (todas).
@@ -512,7 +526,8 @@ congelada y movimientos de stock.)*
 - **Flujo principal:** el usuario solicita la anulación indicando el
   motivo; el sistema pide confirmación, devuelve las existencias de cada
   producto del detalle al inventario, **registra un movimiento de
-  anulación por producto** que referencia la venta, y marca la venta como
+  anulación por producto** que referencia la venta, **marca como anulados
+  los códigos de unidad** de la venta (RN-VEN-19) y marca la venta como
   *Anulada*, registrando quién la anuló, cuándo y por qué. Todo en una
   sola operación (RNF-10, RNF-24).
 - **Alternativos:**
@@ -535,8 +550,13 @@ congelada y movimientos de stock.)*
   la empresa que contiene:
   - los datos del cliente —nombre y teléfono—, **nunca el carnet**;
   - la fecha de la venta y su número;
-  - **solo las líneas con garantía**: producto, código, cantidad, meses de
-    garantía y **fecha de vencimiento** calculada (RN-VEN-13);
+  - **solo los productos con garantía** (RN-VEN-14), con su **fecha de
+    vencimiento** calculada (RN-VEN-13). *(Revisado en v1.5.)* En una
+    venta confirmada desde la v1.5, **una fila por unidad**: producto,
+    **código de unidad**, meses de garantía y vencimiento. En una venta
+    anterior, que no tiene códigos de unidad, una fila por línea como
+    hasta ahora: producto, código del producto, cantidad, meses y
+    vencimiento (RN-VEN-20);
   - quién la generó y la fecha y hora de generación;
   - la leyenda de que **no es un documento fiscal** (RN-VEN-15).
 
@@ -558,8 +578,9 @@ congelada y movimientos de stock.)*
 - **Flujo principal:**
   1. El usuario selecciona el tipo de servicio: mantenimiento, reparación,
      instalación de redes o videovigilancia.
-  2. Registra nombre y teléfono de contacto del cliente y la descripción
-     del problema o del trabajo solicitado.
+  2. Registra nombre y teléfono de contacto del cliente —el teléfono, de
+     exactamente 8 dígitos (RN-CLI-09)— y la descripción del problema o
+     del trabajo solicitado.
   3. Si el tipo de servicio se atiende **a domicilio** (instalación de
      redes, videovigilancia), el sistema exige además la dirección. Si se
      atiende **en taller** (mantenimiento, reparación), la dirección no se
@@ -567,7 +588,8 @@ congelada y movimientos de stock.)*
   4. El sistema registra la solicitud en estado *Registrada*, con fecha,
      hora y el **usuario registrador**.
 - **Alternativos:** datos obligatorios faltantes (incluida la dirección
-  cuando corresponde) → se rechaza el registro.
+  cuando corresponde), o un teléfono que no tiene exactamente 8 dígitos
+  → se rechaza el registro.
 - **Postcondición:** la solicitud queda registrada, visible para su
   registrador y para el Administrador.
 
@@ -705,13 +727,19 @@ congelada y movimientos de stock.)*
 ### 5.7 Clientes *(v1.4)*
 
 #### CU-CLI-01 — Registrar un cliente
+*(Revisado en v1.5: carnet obligatorio y formato del teléfono y del
+carnet.)*
 - **Actor:** Encargado de Ventas, Administrador.
 - **Flujo principal:** desde el módulo de Clientes o desde el registro de
-  una venta, el usuario registra el **nombre** y el **teléfono** del
-  cliente y, opcionalmente, su **dirección** y su **carnet**; el sistema
+  una venta, el usuario registra el **nombre**, el **teléfono** y el
+  **carnet** del cliente y, opcionalmente, su **dirección**; el sistema
   lo guarda como cliente activo, registrando quién lo creó y cuándo.
 - **Alternativos:**
-  - Falta el nombre o el teléfono → se rechaza.
+  - Falta el nombre, el teléfono o el carnet → se rechaza.
+  - El teléfono no tiene exactamente 8 dígitos → se rechaza
+    (RN-CLI-09).
+  - El carnet no tiene 7 u 8 dígitos, o contiene letras o un
+    complemento → se rechaza (RN-CLI-02).
   - El carnet ya pertenece a otro cliente, activo o no → se rechaza
     (RN-CLI-02).
 - **Postcondición:** el cliente queda disponible para elegirlo en las
@@ -730,8 +758,9 @@ congelada y movimientos de stock.)*
 #### CU-CLI-03 — Consultar y buscar clientes
 - **Actor:** Encargado de Ventas, Administrador.
 - **Flujo principal:** el usuario consulta la lista paginada de clientes,
-  busca por nombre, teléfono o carnet, filtra por activos o inactivos, y
-  abre el detalle de cada uno.
+  busca por nombre —sin distinguir tildes ni mayúsculas (RN-CLI-08)—,
+  teléfono o carnet, filtra por activos o inactivos, y abre el detalle
+  de cada uno.
 - **Alternativos:** la búsqueda puede hacerse por carnet, pero **la lista
   no muestra el carnet**: solo aparece en el detalle del cliente
   (RN-CLI-06).
@@ -830,7 +859,9 @@ congelada y movimientos de stock.)*
     un código identifica siempre al mismo producto;
   - usa el **prefijo de circulación interna** de GS1 (20), reservado
     para uso dentro de un comercio, de modo que nunca puede coincidir
-    con el código de fábrica de un producto real (RN-CAT-11).
+    con el código de fábrica de un producto real (RN-CAT-11). El prefijo
+    **21**, del mismo rango, queda para los **códigos de unidad**
+    (RN-VEN-18) *(v1.5)*.
 - **RN-CAT-09** *(v1.4)* — Los **meses de garantía** de un producto son
   un entero mayor o igual que cero; **cero** significa que el producto no
   tiene garantía. Modificarlos afecta solo a las ventas futuras
@@ -861,6 +892,11 @@ congelada y movimientos de stock.)*
   código de fábrica —el mismo modelo en dos colores, por ejemplo—, solo
   uno puede registrarlo; el otro se vende con su código interno y su
   etiqueta.
+- **RN-CAT-12** *(v1.5)* — La **búsqueda de productos por nombre**, en el
+  catálogo y en el registro de venta, **no distingue tildes ni
+  mayúsculas**: «camara», «cámara» y «CAMARA» encuentran lo mismo, y la
+  «ñ» equivale a la «n». La búsqueda **por código** no cambia: sigue
+  siendo exacta (RN-VEN-17).
 
 ### 6.4 Ventas
 
@@ -884,16 +920,18 @@ congelada y movimientos de stock.)*
   en los indicadores de ventas del día.
 - **RN-VEN-09** — Toda venta queda asociada al usuario que la registró y a
   su fecha y hora, dato que no cambia nunca.
-- **RN-VEN-10** *(revisada en v1.4)* — El nombre y el teléfono de
-  contacto del cliente son obligatorios en toda venta, y **la venta
-  guarda su propia copia** de ambos, que no cambia nunca (RNF-11).
+- **RN-VEN-10** *(revisada en v1.4 y en v1.5)* — El nombre de contacto
+  del cliente es obligatorio en toda venta, y **la venta guarda su propia
+  copia** del nombre y del teléfono, que no cambia nunca (RNF-11).
   Además, la venta puede llevar una **referencia opcional** a un cliente
   registrado (§2.3):
   - si se elige un cliente registrado, el nombre y el teléfono los
     **copia el sistema** del registro del cliente en el momento de
     confirmar, igual que el precio se copia del catálogo (RN-VEN-04);
   - si no se elige ninguno, la venta es de un **cliente ocasional** y el
-    nombre y el teléfono son los que escribe el usuario.
+    nombre y el teléfono son los que escribe el usuario. *(v1.5)* El
+    teléfono del cliente ocasional es **opcional**, pero si se escribe
+    debe tener exactamente 8 dígitos (RN-CLI-09).
 
   En ningún caso el cliente obtiene cuenta ni acceso alguno (RN-CLI-04).
 - **RN-VEN-11** — La anulación **no tiene límite de plazo**: una venta
@@ -917,8 +955,9 @@ congelada y movimientos de stock.)*
   garantía vence el 28 de febrero (o el 29 en año bisiesto).
 - **RN-VEN-14** — Solo se emite garantía de una venta **confirmada** que
   tenga **al menos una línea** con meses de garantía mayor que cero, y la
-  garantía lista **únicamente** esas líneas. Una venta anulada no emite
-  garantía.
+  garantía lista **únicamente** los productos de esas líneas, en el
+  formato que corresponde a la venta (RN-VEN-20). Una venta anulada no
+  emite garantía.
 - **RN-VEN-15** — La garantía **declara en su texto que no es un
   documento fiscal** (§2.2). Contiene el nombre y el teléfono del cliente
   tal como están en la venta, quién la generó y cuándo; **nunca el
@@ -937,6 +976,38 @@ congelada y movimientos de stock.)*
   producto **activo y con existencias**. No hay
   coincidencias parciales: un código incompleto no agrega nada, porque
   un lector que lea mal no debe añadir un producto equivocado.
+
+#### Código de unidad *(v1.5)*
+
+- **RN-VEN-18** — Al confirmar una venta, el sistema asigna a **cada
+  unidad vendida** un **código de unidad** propio: una línea de 7
+  unidades recibe 7 códigos distintos. El código:
+  - tiene 13 dígitos en formato **EAN-13** válido, con el prefijo de
+    circulación interna **21** (RN-CAT-08), de modo que puede imprimirse
+    como código de barras y nunca se confunde con un código de producto;
+  - es **único en todo el sistema** y **no se edita ni se reutiliza
+    nunca**, ni siquiera si la venta se anula;
+  - se asigna en la **misma operación atómica** que la confirmación: si
+    la venta no se confirma, no se asigna ningún código (RNF-09).
+
+  Solo reciben códigos de unidad las ventas **confirmadas desde la
+  v1.5**. A las anteriores **no se les asignan retroactivamente**
+  (RNF-30).
+- **RN-VEN-19** — Al **anular** una venta, sus códigos de unidad quedan
+  **anulados**: se conservan, no se eliminan ni se reutilizan, y quedan
+  marcados como anulados, en la misma operación que la anulación
+  (RNF-10).
+- **RN-VEN-20** — La garantía de una venta con códigos de unidad lista
+  **una fila por cada unidad** con garantía: producto, código de unidad,
+  meses de garantía y fecha de vencimiento. La garantía de una venta
+  **anterior a la v1.5**, que no tiene códigos de unidad, conserva el
+  formato anterior: una fila por línea con el código del producto y la
+  cantidad.
+- **RN-VEN-21** — En el registro de venta, un código introducido —a
+  mano o con un lector— que **no coincide con ningún producto** y tiene
+  la **forma de un código de unidad** —13 dígitos que empiezan por 21—
+  no agrega nada, y el sistema avisa: «este es un código de unidad, no
+  de producto».
 
 ### 6.5 Servicios técnicos
 
@@ -972,6 +1043,7 @@ congelada y movimientos de stock.)*
   domicilio y **no se solicita** para los servicios en taller.
 - **RN-SER-05** — El nombre y el teléfono de contacto del cliente y la
   descripción del problema son obligatorios en toda solicitud.
+  *(v1.5)* El teléfono tiene exactamente 8 dígitos (RN-CLI-09).
 - **RN-SER-06** — Toda solicitud queda asociada al usuario que la registró
   y a su fecha y hora; cada cambio de estado registra su autor y momento.
 - **RN-SER-07** — La cancelación exige un motivo.
@@ -1077,12 +1149,16 @@ congelada y movimientos de stock.)*
 
 ### 6.8 Clientes *(v1.4)*
 
-- **RN-CLI-01** — El **nombre** y el **teléfono** de un cliente son
-  obligatorios; la **dirección** y el **carnet** son opcionales.
-- **RN-CLI-02** — Si se informa el carnet, es **único** entre todos los
-  clientes, activos e inactivos. Dos clientes sin carnet no entran en
-  conflicto. El nombre y el teléfono **no** son únicos: dos personas
-  pueden llamarse igual, y una familia puede compartir teléfono.
+- **RN-CLI-01** *(revisada en v1.5)* — El **nombre**, el **teléfono** y
+  el **carnet** de un cliente son obligatorios; la **dirección** es
+  opcional. El teléfono sigue RN-CLI-09.
+- **RN-CLI-02** *(revisada en v1.5)* — El carnet es **la forma de
+  identificar a un cliente**: tiene **7 u 8 dígitos**, solo números y
+  sin complemento, y es **único** entre todos los clientes, activos e
+  inactivos: no se registra dos veces el mismo, ni siquiera si el otro
+  cliente está desactivado. El nombre y el teléfono **no** son únicos:
+  dos personas pueden llamarse igual, y una familia puede compartir
+  teléfono.
 - **RN-CLI-03** — Los clientes **no se eliminan**: se desactivan, igual
   que las cuentas del personal (RN-USU-05). Un cliente inactivo no puede
   elegirse en ventas nuevas, pero conserva sus datos y las ventas que lo
@@ -1101,6 +1177,16 @@ congelada y movimientos de stock.)*
 - **RN-CLI-07** — Solo el **Administrador** desactiva o reactiva
   clientes. El Encargado de Ventas los consulta, registra y edita. El
   Encargado de Servicios no accede al módulo en esta versión (PA-06).
+- **RN-CLI-08** *(v1.5)* — La **búsqueda de clientes por nombre** no
+  distingue tildes ni mayúsculas, igual que la de productos (RN-CAT-12).
+  La búsqueda por carnet sigue siendo exacta.
+- **RN-CLI-09** *(v1.5)* — **Formato del teléfono.** Todo teléfono que
+  se registre en el sistema tiene **exactamente 8 dígitos**, solo
+  números: el del cliente registrado, el del cliente ocasional de una
+  venta —cuando se escribe, porque ahí es opcional (RN-VEN-10)— y el de
+  contacto de una solicitud de servicio (RN-SER-05). La regla rige para
+  los **registros nuevos**: las ventas y solicitudes registradas antes de
+  la v1.5 conservan el teléfono que tenían (RNF-30).
 
 ### 6.9 Reportes *(v1.4)*
 
@@ -1181,12 +1267,13 @@ congelada y movimientos de stock.)*
 | RF-72 | El sistema debe permitir registrar en cada producto sus meses de garantía, como un entero no negativo en el que cero significa sin garantía. |
 | RF-73 | El sistema debe permitir al Administrador ajustar las existencias de un producto indicando la cantidad real y un motivo obligatorio, calculando la diferencia contra las existencias vigentes al confirmar. |
 | RF-97 | El sistema debe permitir al Administrador registrar, corregir y quitar el código de fábrica opcional de un producto, rechazando un código ya registrado en otro producto o perteneciente al espacio de los códigos internos. |
+| RF-98 | *(v1.5)* El sistema debe buscar los productos por nombre sin distinguir tildes ni mayúsculas, en el catálogo y en el registro de venta. |
 
 ### 7.3 Ventas
 
 | ID | Requerimiento |
 |---|---|
-| RF-15 | El sistema debe permitir registrar una venta con nombre y teléfono de contacto del cliente y una o más líneas de producto con su cantidad. |
+| RF-15 | El sistema debe permitir registrar una venta con el nombre de contacto del cliente, su teléfono cuando se indique, y una o más líneas de producto con su cantidad. *(Revisado en v1.5: el teléfono era obligatorio.)* |
 | RF-16 | El sistema debe calcular y mostrar el subtotal de cada línea y el total de la venta antes de confirmarla. |
 | RF-17 | El sistema debe validar, antes de confirmar, que todos los productos tengan existencias suficientes, e indicar cuáles faltan y su disponibilidad. |
 | RF-18 | El sistema debe descontar las existencias de todos los productos al confirmar la venta, de forma completa o no realizarla en absoluto. |
@@ -1202,11 +1289,15 @@ congelada y movimientos de stock.)*
 | RF-54 | El sistema debe permitir anular una venta confirmada sin imponer ningún límite de plazo desde su registro. |
 | RF-74 | El sistema debe agregar un producto a la venta en curso cuando se introduce un código —a mano o con un lector de código de barras— que coincide exactamente con el código interno o el de fábrica de un producto activo con existencias. |
 | RF-75 | El sistema debe congelar los meses de garantía de cada producto en el detalle de la venta al confirmarla. |
-| RF-76 | El sistema debe generar en PDF la garantía de una venta, con el membrete de la empresa, los datos del cliente, las líneas con garantía (producto, código, cantidad, meses y fecha de vencimiento), quién la generó, la fecha de generación y la leyenda de que no es un documento fiscal. |
+| RF-76 | El sistema debe generar en PDF la garantía de una venta, con el membrete de la empresa, los datos del cliente, los productos con garantía y su fecha de vencimiento, quién la generó, la fecha de generación y la leyenda de que no es un documento fiscal. *(Revisado en v1.5: el detalle de las filas lo fija RF-104.)* |
 | RF-77 | El sistema debe ofrecer la emisión de la garantía al confirmar una venta y desde el detalle de una venta del historial. |
 | RF-78 | El sistema debe impedir emitir la garantía de una venta anulada o sin ninguna línea con garantía. |
 | RF-79 | El sistema debe permitir, al registrar una venta, elegir un cliente registrado activo, registrar uno nuevo en ese momento o escribir el nombre y teléfono de un cliente ocasional. |
 | RF-80 | El sistema debe guardar en cada venta su propia copia del nombre y el teléfono del cliente y, si se eligió un cliente registrado, una referencia a él. |
+| RF-102 | *(v1.5)* El sistema debe asignar, al confirmar una venta y en la misma operación, un código de unidad EAN-13 único con prefijo 21 a cada unidad vendida, que no se edita ni se reutiliza. |
+| RF-103 | *(v1.5)* El sistema debe marcar como anulados los códigos de unidad de una venta al anularla, conservándolos. |
+| RF-104 | *(v1.5)* El sistema debe listar en la garantía de una venta con códigos de unidad una fila por cada unidad con garantía —producto, código de unidad, meses y fecha de vencimiento—, y conservar el formato anterior, una fila por línea, en la garantía de las ventas sin códigos de unidad. |
+| RF-105 | *(v1.5)* El sistema debe avisar «este es un código de unidad, no de producto», sin agregar nada, cuando en el registro de venta se introduce un código que no corresponde a ningún producto y tiene la forma de un código de unidad. |
 
 ### 7.4 Servicios técnicos
 
@@ -1273,12 +1364,15 @@ congelada y movimientos de stock.)*
 
 | ID | Requerimiento |
 |---|---|
-| RF-84 | El sistema debe permitir al Administrador y al Encargado de Ventas registrar clientes con nombre y teléfono obligatorios, y dirección y carnet opcionales. |
+| RF-84 | El sistema debe permitir al Administrador y al Encargado de Ventas registrar clientes con nombre, teléfono y carnet obligatorios, y dirección opcional. *(Revisado en v1.5: el carnet era opcional.)* |
 | RF-85 | El sistema debe permitir al Administrador y al Encargado de Ventas editar los datos de un cliente. |
 | RF-86 | El sistema debe permitir buscar clientes por nombre, teléfono o carnet, en una lista paginada que pueda filtrarse por activos o inactivos. |
 | RF-87 | El sistema debe permitir solo al Administrador desactivar y reactivar clientes, sin eliminarlos nunca. |
 | RF-88 | El sistema debe impedir registrar dos clientes con el mismo carnet. |
 | RF-89 | El sistema debe mostrar el carnet de un cliente únicamente en su detalle. |
+| RF-99 | *(v1.5)* El sistema debe buscar los clientes por nombre sin distinguir tildes ni mayúsculas. |
+| RF-100 | *(v1.5)* El sistema debe exigir que todo teléfono nuevo tenga exactamente 8 dígitos, en el registro de clientes, en el cliente ocasional de una venta —donde el teléfono es opcional— y en las solicitudes de servicio, sin alterar los registros anteriores. |
+| RF-101 | *(v1.5)* El sistema debe exigir que el carnet de un cliente tenga 7 u 8 dígitos, solo números, y rechazar un carnet ya registrado en otro cliente, activo o no. |
 
 ### 7.9 Reportes *(v1.4)*
 
@@ -1319,6 +1413,7 @@ congelada y movimientos de stock.)*
 | RNF-11 | El historial de ventas y servicios es inmutable en sus datos congelados, incluso si los productos o las cuentas cambian después. |
 | RNF-24 | *(v1.4)* El registro de cada movimiento de stock es atómico con el cambio de existencias que lo origina y respeta el mismo bloqueo de filas que RNF-08: ni dos operaciones simultáneas, ni un fallo a mitad de una operación, pueden dejar una existencia sin su movimiento o un movimiento sin su existencia. |
 | RNF-25 | *(v1.4)* Los movimientos de stock son inmutables: ninguna vía del sistema permite editarlos ni eliminarlos. |
+| RNF-30 | *(v1.5)* Las reglas nuevas de la v1.5 no son retroactivas: las ventas y solicitudes registradas antes de ella conservan sus datos tal como estaban, no reciben códigos de unidad, y siguen pudiendo consultarse, anularse, cambiar de estado y emitir su garantía o su informe como hasta entonces. |
 
 ### 8.3 Usabilidad
 
@@ -1377,6 +1472,11 @@ Esta etapa se considera aprobada cuando:
    cuadrado (RN-MOV-01, RN-MOV-03), clientes sin acceso al sistema y sin
    efecto sobre ventas pasadas (RN-CLI-04, RN-CLI-05) y minimización del
    carnet (RN-CLI-06).
+8. *(v1.5)* Las reglas de la v1.5 son verificables: búsqueda sin tildes
+   (RN-CAT-12, RN-CLI-08), formato del teléfono y del carnet (RN-CLI-02,
+   RN-CLI-09), un código de unidad único por unidad vendida y su
+   anulación (RN-VEN-18, RN-VEN-19), la garantía por unidad (RN-VEN-20)
+   y que nada de ello altera los registros anteriores (RNF-30).
 
 ---
 
@@ -1487,3 +1587,30 @@ de fábrica **no puede tener la forma de un código interno** —13 dígitos
 empezando por 20— (RN-CAT-11). Sin eso, un código de fábrica mal
 escrito podría coincidir con el código interno de otro producto, y una
 misma lectura identificaría a dos.
+
+---
+
+## 13. Decisiones de la v1.5
+
+Las decisiones de la v1.5 las tomó el propietario el 2026-10-26, a
+partir del uso del sistema, y ya están incorporadas al cuerpo del
+documento.
+
+| # | Pregunta | Decisión | Se refleja en |
+|---|---|---|---|
+| **PA-09** | ¿Puede venderse a un cliente ocasional sin teléfono? | **Sí.** Basta el nombre; el teléfono es opcional, pero si se escribe debe tener 8 dígitos. | RN-VEN-10, RN-CLI-09, RF-15, RF-100, CU-VEN-01 |
+| **PA-10** | ¿Cómo es el carnet del cliente? | **Obligatorio, de 7 u 8 dígitos, solo números y sin complemento**, y único aunque el otro cliente esté desactivado: es la forma de identificar al cliente. | RN-CLI-01, RN-CLI-02, RF-84, RF-101, CU-CLI-01 |
+| **PA-11** | ¿Se aplican las reglas nuevas a los registros anteriores? | **No.** Las ventas y solicitudes anteriores conservan sus datos; no se les asignan códigos de unidad, y sus garantías mantienen el formato anterior. | RNF-30, RN-CLI-09, RN-VEN-18, RN-VEN-20 |
+| **PA-12** | ¿Cómo se identifica cada unidad vendida? | **Con un código de unidad que se genera al confirmar la venta** (no al ingresar la mercadería al inventario): no obliga a etiquetar todo el inventario ni cambia la forma de vender. EAN-13 con prefijo 21; si la venta se anula, los códigos quedan anulados. | RN-VEN-18, RN-VEN-19, RF-102, RF-103, CU-VEN-01, CU-VEN-03 |
+| **PA-13** | ¿Qué pasa si se introduce un código de unidad en el registro de venta? | **Se avisa** «este es un código de unidad, no de producto» y no se agrega nada. | RN-VEN-21, RF-105 |
+
+### Lo que la v1.5 no cambia
+
+- **PA-06 sigue pendiente.** Las solicitudes de servicio continúan
+  guardando el contacto del cliente como dato propio, ahora con el
+  teléfono de 8 dígitos (RN-SER-05); integrarlas con el módulo de
+  Clientes queda para una versión posterior.
+- **Los clientes ya registrados** deben cumplir el nuevo formato del
+  carnet y del teléfono antes de que la regla se active en la base de
+  datos. El propietario los revisa y corrige; el sistema no les inventa
+  datos ni los desactiva.

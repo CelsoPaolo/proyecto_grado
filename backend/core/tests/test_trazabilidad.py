@@ -62,8 +62,11 @@ def test_la_especificacion_declara_los_requerimientos_esperados():
     # PDF de la solicitud de servicio (RF-67, RF-68); 97 y 29 desde la
     # v1.4, que anade codigo de producto, garantia, reportes,
     # movimientos de stock y clientes (RF-69 a RF-97, RNF-24 a RNF-29).
-    assert len(FUNCIONALES) == 97, f"RF declarados: {len(FUNCIONALES)}"
-    assert len(NO_FUNCIONALES) == 29, f"RNF declarados: {len(NO_FUNCIONALES)}"
+    # 105 y 30 desde la v1.5, que anade busqueda sin tildes, formato del
+    # telefono y del carnet, y codigo por unidad (RF-98 a RF-105,
+    # RNF-30).
+    assert len(FUNCIONALES) == 105, f"RF declarados: {len(FUNCIONALES)}"
+    assert len(NO_FUNCIONALES) == 30, f"RNF declarados: {len(NO_FUNCIONALES)}"
 
 
 @pytest.mark.parametrize("requerimiento", FUNCIONALES)
