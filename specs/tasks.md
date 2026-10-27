@@ -2004,7 +2004,7 @@ los requerimientos de la v1.5 todavía sin implementar.
   - Backend: 1199 pruebas, 1 fallo del guardián (RF-101, la tarea
     T-15.9 pendiente); frontend 253 / 253.
 
-### [ ] T-15.9 — Carnet obligatorio de 7 u 8 dígitos ⚠️
+### [x] T-15.9 — Carnet obligatorio de 7 u 8 dígitos ⚠️
 - **Cubre:** RF-101, RF-84, RN-CLI-01, RN-CLI-02
 - **Depende de:** confirmación del propietario de que corrigió los
   clientes que incumplían la regla (`plan.md` §11.5).
@@ -2015,6 +2015,31 @@ los requerimientos de la v1.5 todavía sin implementar.
   cliente incumple; pruebas verifican los rechazos (6 y 9 dígitos,
   letras, complemento, vacío), el duplicado con un cliente inactivo y
   que la migración es reversible.
+- **Resultado (2026-10-27):** migración `clientes/0002_carnet_obligatorio`,
+  `carnet_valido` en `core/validadores.py` y `utils/carnet.js`.
+  - El propietario confirmó que corrigió los clientes #3 y #4. Se volvió
+    a comprobar dos veces, la última justo antes de migrar en la misma
+    orden: 4 clientes, ninguno incumple. Aplicada a la base de
+    desarrollo.
+  - En la base: carnet único total (ya no parcial), y formato del carnet
+    y del teléfono comprobado en **todas** las filas de clientes.
+  - El campo del carnet admite solo dígitos y como máximo 8; el
+    formulario avisa, sin enviar, si falta o tiene menos de 7, a la vez
+    que del teléfono.
+  - Al quedar garantizado por la base, se retiró de la venta el rechazo
+    de un cliente registrado con teléfono fuera de formato (T-15.3) y
+    sus dos pruebas: ese cliente ya no puede existir.
+  - Datos de prueba: carnets con complemento («1234567-1A», «7777777-1Z»)
+    o de 3 dígitos («555», «111») pasan a ser de 7 u 8 dígitos. Las
+    pruebas que verificaban la regla anterior —clientes sin carnet,
+    mayúsculas y minúsculas del complemento— se sustituyeron por las de
+    la nueva.
+  - Pruebas nuevas: 14 de modelo y migración, 11 de servicio, 1 de API y
+    10 de interfaz en `carnet.test.js`.
+  - Mutaciones detectadas: quitar la comprobación del formato en el
+    servicio y en el formulario.
+  - Backend: 1219 pruebas, **0 fallos** (6 omitidas); frontend
+    263 / 263.
 
 ### [ ] T-15.10 — Revisión del bloque 15
 - **Cubre:** RNF-22, RNF-23

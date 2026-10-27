@@ -44,7 +44,7 @@ const DETALLE = {
   nombre: 'María Gutiérrez',
   telefono: '70012345',
   direccion: 'Calle Junín 123',
-  carnet: '1234567-1A',
+  carnet: '12345671',
   activo: true,
   creado_por: 'Víctor',
   creado_en: '2026-10-09T10:00:00-04:00',
@@ -95,7 +95,7 @@ describe('carnet solo en el detalle (RN-CLI-06)', () => {
     const wrapper = montar(ClienteDetalleView)
     await flushPromises()
 
-    expect(wrapper.find('[data-prueba="carnet"]').text()).toBe('1234567-1A')
+    expect(wrapper.find('[data-prueba="carnet"]').text()).toBe('12345671')
   })
 
   it('la lista pide por defecto los activos y busca con el texto escrito', async () => {
@@ -164,12 +164,13 @@ describe('formulario', () => {
     const wrapper = await abrir()
     await wrapper.find('#cliente-nombre').setValue('María')
     await wrapper.find('#cliente-telefono').setValue('70012345')
+    await wrapper.find('#cliente-carnet').setValue('12345671')
 
     await wrapper.find('form').trigger('submit')
     await flushPromises()
 
     expect(clientesApi.crear).toHaveBeenCalledWith(
-      expect.objectContaining({ nombre: 'María', telefono: '70012345' }),
+      expect.objectContaining({ nombre: 'María', telefono: '70012345', carnet: '12345671' }),
     )
     expect(wrapper.emitted('guardado')[0][0]).toMatchObject({ id: 9 })
   })
@@ -181,9 +182,10 @@ describe('formulario', () => {
       errores: { carnet: ['Ya hay un cliente registrado con ese carnet.'] },
     })
     const wrapper = await abrir()
-    // v1.5: un teléfono válido, para que el formulario llegue al servidor.
+    // v1.5: teléfono y carnet válidos, para que el formulario llegue al servidor.
     await wrapper.find('#cliente-nombre').setValue('María')
     await wrapper.find('#cliente-telefono').setValue('70012345')
+    await wrapper.find('#cliente-carnet').setValue('7654321')
 
     await wrapper.find('form').trigger('submit')
     await flushPromises()
@@ -195,7 +197,7 @@ describe('formulario', () => {
   it('al editar carga los datos, carnet incluido', async () => {
     const wrapper = await abrir(DETALLE)
 
-    expect(wrapper.find('#cliente-carnet').element.value).toBe('1234567-1A')
+    expect(wrapper.find('#cliente-carnet').element.value).toBe('12345671')
   })
 })
 

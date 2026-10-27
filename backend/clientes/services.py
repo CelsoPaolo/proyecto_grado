@@ -10,23 +10,26 @@ from django.db import IntegrityError, transaction
 from clientes.exceptions import CarnetDuplicado
 from clientes.models import Cliente, normalizar_carnet
 from core.exceptions import ErrorDeNegocio
-from core.validadores import MENSAJE_TELEFONO, telefono_valido
+from core.validadores import MENSAJE_CARNET, MENSAJE_TELEFONO, carnet_valido, telefono_valido
 
 CAMPOS_EDITABLES = ("nombre", "telefono", "direccion", "carnet")
 
 
 def _limpiar(datos):
-    """RN-CLI-01: nombre y telefono obligatorios; todo sin espacios en los
-    extremos y el carnet normalizado."""
+    """RN-CLI-01: nombre, telefono y carnet obligatorios (v1.5); todo sin
+    espacios en los extremos y el carnet normalizado."""
     limpio = {}
     for campo in CAMPOS_EDITABLES:
         if campo in datos:
             valor = datos[campo]
             limpio[campo] = normalizar_carnet(valor) if campo == "carnet" else (valor or "").strip()
     errores = {}
-    for campo, nombre in (("nombre", "el nombre"), ("telefono", "el teléfono")):
+    for campo, nombre in (("nombre", "el nombre"), ("telefono", "el teléfono"), ("carnet", "el carnet")):
         if campo in limpio and not limpio[campo]:
             errores[campo] = [f"Indique {nombre} del cliente."]
+    # RF-101 y RN-CLI-02 (v1.5): obligatorio (arriba) y de 7 u 8 digitos.
+    if limpio.get("carnet") and not carnet_valido(limpio["carnet"]):
+        errores["carnet"] = [MENSAJE_CARNET]
     # RF-100 y RN-CLI-09: el telefono, si llega, con 8 digitos. Solo se
     # comprueba el que se envia: editar el nombre de un cliente anterior
     # no obliga a corregir en ese momento un telefono que no se toca.
@@ -62,8 +65,8 @@ def _guardar(cliente, excluir_pk=None):
 
 @transaction.atomic
 def registrar_cliente(*, usuario, **datos):
-    """RF-84 — nombre y telefono obligatorios; direccion y carnet opcionales."""
-    limpio = _limpiar({"nombre": "", "telefono": "", **datos})
+    """RF-84 — nombre, telefono y carnet obligatorios; direccion opcional."""
+    limpio = _limpiar({"nombre": "", "telefono": "", "carnet": "", **datos})
     cliente = Cliente(**limpio, creado_por=usuario, actualizado_por=usuario)
     return _guardar(cliente)
 

@@ -32,7 +32,9 @@ from ventas.services import anular_venta, registrar_venta
 pytestmark = pytest.mark.django_db
 
 URL = "/api/v1/reportes"
-CARNET = "7777777-1Z"
+# v1.5: 8 digitos (PA-10), elegidos para no coincidir con ninguna cifra
+# del reporte.
+CARNET = "86420975"
 
 
 def _autenticar(usuario):

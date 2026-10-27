@@ -2,9 +2,10 @@
 /* Alta y edición de un cliente (RF-84, RF-85).
 
    Lo usan la pantalla de clientes y, para registrar uno nuevo sin salir
-   de la venta, el registro de venta (RF-79). Las reglas —nombre y
-   teléfono obligatorios, carnet único— las aplica el servidor; aquí se
-   muestran sus errores junto a cada campo (RNF-15). Un carnet repetido
+   de la venta, el registro de venta (RF-79). Las reglas —nombre,
+   teléfono y carnet obligatorios, carnet único (v1.5)— las aplica el
+   servidor; aquí se avisa antes de enviar y se muestran sus errores
+   junto a cada campo (RNF-15). Un carnet repetido
    llega como 409 CARNET_DUPLICADO con el error en el campo carnet. */
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
@@ -15,6 +16,7 @@ import { computed, ref, watch } from 'vue'
 
 import { clientesApi } from '@/api/clientes'
 import { useErroresApi } from '@/composables/useErroresApi'
+import { MENSAJE_CARNET, carnetValido, soloDigitosDeCarnet } from '@/utils/carnet'
 import { MENSAJE_TELEFONO, soloDigitosDeTelefono, telefonoValido } from '@/utils/telefono'
 
 const props = defineProps({
@@ -50,9 +52,13 @@ watch(
 
 async function guardar() {
   limpiar()
-  // RF-100: se avisa antes de enviar; el servidor vuelve a comprobarlo.
-  if (!telefonoValido(formulario.value.telefono)) {
-    registrar({ errores: { telefono: [MENSAJE_TELEFONO] } })
+  // RF-100 y RF-101: se avisa antes de enviar, de los dos campos a la
+  // vez; el servidor vuelve a comprobarlo.
+  const errores = {}
+  if (!telefonoValido(formulario.value.telefono)) errores.telefono = [MENSAJE_TELEFONO]
+  if (!carnetValido(formulario.value.carnet)) errores.carnet = [MENSAJE_CARNET]
+  if (Object.keys(errores).length) {
+    registrar({ errores })
     return
   }
   guardando.value = true
@@ -109,11 +115,20 @@ async function guardar() {
         <InputText id="cliente-direccion" v-model="formulario.direccion" />
       </div>
       <div class="campo">
-        <label for="cliente-carnet">Carnet de identidad <span class="ayuda">(opcional)</span></label>
-        <InputText id="cliente-carnet" v-model="formulario.carnet" :invalid="Boolean(errorDe('carnet'))" />
+        <label for="cliente-carnet">Carnet de identidad</label>
+        <!-- RF-101: obligatorio, solo dígitos y como máximo 8 al escribir. -->
+        <InputText
+          id="cliente-carnet"
+          :model-value="formulario.carnet"
+          inputmode="numeric"
+          maxlength="8"
+          :invalid="Boolean(errorDe('carnet'))"
+          @update:model-value="formulario.carnet = soloDigitosDeCarnet($event)"
+        />
         <small v-if="errorDe('carnet')" class="error">{{ errorDe('carnet') }}</small>
         <small v-else class="ayuda">
-          Dato personal: solo se verá en el detalle del cliente.
+          7 u 8 dígitos, sin complemento. Dato personal: solo se verá en el
+          detalle del cliente.
         </small>
       </div>
 

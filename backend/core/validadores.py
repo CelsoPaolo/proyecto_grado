@@ -20,3 +20,14 @@ def telefono_valido(valor):
     alfabetos (arabigos, devanagari...), que la base de datos rechazaria.
     """
     return bool(PATRON_TELEFONO.fullmatch(valor or ""))
+
+
+#: RN-CLI-02 y RF-101 (v1.5, PA-10): de 7 u 8 digitos, solo numeros y
+#: sin complemento. Es la forma de identificar a un cliente.
+PATRON_CARNET = re.compile(r"^[0-9]{7,8}$")
+MENSAJE_CARNET = "El carnet debe tener 7 u 8 dígitos, solo números."
+
+
+def carnet_valido(valor):
+    """RN-CLI-02 — 7 u 8 digitos ASCII, sin letras ni complemento."""
+    return bool(PATRON_CARNET.fullmatch(valor or ""))

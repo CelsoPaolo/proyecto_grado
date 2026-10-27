@@ -47,7 +47,7 @@ def producto():
 
 @pytest.fixture
 def maria():
-    return ClienteFactory(nombre="María Gutiérrez", telefono="70012345", carnet="1234567-1A")
+    return ClienteFactory(nombre="María Gutiérrez", telefono="70012345", carnet="12345671")
 
 
 def _items(producto, cantidad=1):
@@ -158,7 +158,7 @@ def test_el_detalle_de_la_venta_no_contiene_el_carnet(vendedor, producto, maria)
 
     for cuerpo in (respuesta.content.decode(), lista.content.decode()):
         assert "carnet" not in cuerpo
-        assert "1234567-1A" not in cuerpo
+        assert "12345671" not in cuerpo
 
 
 @pytest.mark.django_db(transaction=True)

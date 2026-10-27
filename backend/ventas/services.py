@@ -82,19 +82,8 @@ def _cliente_de_la_venta(cliente_id, cliente_nombre, cliente_telefono):
         )
     if not cliente.activo:
         raise ClienteInactivo()
-    # Un cliente registrado antes de la v1.5 puede tener un telefono
-    # fuera de formato. La venta lo copiaria, y la base de datos la
-    # rechazaria (plan.md 3.6): se avisa antes, con que hacer.
-    if not telefono_valido(cliente.telefono):
-        raise ErrorDeNegocio(
-            detalle="El teléfono del cliente no tiene 8 dígitos.",
-            errores={
-                "cliente_id": [
-                    "El teléfono de este cliente no tiene 8 dígitos. "
-                    "Corríjalo en Clientes antes de registrar la venta."
-                ]
-            },
-        )
+    # El telefono del cliente registrado ya cumple RN-CLI-09: la base lo
+    # garantiza para todos los clientes (clientes/0002, T-15.9).
     return cliente, cliente.nombre, cliente.telefono
 
 

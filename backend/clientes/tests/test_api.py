@@ -42,7 +42,7 @@ def admin():
 @pytest.fixture
 def registrados():
     return [
-        ClienteFactory(nombre="María Gutiérrez", telefono="70012345", carnet="1234567-1A"),
+        ClienteFactory(nombre="María Gutiérrez", telefono="70012345", carnet="12345671"),
         ClienteFactory(nombre="Juan Pérez", telefono="71111111", carnet="7654321"),
         ClienteFactory(nombre="Ana Rojas", telefono="72222222", activo=False),
     ]
@@ -62,13 +62,13 @@ def test_el_valor_del_carnet_no_aparece_en_ninguna_parte_de_la_lista(ventas, reg
     """Ni bajo otra clave: se busca el valor en la respuesta entera."""
     cuerpo = ventas.get(CLIENTES).content.decode()
 
-    assert "1234567-1A" not in cuerpo and "7654321" not in cuerpo
+    assert "12345671" not in cuerpo and "7654321" not in cuerpo
 
 
 def test_el_detalle_si_trae_el_carnet(ventas, registrados):
     detalle = ventas.get(f"{CLIENTES}/{registrados[0].pk}").data
 
-    assert detalle["carnet"] == "1234567-1A"
+    assert detalle["carnet"] == "12345671"
 
 
 # ─────────────────────────────────────────────────────────────────────
@@ -84,7 +84,7 @@ def test_busca_por_parte_del_nombre_o_del_telefono(ventas, registrados):
 
 
 def test_busca_por_carnet_exacto_normalizado(ventas, registrados):
-    assert _nombres(ventas, buscar="1234567-1a") == ["María Gutiérrez"]
+    assert _nombres(ventas, buscar=" 1234 5671 ") == ["María Gutiérrez"]
 
 
 def test_un_carnet_parcial_no_encuentra_a_nadie(ventas, registrados):
@@ -130,21 +130,31 @@ def test_la_lista_esta_paginada(ventas):
 # ─────────────────────────────────────────────────────────────────────
 def test_el_encargado_de_ventas_registra_y_edita(ventas):
     alta = ventas.post(
-        CLIENTES, {"nombre": "Carlos", "telefono": "73333333", "carnet": "555 lp"}, format="json"
+        CLIENTES, {"nombre": "Carlos", "telefono": "73333333", "carnet": "5555 555"}, format="json"
     )
     assert alta.status_code == status.HTTP_201_CREATED
-    assert alta.data["carnet"] == "555LP"
+    assert alta.data["carnet"] == "5555555"
 
     edicion = ventas.patch(f"{CLIENTES}/{alta.data['id']}", {"telefono": "74444444"}, format="json")
     assert edicion.status_code == 200
     assert edicion.data["telefono"] == "74444444"
 
 
-def test_sin_nombre_o_telefono_400_junto_al_campo(ventas):
+def test_sin_nombre_telefono_ni_carnet_400_junto_al_campo(ventas):
     respuesta = ventas.post(CLIENTES, {"nombre": " ", "telefono": ""}, format="json")
 
     assert respuesta.status_code == status.HTTP_400_BAD_REQUEST
-    assert {"nombre", "telefono"} <= set(respuesta.data["errores"])
+    assert set(respuesta.data["errores"]) == {"nombre", "telefono", "carnet"}
+
+
+def test_un_carnet_con_complemento_400_junto_al_campo(ventas):
+    """T-15.9 (PA-10): sin complemento ni letras."""
+    respuesta = ventas.post(
+        CLIENTES, {"nombre": "Ana", "telefono": "70012345", "carnet": "1234567-1A"}, format="json"
+    )
+
+    assert respuesta.status_code == status.HTTP_400_BAD_REQUEST
+    assert respuesta.data["errores"]["carnet"] == ["El carnet debe tener 7 u 8 dígitos, solo números."]
 
 
 def test_un_carnet_repetido_responde_409_carnet_duplicado(ventas, registrados):

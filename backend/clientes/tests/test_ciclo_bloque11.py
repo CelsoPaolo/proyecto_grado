@@ -37,7 +37,7 @@ def test_venta_a_cliente_registrado_editarlo_y_la_venta_conserva_sus_datos():
 
     alta = caja.post(
         "/api/v1/clientes",
-        {"nombre": "María Gutiérrez", "telefono": "70012345", "carnet": "1234567-1a"},
+        {"nombre": "María Gutiérrez", "telefono": "70012345", "carnet": "12345671"},
         format="json",
     )
     assert alta.status_code == 201, alta.data
@@ -64,7 +64,7 @@ def test_venta_a_cliente_registrado_editarlo_y_la_venta_conserva_sus_datos():
     texto = "\n".join(p.extract_text() for p in PdfReader(BytesIO(garantia.content)).pages)
     assert "María Gutiérrez" in texto
     for salida in (detalle.content.decode(), caja.get("/api/v1/ventas").content.decode(), texto):
-        assert "1234567-1A" not in salida.upper()
+        assert "12345671" not in salida
 
     # Desactivado, ya no puede elegirse en una venta nueva.
     otra = caja.post(

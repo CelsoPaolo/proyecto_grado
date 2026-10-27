@@ -73,7 +73,9 @@ def test_la_api_de_clientes_rechaza_un_telefono_fuera_de_formato(telefono):
 
 @pytest.mark.django_db
 def test_el_servicio_de_clientes_acepta_ocho_digitos():
-    cliente = registrar_cliente(usuario=VendedorFactory(), nombre="Ana", telefono=" 70012345 ")
+    cliente = registrar_cliente(
+        usuario=VendedorFactory(), nombre="Ana", telefono=" 70012345 ", carnet="1234567"
+    )
 
     assert cliente.telefono == "70012345"
 
@@ -86,19 +88,6 @@ def test_editar_el_telefono_exige_el_formato():
         editar_cliente(cliente=cliente, usuario=VendedorFactory(), telefono="123")
 
     assert error.value.errores == {"telefono": [MENSAJE_TELEFONO]}
-
-
-@pytest.mark.django_db
-def test_editar_otro_dato_de_un_cliente_anterior_no_exige_corregir_su_telefono():
-    """Solo se valida el telefono que se envia."""
-    cliente = ClienteFactory()
-    Cliente.objects.filter(pk=cliente.pk).update(telefono="563563463")
-    cliente.refresh_from_db()
-
-    editar_cliente(cliente=cliente, usuario=VendedorFactory(), direccion="Calle 1")
-
-    cliente.refresh_from_db()
-    assert cliente.direccion == "Calle 1"
 
 
 # ─────────────────────────────────────────────────────────────────────
@@ -146,26 +135,6 @@ def test_el_servicio_de_ventas_tambien_lo_comprueba():
         )
 
     assert not Venta.objects.exists()
-
-
-@pytest.mark.django_db
-def test_no_se_vende_a_un_cliente_registrado_con_telefono_fuera_de_formato():
-    """La venta copiaria ese telefono y la base la rechazaria: se avisa
-    antes, junto al cliente, y no se descuenta nada."""
-    cliente = ClienteFactory()
-    Cliente.objects.filter(pk=cliente.pk).update(telefono="563563463")
-    producto = ProductoFactory(stock=5)
-
-    respuesta = _autenticar(VendedorFactory()).post(
-        "/api/v1/ventas",
-        {"cliente_id": cliente.pk, "items": [{"producto_id": producto.id, "cantidad": 1}]},
-        format="json",
-    )
-
-    assert respuesta.status_code == status.HTTP_400_BAD_REQUEST
-    assert "Corríjalo en Clientes" in respuesta.data["errores"]["cliente_id"][0]
-    producto.refresh_from_db()
-    assert producto.stock == 5
 
 
 # ─────────────────────────────────────────────────────────────────────

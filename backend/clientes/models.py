@@ -16,11 +16,12 @@ from django.db import models
 
 
 def normalizar_carnet(texto):
-    """RN-CLI-02 — sin espacios y en mayusculas.
+    """RN-CLI-02 — sin espacios.
 
-    Un carnet boliviano puede llevar complemento o extension
-    (1234567-1A, 1234567 LP). Sin normalizar, 1234567-1a y 1234567-1A
-    serian dos clientes distintos para la base.
+    Desde la v1.5 el carnet son 7 u 8 digitos, sin complemento (PA-10):
+    quitar los espacios hace que «1234 5678» y «12345678» sean el mismo.
+    Se conserva el paso a mayusculas: es inocuo con digitos, y una
+    entrada con letras se rechaza igual al validarla.
     """
     return "".join((texto or "").split()).upper()
 
@@ -31,14 +32,12 @@ class Cliente(models.Model):
     nombre = models.CharField("nombre", max_length=150)
     telefono = models.CharField("teléfono", max_length=30)
     direccion = models.CharField("dirección", max_length=255, blank=True, default="")
-    # Cadena vacia, no NULL: el UNIQUE parcial de Meta deja convivir a
-    # todos los clientes sin carnet.
+    # RF-101, RN-CLI-01 y RN-CLI-02 (v1.5): obligatorio, de 7 u 8 digitos
+    # y unico. Identifica al cliente.
     carnet = models.CharField(
         "carnet de identidad",
         max_length=20,
-        blank=True,
-        default="",
-        help_text="Opcional. Dato personal: solo visible en el detalle (RN-CLI-06).",
+        help_text="7 u 8 dígitos. Dato personal: solo visible en el detalle (RN-CLI-06).",
     )
     activo = models.BooleanField(
         "activo",
@@ -67,12 +66,27 @@ class Cliente(models.Model):
         verbose_name_plural = "clientes"
         ordering = ["nombre", "id"]
         constraints = [
-            # RN-CLI-02: unico si se informa, entre activos e inactivos.
+            # RN-CLI-02: unico entre activos e inactivos. Desde la v1.5 es
+            # total, y no parcial: ya no hay clientes sin carnet.
             models.UniqueConstraint(
                 fields=["carnet"],
-                condition=~models.Q(carnet=""),
                 name="cliente_carnet_unico",
                 violation_error_message="Ya hay un cliente registrado con ese carnet.",
+            ),
+            # RF-101 y RN-CLI-02 (v1.5): 7 u 8 digitos. A diferencia de las
+            # ventas y solicitudes (plan.md 3.6), aqui se comprueban TODAS
+            # las filas: los clientes se editan, y uno con un carnet
+            # invalido no debe poder seguir existiendo.
+            models.CheckConstraint(
+                condition=models.Q(carnet__regex=r"^[0-9]{7,8}$"),
+                name="cliente_carnet_formato",
+                violation_error_message="El carnet debe tener 7 u 8 dígitos, solo números.",
+            ),
+            # RF-100 y RN-CLI-09: el telefono, de 8 digitos, en todas las filas.
+            models.CheckConstraint(
+                condition=models.Q(telefono__regex=r"^[0-9]{8}$"),
+                name="cliente_telefono_formato",
+                violation_error_message="El teléfono debe tener exactamente 8 dígitos, solo números.",
             ),
             # RN-CLI-01: nombre y telefono obligatorios. Se exige un
             # caracter que no sea espacio: «   » no es un nombre.

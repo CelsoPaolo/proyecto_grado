@@ -116,6 +116,7 @@ describe('registro de cliente', () => {
     const wrapper = await abrir()
     await wrapper.find('#cliente-nombre').setValue('Ana')
     await wrapper.find('#cliente-telefono').setValue('70012345')
+    await wrapper.find('#cliente-carnet').setValue('1234567')
 
     await wrapper.find('form').trigger('submit')
     await flushPromises()

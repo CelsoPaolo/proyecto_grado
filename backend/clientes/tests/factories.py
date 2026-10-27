@@ -12,5 +12,7 @@ class ClienteFactory(factory.django.DjangoModelFactory):
 
     nombre = factory.Sequence(lambda n: f"Cliente {n}")
     telefono = factory.Sequence(lambda n: f"7{n:07d}")
+    # v1.5: obligatorio, de 7 u 8 digitos y unico (RN-CLI-02).
+    carnet = factory.Sequence(lambda n: f"1{n:07d}")
     creado_por = factory.SubFactory(VendedorFactory)
     actualizado_por = factory.SelfAttribute("creado_por")
