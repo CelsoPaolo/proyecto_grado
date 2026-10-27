@@ -44,6 +44,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # v1.5: el lookup __unaccent de la busqueda sin tildes (plan.md 3.6).
+    # Es parte de Django, no una dependencia nueva.
+    'django.contrib.postgres',
     # Terceros
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',

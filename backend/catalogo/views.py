@@ -8,7 +8,6 @@ from django.db.models import Count, Q
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.filters import SearchFilter
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
 
@@ -21,6 +20,7 @@ from catalogo.services import (
     retirar_producto,
     umbral_stock_bajo,
 )
+from core.filtros import BusquedaSinTildes
 from core.permissions import EsAdministrador, PuedeVender
 from inventario.serializers import (
     AjustarExistenciasSerializer,
@@ -71,7 +71,8 @@ class ProductoViewSet(
 
     serializer_class = ProductoSerializer
     parser_classes = [JSONParser, MultiPartParser, FormParser]
-    filter_backends = [DjangoFilterBackend, SearchFilter]
+    # RF-98 y RN-CAT-12: la busqueda por nombre no distingue tildes.
+    filter_backends = [DjangoFilterBackend, BusquedaSinTildes]
     filterset_fields = ["categoria", "activo"]
     search_fields = ["nombre", "descripcion"]
 

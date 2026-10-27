@@ -1840,7 +1840,7 @@ Antes de empezar: respaldo con `pg_dump` y revisión de los clientes
 admitidos en la suite son los del guardián de trazabilidad, que marca
 los requerimientos de la v1.5 todavía sin implementar.
 
-### [ ] T-15.1 — Búsqueda de productos sin tildes
+### [x] T-15.1 — Búsqueda de productos sin tildes
 - **Cubre:** RF-98, RN-CAT-12
 - **Trabajo:** Migración que activa `unaccent`; `django.contrib.postgres`
   en `INSTALLED_APPS`; filtro `BusquedaSinTildes` en `core/filtros.py`
@@ -1849,6 +1849,17 @@ los requerimientos de la v1.5 todavía sin implementar.
   encuentran «Cámara», que la ñ equivale a la n, que se sigue buscando
   en la descripción, que la búsqueda por código sigue exacta y que la
   migración es reversible.
+- **Resultado (2026-10-26):** `catalogo/0007_extension_unaccent` y
+  `BusquedaSinTildes`.
+  - Cubre el Catálogo y el buscador de Registrar venta, que usan el
+    mismo `?search=`. El campo del código y el lector no se tocaron.
+  - 13 pruebas en `test_busqueda_sin_tildes.py`, también en el otro
+    sentido: un nombre sin tilde se encuentra buscando con tilde.
+  - Mutación detectada: comparar con `__icontains` en lugar de
+    `__unaccent__icontains`.
+  - Backend: 1135 pruebas, 8 fallos, todos del guardián de
+    trazabilidad (RF-99 a RF-105 y RNF-30, pendientes); frontend
+    236 / 236.
 
 ### [ ] T-15.2 — Búsqueda de clientes sin tildes
 - **Cubre:** RF-99, RN-CLI-08
