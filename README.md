@@ -156,8 +156,8 @@ La aplicación queda en `http://localhost:5173`.
 ## Pruebas
 
 ```bash
-cd backend  && pytest        # 1064 pruebas (2026-10-09)
-cd frontend && npm run test  #  217 pruebas
+cd backend  && pytest        # 1238 pruebas (2026-11-23)
+cd frontend && npm run test  #  263 pruebas
 ```
 
 La suite completa corre en pocos segundos: `conftest.py` sustituye
@@ -172,7 +172,7 @@ producción sigue usando PBKDF2, y hay una prueba que lo verifica.
 | `ventas/tests/test_concurrencia.py` | Que ventas y ajustes simultáneos nunca dejan el stock en negativo (**RNF-08**) y que el libro de movimientos cuadra **con su cadena de resultantes**, no solo con la suma (**RNF-24**). Resultados con y sin el bloqueo en `docs/evidencia_concurrencia.md`. |
 | `conftest.py` (guardián del libro) | Tras **cada** prueba con base de datos, la suma de movimientos de cada producto es su stock (**RN-MOV-03**). |
 | `core/tests/test_matriz_permisos.py` | Cada uno de los 52 endpoints × cada rol, contra la matriz de `spec.md` §4.4. Falla si se publica un endpoint sin declarar quién puede usarlo. |
-| `core/tests/test_trazabilidad.py` | Que cada uno de los 97 RF y 29 RNF de `spec.md` está citado en el código o las pruebas. |
+| `core/tests/test_trazabilidad.py` | Que cada uno de los 105 RF y 30 RNF de `spec.md` está citado en el código o las pruebas. |
 | `panel/tests/test_coherencia_reportes.py` | Que el reporte en JSON, PDF y Excel tiene **las mismas cifras**, que el carnet no aparece en ninguno, y que un año de datos se reporta en menos de 5 s (**RN-REP-07**, **RNF-28**). |
 | `core/tests/test_cobertura_reglas.py` | Que cada regla con prueba obligatoria (`plan.md` §9) conserva la suya. |
 | `usuarios/tests/test_invalidacion_inmediata.py` | Que bloquear una cuenta la expulsa al instante, por las cuatro vías posibles. |
